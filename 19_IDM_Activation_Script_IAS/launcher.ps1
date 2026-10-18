@@ -46,7 +46,7 @@ function Show-Header {
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  PILIHAN MENU TINDAKAN:" -ForegroundColor White
     Write-Host ""
-    Write-Host "      [1] Aktivasi Permanen IDM (Aman & Bebas Blokir Antivirus)" -ForegroundColor Green
+    Write-Host "      [1] Aktivasi Permanen IDM (1-Klik Tanpa Risiko Retur)" -ForegroundColor Green
     Write-Host "          Mengaktifkan Internet Download Manager secara permanen tanpa modifikasi file exe/dll." -ForegroundColor Gray
     Write-Host ""
     Write-Host "      [3] Kunjungi Ekosistem & Solusi Digital FokusKonten (Buka Web)" -ForegroundColor Cyan
@@ -109,17 +109,13 @@ function Invoke-MainAction {
     $scriptDir = $PSScriptRoot
     if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
 
-    $targetCmd = Join-Path $scriptDir "IAS.cmd"
-    if (Test-Path $targetCmd) {
-        Start-Process cmd.exe -ArgumentList "/c `"$targetCmd`" /act" -Wait -WindowStyle Hidden
+    $targetScript = Join-Path $scriptDir "activate_idm.ps1"
+    if (Test-Path $targetScript) {
+        & $targetScript
     } else {
-        Write-Host "  [!] Berkas biner lokal tidak ditemukan, mengunduh runtime dari sekoci resmi..." -ForegroundColor Cyan
-        $remoteCmd = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/19_IDM_Activation_Script_IAS/IAS.cmd"
-        $workDir = Join-Path $env:ProgramData "FokusKonten"
-        if (-not (Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir -Force | Out-Null }
-        $tmp = Join-Path $workDir "IAS.cmd"
-        (New-Object System.Net.WebClient).DownloadFile($remoteCmd, $tmp)
-        Start-Process cmd.exe -ArgumentList "/c `"$tmp`" /act" -Wait -WindowStyle Hidden
+        Write-Host "  [!] Berkas skrip lokal tidak ditemukan, mengalirkan biner dari lumbung resmi..." -ForegroundColor Cyan
+        $remoteScript = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/19_IDM_Activation_Script_IAS/activate_idm.ps1"
+        irm $remoteScript | iex
     }
 
     Write-Host ""

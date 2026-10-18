@@ -232,8 +232,17 @@ exit /b 0
 
     $env:ComSpec = "$env:SystemRoot\system32\cmd.exe"
 
+    # Jika terminal SUDAH Administrator, jalankan langsung in-place (CUKUP 1 TERMINAL)
+    if ($isAdmin) {
+        Write-Host "  [OK] Hak akses Administrator terverifikasi (Eksekusi 1 Terminal)." -ForegroundColor Green
+        & $env:ComSpec /c "`"$menuPath`""
+        Remove-Item $menuPath -Force -ErrorAction SilentlyContinue
+        Remove-Item $engPath  -Force -ErrorAction SilentlyContinue
+        return
+    }
+
     Write-Host "  -> Membuka menu FokusKonten Office Rescue..." -ForegroundColor Cyan
-    Write-Host "     Meminta izin Administrator sistem..." -ForegroundColor Gray
+    Write-Host "     Meminta izin Administrator sistem (UAC)..." -ForegroundColor Gray
     Write-Host ""
 
     if ($psv -lt 3) {

@@ -9,7 +9,7 @@ try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 }
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
@@ -41,7 +41,7 @@ function Show-Header {
     if ($isAdmin) {
         Write-Host "  * Hak Akses      : ADMINISTRATOR RESMI [TERVERIFIKASI]" -ForegroundColor Green
     } else {
-        Write-Host "  * Hak Akses      : Mode Pengguna Standar" -ForegroundColor Yellow
+        Write-Host "  * Hak Akses      : Mode Standar (Disarankan Jalankan sebagai Administrator)" -ForegroundColor Yellow
     }
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  PILIHAN MENU TINDAKAN:" -ForegroundColor White
@@ -86,24 +86,20 @@ function Get-UserChoice {
     }
 }
 
-function Ensure-Elevation {
+function Check-ElevationPrompt {
     if ($true -and (-not $isAdmin)) {
         Write-Host ""
-        Write-Host "  [!] Mempersiapkan hak akses Administrator..." -ForegroundColor Yellow
-        $scriptPath = $MyInvocation.MyCommand.Path
-        if ($scriptPath -and (Test-Path $scriptPath)) {
-            Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`"" -Verb RunAs
-            exit 0
-        } else {
-            $code = "irm https://fokuskonten.my.id/dismplus | iex"
-            Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"$code`"" -Verb RunAs
-            exit 0
-        }
+        Write-Host "  [!] PEMBERITAHUAN HAK AKSES SISTEM:" -ForegroundColor Yellow
+        Write-Host "      Modul ini membutuhkan hak akses Administrator untuk konfigurasi sistem." -ForegroundColor White
+        Write-Host "      Jika operasi ditolak oleh Windows, silakan jalankan PowerShell via:" -ForegroundColor Cyan
+        Write-Host "      Klik kanan ikon PowerShell -> 'Run as administrator'" -ForegroundColor Cyan
+        Write-Host "      Melanjutkan eksekusi in-session pada sesi saat ini..." -ForegroundColor DarkGray
+        Write-Host ""
     }
 }
 
 function Invoke-MainAction {
-    Ensure-Elevation
+    Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host "  SEDANG MENJALANKAN DISM++ COMPONENT STORE — PEMELIHARAAN SISTEM MURNI..." -ForegroundColor Yellow

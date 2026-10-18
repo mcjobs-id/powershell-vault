@@ -156,9 +156,23 @@ switch ($choice) {
     "2" {
         Check-ElevationPrompt
         $engine = Get-EnginePath
-        Start-Process cmd.exe -ArgumentList "/c `"$engine`" /status" -Wait -WindowStyle Hidden
+        Write-Host ""
+        Write-Host "  SEDANG MEMERIKSA STATUS LISENSI SISTEM..." -ForegroundColor Cyan
+        & cmd.exe /c "`"$engine`" /status"
     }
     "3" {
+        Check-ElevationPrompt
+        $engine = Get-EnginePath
+        Write-Host ""
+        Write-Host "  ================================================================" -ForegroundColor Yellow
+        Write-Host "  SEDANG MENCABUT / MEMBATALKAN LISENSI..." -ForegroundColor Yellow
+        Write-Host "  ================================================================" -ForegroundColor Yellow
+        Write-Host ""
+        & cmd.exe /c "`"$engine`" /u"
+        Write-Host ""
+        Write-Host "  [OK] PROSES PENCABUTAN LISENSI SELESAI!" -ForegroundColor Green
+    }
+    "4" {
         Start-Process "https://fokuskonten.my.id/toko-digital/"
         Write-Host "  Membuka etalase digital FokusKonten di peramban web..." -ForegroundColor Cyan
     }

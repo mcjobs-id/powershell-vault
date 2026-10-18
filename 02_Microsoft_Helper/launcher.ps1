@@ -112,7 +112,7 @@ function Get-EnginePath {
 
     $workDir = Join-Path $env:ProgramData "FokusKonten"
     if (-not (Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir -Force | Out-Null }
-    $cached = Join-Path $workDir "FK_Core_Runtime.cmd"
+    $cached = Join-Path $workDir "FK_Core_Runtime_v2.cmd"
     if ((Test-Path $cached) -and ((Get-Item $cached).Length -gt 50000)) {
         return $cached
     }

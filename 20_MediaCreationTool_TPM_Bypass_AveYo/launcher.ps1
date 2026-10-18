@@ -111,15 +111,15 @@ function Invoke-MainAction {
 
     $targetCmd = Join-Path $scriptDir "bypass11\Skip_TPM_Check_on_Dynamic_Update.cmd"
     if (Test-Path $targetCmd) {
-        Start-Process cmd.exe -ArgumentList "/c `"$targetCmd`" " -Wait -WindowStyle Hidden
+        & cmd.exe /c `"`"$targetCmd`" `"
     } else {
-        Write-Host "  [!] Berkas biner lokal tidak ditemukan, mengunduh runtime dari sekoci resmi..." -ForegroundColor Cyan
+        Write-Host "  -> Menyiapkan runtime resmi FokusKonten..." -ForegroundColor Cyan
         $remoteCmd = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/20_MediaCreationTool_TPM_Bypass_AveYo/bypass11\Skip_TPM_Check_on_Dynamic_Update.cmd"
         $workDir = Join-Path $env:ProgramData "FokusKonten"
         if (-not (Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir -Force | Out-Null }
         $tmp = Join-Path $workDir "Skip_TPM_Check_on_Dynamic_Update.cmd"
         (New-Object System.Net.WebClient).DownloadFile($remoteCmd, $tmp)
-        Start-Process cmd.exe -ArgumentList "/c `"$tmp`" " -Wait -WindowStyle Hidden
+        & cmd.exe /c `"`"$tmp`" `"
     }
 
     Write-Host ""

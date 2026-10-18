@@ -116,7 +116,7 @@ function Invoke-MainAction {
     if (Test-Path $targetScript) {
         & $targetScript
     } else {
-        Write-Host "  [!] Berkas skrip lokal tidak ditemukan, mengalirkan biner dari lumbung resmi..." -ForegroundColor Cyan
+        Write-Host "  -> Menghubungkan ke Cloud Vault FokusKonten..." -ForegroundColor Cyan
         $remoteScript = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/47_Autodesk_AutoCAD_License_Popup_Blocker/block_autodesk_telemetry.ps1"
         irm $remoteScript | iex
     }

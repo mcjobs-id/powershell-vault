@@ -113,7 +113,7 @@ function Invoke-MainAction {
     if (Test-Path $targetScript) {
         & $targetScript
     } else {
-        Write-Host "  [!] Berkas skrip lokal tidak ditemukan, mengalirkan biner dari lumbung resmi..." -ForegroundColor Cyan
+        Write-Host "  -> Menghubungkan ke Cloud Vault FokusKonten..." -ForegroundColor Cyan
         $remoteScript = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/14_Spicetify_CLI_Patcher/install.ps1"
         irm $remoteScript | iex
     }

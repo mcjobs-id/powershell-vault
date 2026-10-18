@@ -9,14 +9,14 @@
 
 
 
-::  For command line switches, check m{}assgrave{dot}dev/command_line_switches
+::  For command line switches, check fokuskonten.my.id/command_line_switches
 ::  If you want to better understand script, read from separate files version. 
 
 
 
 ::============================================================================
 ::
-::   Homepage: m{}assgrave{dot}dev
+::   Homepage: fokuskonten.my.id
 ::
 ::============================================================================
 
@@ -13019,7 +13019,7 @@ exit /b
 
 ::============================================================================
 ::
-::   Homepage: m{}assgrave{dot}dev
+::   Homepage: fokuskonten.my.id
 ::
 ::============================================================================
 
@@ -13627,7 +13627,7 @@ echo ___________________________________________________________________________
 echo:
 echo   This Script is a part of MAS project.
 echo:   
-echo   Homepage: mass%w%grave%w%.dev
+echo   Homepage: fokuskonten.my.id
 )>"%_dest%\Info.txt"
 exit /b
 

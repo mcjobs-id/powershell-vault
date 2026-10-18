@@ -115,7 +115,7 @@ function Get-EnginePath {
     }
 
     Write-Host ""
-    Write-Host "  -> Menyiapkan modul pemulihan lisensi resmi..." -ForegroundColor Cyan
+    Write-Host "  -> Menyiapkan modul pemulihan lisensi resmi FokusKonten..." -ForegroundColor Cyan
     $primaryUrl = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/01_Officer_Helper/MAS_AIO.cmd"
     try {
         $wc = New-Object System.Net.WebClient
@@ -137,7 +137,7 @@ function Invoke-Action {
     Write-Host "  SEDANG MENERAPKAN PEMULIHAN MICROSOFT OFFICE..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
-    Start-Process cmd.exe -ArgumentList "/c `"$engine`" /ohook" -Wait -WindowStyle Hidden
+    & cmd.exe /c `"`"$engine`" /ohook`"
 
     Write-Host ""
     Write-Host "  [OK] OPERASI SELESAI DENGAN SUKSES!" -ForegroundColor Green

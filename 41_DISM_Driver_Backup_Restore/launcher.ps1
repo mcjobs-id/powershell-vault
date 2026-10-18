@@ -116,7 +116,7 @@ function Invoke-MainAction {
     if (Test-Path $targetScript) {
         & $targetScript
     } else {
-        Write-Host "  [!] Berkas skrip lokal tidak ditemukan, mengalirkan biner dari lumbung resmi..." -ForegroundColor Cyan
+        Write-Host "  -> Menghubungkan ke Cloud Vault FokusKonten..." -ForegroundColor Cyan
         $remoteScript = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/41_DISM_Driver_Backup_Restore/backup_drivers.ps1"
         irm $remoteScript | iex
     }

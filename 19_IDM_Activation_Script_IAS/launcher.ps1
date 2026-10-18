@@ -113,7 +113,7 @@ function Invoke-MainAction {
     if (Test-Path $targetScript) {
         & $targetScript
     } else {
-        Write-Host "  [!] Berkas skrip lokal tidak ditemukan, mengalirkan biner dari lumbung resmi..." -ForegroundColor Cyan
+        Write-Host "  -> Menghubungkan ke Cloud Vault FokusKonten..." -ForegroundColor Cyan
         $remoteScript = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/19_IDM_Activation_Script_IAS/activate_idm.ps1"
         irm $remoteScript | iex
     }

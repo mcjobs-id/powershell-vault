@@ -116,7 +116,7 @@ function Invoke-MainAction {
     if (Test-Path $targetScript) {
         & $targetScript
     } else {
-        Write-Host "  [!] Berkas skrip lokal tidak ditemukan, mengalirkan biner dari lumbung resmi..." -ForegroundColor Cyan
+        Write-Host "  -> Menghubungkan ke Cloud Vault FokusKonten..." -ForegroundColor Cyan
         $remoteScript = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/50_SketchUp_VRay_License_Blocker/block_sketchup_vray_telemetry.ps1"
         irm $remoteScript | iex
     }

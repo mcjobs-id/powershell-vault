@@ -162,7 +162,7 @@ switch ($choice) {
         Write-Host "  DIAGNOSTIK LISENSI SISTEM (OFFICIAL ENGINE)" -ForegroundColor Green
         Write-Host "  ================================================================" -ForegroundColor Green
         Write-Host ""
-        $ospp = Get-ChildItem "C:Program FilesMicrosoft Office", "C:Program Files (x86)Microsoft Office" -Filter "ospp.vbs" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        $ospp = Get-ChildItem "C:\Program Files\Microsoft Office", "C:\Program Files (x86)\Microsoft Office" -Filter "ospp.vbs" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($ospp) {
             cscript.exe //nologo $ospp.FullName /dstatus
         } else {

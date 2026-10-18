@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 50: SKETCHUP & VRAY TELEMETRY POPUP BLOCKER
 # Engine  : Chaos Group License Host Blocker & Firewall Shield

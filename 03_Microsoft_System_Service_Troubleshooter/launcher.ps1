@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 03: SYSTEM SERVICE TROUBLESHOOTER — PERBAIKAN SPPSVC
+# Modul 03: SYSTEM SERVICE TROUBLESHOOTER - PERBAIKAN SPPSVC
 # Engine  : License Token Reset & Software Protection Repair
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // SYSTEM SERVICE TROUBLESHOOTER — PERBAIKAN SPPSVC"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // SYSTEM SERVICE TROUBLESHOOTER - PERBAIKAN SPPSVC"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten sedang menyiapkan pemulihan lisensi otomatis tanpa risiko." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : SYSTEM SERVICE TROUBLESHOOTER — PERBAIKAN SPPSVC" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : SYSTEM SERVICE TROUBLESHOOTER - PERBAIKAN SPPSVC" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : License Token Reset & Software Protection Repair" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Bebas Antivirus, Tanpa Mengubah Dokumen Kerja)" -ForegroundColor Green

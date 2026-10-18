@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 01: OFFICER HELPER — PEMULIHAN MICROSOFT OFFICE
+# Modul 01: OFFICER HELPER - PEMULIHAN MICROSOFT OFFICE
 # Engine  : OHook Dynamic Hook Injection (sppc.dll Virtualization)
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // OFFICER HELPER — PEMULIHAN MICROSOFT OFFICE"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // OFFICER HELPER - PEMULIHAN MICROSOFT OFFICE"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten sedang menyiapkan pemulihan lisensi otomatis tanpa risiko." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : OFFICER HELPER — PEMULIHAN MICROSOFT OFFICE" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : OFFICER HELPER - PEMULIHAN MICROSOFT OFFICE" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : OHook Dynamic Hook Injection (sppc.dll Virtualization)" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Bebas Antivirus, Tanpa Mengubah Dokumen Kerja)" -ForegroundColor Green

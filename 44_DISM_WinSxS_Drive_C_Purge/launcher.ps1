@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 44: DISM WINSXS DRIVE C DEEP PURGE
 # Engine  : Component Store ResetBase & Windows Update Cleanup

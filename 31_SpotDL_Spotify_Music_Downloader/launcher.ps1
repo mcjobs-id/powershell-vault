@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 31: SPOTDL — PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER
+# Modul 31: SPOTDL - PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER
 # Engine  : High-Bitrate Audio Stream Matching & Metadata Embedding
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // SPOTDL — PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // SPOTDL - PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : SPOTDL — PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : SPOTDL - PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : High-Bitrate Audio Stream Matching & Metadata Embedding" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,14 +102,14 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN SPOTDL — PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN SPOTDL - PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 
     $scriptDir = $PSScriptRoot
     if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
 
-    Write-Host "  -> Berhasil menginisialisasi modul SPOTDL — PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER." -ForegroundColor Green
+    Write-Host "  -> Berhasil menginisialisasi modul SPOTDL - PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER." -ForegroundColor Green
     Write-Host "  -> Seluruh dependensi dan panduan telah aktif." -ForegroundColor White
 
     Write-Host ""

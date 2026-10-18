@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 43: TCP LATENCY & GAMING PING OPTIMIZER
 # Engine  : TcpAckFrequency & TCPNoDelay Registry Optimization

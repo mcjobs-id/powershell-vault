@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 22: GOODBYEDPI — BYPASS BLOKIR & SENSOR INTERNET ISP
+# Modul 22: GOODBYEDPI - BYPASS BLOKIR & SENSOR INTERNET ISP
 # Engine  : TCP/IP Packet Fragmentation via WinDivert Driver Without VPN
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // GOODBYEDPI — BYPASS BLOKIR & SENSOR INTERNET ISP"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // GOODBYEDPI - BYPASS BLOKIR & SENSOR INTERNET ISP"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : GOODBYEDPI — BYPASS BLOKIR & SENSOR INTERNET ISP" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : GOODBYEDPI - BYPASS BLOKIR & SENSOR INTERNET ISP" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : TCP/IP Packet Fragmentation via WinDivert Driver Without VPN" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,14 +102,14 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN GOODBYEDPI — BYPASS BLOKIR & SENSOR INTERNET ISP..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN GOODBYEDPI - BYPASS BLOKIR & SENSOR INTERNET ISP..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 
     $scriptDir = $PSScriptRoot
     if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
 
-    Write-Host "  -> Berhasil menginisialisasi modul GOODBYEDPI — BYPASS BLOKIR & SENSOR INTERNET ISP." -ForegroundColor Green
+    Write-Host "  -> Berhasil menginisialisasi modul GOODBYEDPI - BYPASS BLOKIR & SENSOR INTERNET ISP." -ForegroundColor Green
     Write-Host "  -> Seluruh dependensi dan panduan telah aktif." -ForegroundColor White
 
     Write-Host ""

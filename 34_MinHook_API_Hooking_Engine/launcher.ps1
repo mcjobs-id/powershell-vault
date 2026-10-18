@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 34: MINHOOK — INLINE X86/X64 API HOOKING LIBRARY
+# Modul 34: MINHOOK - INLINE X86/X64 API HOOKING LIBRARY
 # Engine  : Minimalist Trampoline & Instruction Boundary Disassembler
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // MINHOOK — INLINE X86/X64 API HOOKING LIBRARY"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // MINHOOK - INLINE X86/X64 API HOOKING LIBRARY"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : MINHOOK — INLINE X86/X64 API HOOKING LIBRARY" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : MINHOOK - INLINE X86/X64 API HOOKING LIBRARY" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : Minimalist Trampoline & Instruction Boundary Disassembler" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,14 +102,14 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN MINHOOK — INLINE X86/X64 API HOOKING LIBRARY..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN MINHOOK - INLINE X86/X64 API HOOKING LIBRARY..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 
     $scriptDir = $PSScriptRoot
     if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
 
-    Write-Host "  -> Berhasil menginisialisasi modul MINHOOK — INLINE X86/X64 API HOOKING LIBRARY." -ForegroundColor Green
+    Write-Host "  -> Berhasil menginisialisasi modul MINHOOK - INLINE X86/X64 API HOOKING LIBRARY." -ForegroundColor Green
     Write-Host "  -> Seluruh dependensi dan panduan telah aktif." -ForegroundColor White
 
     Write-Host ""

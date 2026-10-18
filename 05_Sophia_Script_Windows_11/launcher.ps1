@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 05: SOPHIA SCRIPT — PRIVACY & TELEMETRY FINE-TUNING
+# Modul 05: SOPHIA SCRIPT - PRIVACY & TELEMETRY FINE-TUNING
 # Engine  : System Restore Point, DiagTrack Disable & Windows 11 Optimization
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // SOPHIA SCRIPT — PRIVACY & TELEMETRY FINE-TUNING"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // SOPHIA SCRIPT - PRIVACY & TELEMETRY FINE-TUNING"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : SOPHIA SCRIPT — PRIVACY & TELEMETRY FINE-TUNING" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : SOPHIA SCRIPT - PRIVACY & TELEMETRY FINE-TUNING" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : System Restore Point, DiagTrack Disable & Windows 11 Optimization" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,7 +102,7 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN SOPHIA SCRIPT — PRIVACY & TELEMETRY FINE-TUNING..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN SOPHIA SCRIPT - PRIVACY & TELEMETRY FINE-TUNING..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 

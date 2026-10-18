@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 08: CHOCOLATEY PACKAGE MANAGER — INSTALLER RESMI
+# Modul 08: CHOCOLATEY PACKAGE MANAGER - INSTALLER RESMI
 # Engine  : Machine-Level Windows Software Packaging Engine
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // CHOCOLATEY PACKAGE MANAGER — INSTALLER RESMI"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // CHOCOLATEY PACKAGE MANAGER - INSTALLER RESMI"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : CHOCOLATEY PACKAGE MANAGER — INSTALLER RESMI" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : CHOCOLATEY PACKAGE MANAGER - INSTALLER RESMI" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : Machine-Level Windows Software Packaging Engine" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,7 +102,7 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN CHOCOLATEY PACKAGE MANAGER — INSTALLER RESMI..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN CHOCOLATEY PACKAGE MANAGER - INSTALLER RESMI..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 

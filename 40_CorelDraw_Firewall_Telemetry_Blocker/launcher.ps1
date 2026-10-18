@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 40: CORELDRAW ANTI-BLOKIR AKUN & PEMULIH FITUR SIMPAN
 # Engine  : Corel License Validation Blocker & Outbound Firewall Isolation

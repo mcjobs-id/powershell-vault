@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 47: AUTODESK AUTOCAD GENUINE SERVICE BLOCKER
 # Engine  : AutoCAD Genuine Service Isolation & Host Blocking

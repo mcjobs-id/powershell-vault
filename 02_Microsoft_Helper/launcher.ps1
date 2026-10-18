@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 02: MICROSOFT HELPER — LISENSI DIGITAL WINDOWS (HWID)
+# Modul 02: MICROSOFT HELPER - LISENSI DIGITAL WINDOWS (HWID)
 # Engine  : Permanent Hardware ID Ticket Registration (ClipSVC)
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // MICROSOFT HELPER — LISENSI DIGITAL WINDOWS (HWID)"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // MICROSOFT HELPER - LISENSI DIGITAL WINDOWS (HWID)"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten sedang menyiapkan pemulihan lisensi otomatis tanpa risiko." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : MICROSOFT HELPER — LISENSI DIGITAL WINDOWS (HWID)" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : MICROSOFT HELPER - LISENSI DIGITAL WINDOWS (HWID)" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : Permanent Hardware ID Ticket Registration (ClipSVC)" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Bebas Antivirus, Tanpa Mengubah Dokumen Kerja)" -ForegroundColor Green

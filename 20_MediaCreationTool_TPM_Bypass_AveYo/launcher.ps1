@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 20: WINDOWS 11 TPM & HARDWARE BYPASS (AVEYO)
 # Engine  : WMI Event Consumer Bypass for Windows 11 Compatibility Check

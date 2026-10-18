@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 04: CHRIS TITUS WINUTIL — WINDOWS UTILITY SUITE
+# Modul 04: CHRIS TITUS WINUTIL - WINDOWS UTILITY SUITE
 # Engine  : WPF Runspaces, System Tweaks, Winget Installer & AppX Debloat
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // CHRIS TITUS WINUTIL — WINDOWS UTILITY SUITE"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // CHRIS TITUS WINUTIL - WINDOWS UTILITY SUITE"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : CHRIS TITUS WINUTIL — WINDOWS UTILITY SUITE" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : CHRIS TITUS WINUTIL - WINDOWS UTILITY SUITE" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : WPF Runspaces, System Tweaks, Winget Installer & AppX Debloat" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,7 +102,7 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN CHRIS TITUS WINUTIL — WINDOWS UTILITY SUITE..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN CHRIS TITUS WINUTIL - WINDOWS UTILITY SUITE..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 

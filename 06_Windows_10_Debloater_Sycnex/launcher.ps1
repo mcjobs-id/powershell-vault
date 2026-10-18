@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 06: WINDOWS 10 DEBLOATER — PEMBERSIH APPX & CORTANA
+# Modul 06: WINDOWS 10 DEBLOATER - PEMBERSIH APPX & CORTANA
 # Engine  : Safe AppX Package Removal & Privacy Telemetry Protection
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // WINDOWS 10 DEBLOATER — PEMBERSIH APPX & CORTANA"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // WINDOWS 10 DEBLOATER - PEMBERSIH APPX & CORTANA"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : WINDOWS 10 DEBLOATER — PEMBERSIH APPX & CORTANA" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : WINDOWS 10 DEBLOATER - PEMBERSIH APPX & CORTANA" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : Safe AppX Package Removal & Privacy Telemetry Protection" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,7 +102,7 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN WINDOWS 10 DEBLOATER — PEMBERSIH APPX & CORTANA..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN WINDOWS 10 DEBLOATER - PEMBERSIH APPX & CORTANA..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 

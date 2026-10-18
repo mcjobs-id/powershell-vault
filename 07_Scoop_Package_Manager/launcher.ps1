@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 07: SCOOP PACKAGE MANAGER — INSTALLER OTOMATIS
+# Modul 07: SCOOP PACKAGE MANAGER - INSTALLER OTOMATIS
 # Engine  : Portable Shims Architecture & User-Level Package Management
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // SCOOP PACKAGE MANAGER — INSTALLER OTOMATIS"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // SCOOP PACKAGE MANAGER - INSTALLER OTOMATIS"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : SCOOP PACKAGE MANAGER — INSTALLER OTOMATIS" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : SCOOP PACKAGE MANAGER - INSTALLER OTOMATIS" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : Portable Shims Architecture & User-Level Package Management" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,7 +102,7 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN SCOOP PACKAGE MANAGER — INSTALLER OTOMATIS..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN SCOOP PACKAGE MANAGER - INSTALLER OTOMATIS..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 

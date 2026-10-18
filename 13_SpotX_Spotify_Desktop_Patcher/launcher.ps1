@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 13: SPOTX — PEMBLOKIR IKLAN SPOTIFY DESKTOP
+# Modul 13: SPOTX - PEMBLOKIR IKLAN SPOTIFY DESKTOP
 # Engine  : In-Memory SPA Patching & Audio Banner Ad Blocking
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // SPOTX — PEMBLOKIR IKLAN SPOTIFY DESKTOP"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // SPOTX - PEMBLOKIR IKLAN SPOTIFY DESKTOP"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : SPOTX — PEMBLOKIR IKLAN SPOTIFY DESKTOP" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : SPOTX - PEMBLOKIR IKLAN SPOTIFY DESKTOP" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : In-Memory SPA Patching & Audio Banner Ad Blocking" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,7 +102,7 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN SPOTX — PEMBLOKIR IKLAN SPOTIFY DESKTOP..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN SPOTX - PEMBLOKIR IKLAN SPOTIFY DESKTOP..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 

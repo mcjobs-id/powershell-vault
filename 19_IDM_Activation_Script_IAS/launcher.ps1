@@ -1,6 +1,6 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 19: IDM ACTIVATION SCRIPT — PEMULIHAN LISENSI RESMI IDM
+# Modul 19: IDM ACTIVATION SCRIPT - PEMULIHAN LISENSI RESMI IDM
 # Engine  : CLSID Trial Lock & Registry Re-Arming Without Binary Crack
 # ==============================================================================
 try {
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // IDM ACTIVATION SCRIPT — PEMULIHAN LISENSI RESMI IDM"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // IDM ACTIVATION SCRIPT - PEMULIHAN LISENSI RESMI IDM"
 } catch {}
 
 $isAdmin = $false
@@ -34,7 +34,7 @@ function Show-Header {
     Write-Host "  FokusKonten menyiapkan otomatisasi sistem tanpa risiko data loss." -ForegroundColor Gray
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  RINGKASAN DIAGNOSTIK:" -ForegroundColor White
-    Write-Host "  * Layanan        : IDM ACTIVATION SCRIPT — PEMULIHAN LISENSI RESMI IDM" -ForegroundColor Cyan
+    Write-Host "  * Layanan        : IDM ACTIVATION SCRIPT - PEMULIHAN LISENSI RESMI IDM" -ForegroundColor Cyan
     Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
     Write-Host "  * Metode Inti    : CLSID Trial Lock & Registry Re-Arming Without Binary Crack" -ForegroundColor White
     Write-Host "  * Tingkat Risiko : 0% (Aman, Idempoten, dan Mudah Dikembalikan)" -ForegroundColor Green
@@ -102,7 +102,7 @@ function Invoke-MainAction {
     Check-ElevationPrompt
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Green
-    Write-Host "  SEDANG MENJALANKAN IDM ACTIVATION SCRIPT — PEMULIHAN LISENSI RESMI IDM..." -ForegroundColor Yellow
+    Write-Host "  SEDANG MENJALANKAN IDM ACTIVATION SCRIPT - PEMULIHAN LISENSI RESMI IDM..." -ForegroundColor Yellow
     Write-Host "  ================================================================" -ForegroundColor Green
     Write-Host ""
 

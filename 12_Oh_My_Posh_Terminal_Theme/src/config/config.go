@@ -1,0 +1,320 @@
+package config
+
+import (
+	"encoding/gob"
+	"slices"
+	"strings"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/cli/upgrade"
+	"github.com/jandedobbeleer/oh-my-posh/src/color"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/jandedobbeleer/oh-my-posh/src/maps"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime"
+	"github.com/jandedobbeleer/oh-my-posh/src/segments/options"
+	"github.com/jandedobbeleer/oh-my-posh/src/shell"
+	"github.com/jandedobbeleer/oh-my-posh/src/template"
+	"github.com/jandedobbeleer/oh-my-posh/src/terminal"
+)
+
+func init() {
+	gob.Register(&Config{})
+}
+
+// Mirrors segments.Source/Pwsh/Cli/FirstMatch: read locally instead of importing
+// segments, which drags its full transitive dep tree (HCL, go-cty, etc.) into
+// every binary that links this package, including the wasm render build.
+const (
+	sourceOption options.Option = "source"
+	pwshSource   string         = "pwsh"
+	cliSource    string         = "cli"
+	firstMatch   string         = "cli|pwsh"
+)
+
+const (
+	JSON string = "json"
+	YAML string = "yaml"
+	TOML string = "toml"
+
+	TML   string = "tml"
+	YML   string = "yml"
+	JSONC string = "jsonc"
+
+	AUTOUPGRADE   = "upgrade"
+	UPGRADENOTICE = "notice"
+	RELOAD        = "reload"
+
+	Version = 4
+)
+
+type Action string
+
+func (a Action) IsDefault() bool {
+	return a != Prepend && a != Extend
+}
+
+const (
+	Prepend Action = "prepend"
+	Extend  Action = "extend"
+)
+
+type Config struct {
+	Palette                 color.Palette      `json:"palette,omitempty" toml:"palette,omitempty" yaml:"palette,omitempty"`
+	DebugPrompt             *Segment           `json:"debug_prompt,omitempty" toml:"debug_prompt,omitempty" yaml:"debug_prompt,omitempty"`
+	Var                     map[string]any     `json:"var,omitempty" toml:"var,omitempty" yaml:"var,omitempty"`
+	Palettes                *color.Palettes    `json:"palettes,omitempty" toml:"palettes,omitempty" yaml:"palettes,omitempty"`
+	ValidLine               *Segment           `json:"valid_line,omitempty" toml:"valid_line,omitempty" yaml:"valid_line,omitempty"`
+	SecondaryPrompt         *Segment           `json:"secondary_prompt,omitempty" toml:"secondary_prompt,omitempty" yaml:"secondary_prompt,omitempty"`
+	TransientPrompt         *Segment           `json:"transient_prompt,omitempty" toml:"transient_prompt,omitempty" yaml:"transient_prompt,omitempty"`
+	ErrorLine               *Segment           `json:"error_line,omitempty" toml:"error_line,omitempty" yaml:"error_line,omitempty"`
+	Maps                    *maps.Config       `json:"maps,omitempty" toml:"maps,omitempty" yaml:"maps,omitempty"`
+	Upgrade                 *upgrade.Config    `json:"upgrade,omitempty" toml:"upgrade,omitempty" yaml:"upgrade,omitempty"`
+	TerminalFeatures        *terminal.Features `json:"terminal_features,omitempty" toml:"terminal_features,omitempty" yaml:"terminal_features,omitempty"`
+	presentFields           map[string]bool
+	Extends                 string                 `json:"extends,omitempty" toml:"extends,omitempty" yaml:"extends,omitempty"`
+	PWD                     string                 `json:"pwd,omitempty" toml:"pwd,omitempty" yaml:"pwd,omitempty"`
+	Source                  string                 `json:"-" toml:"-" yaml:"-"`
+	Format                  string                 `json:"-" toml:"-" yaml:"-"`
+	TerminalBackground      color.Ansi             `json:"terminal_background,omitempty" toml:"terminal_background,omitempty" yaml:"terminal_background,omitempty"`
+	ToolTipsAction          Action                 `json:"tooltips_action,omitempty" toml:"tooltips_action,omitempty" yaml:"tooltips_action,omitempty"`
+	ConsoleTitleTemplate    string                 `json:"console_title_template,omitempty" toml:"console_title_template,omitempty" yaml:"console_title_template,omitempty"`
+	CursorStyle             string                 `json:"cursor_style,omitempty" toml:"cursor_style,omitempty" yaml:"cursor_style,omitempty"`
+	AccentColor             color.Ansi             `json:"accent_color,omitempty" toml:"accent_color,omitempty" yaml:"accent_color,omitempty"`
+	Blocks                  []*Block               `json:"blocks,omitempty" toml:"blocks,omitempty" yaml:"blocks,omitempty"`
+	ITermFeatures           terminal.ITermFeatures `json:"iterm_features,omitempty" toml:"iterm_features,omitempty" yaml:"iterm_features,omitempty"`
+	Tooltips                []*Segment             `json:"tooltips,omitempty" toml:"tooltips,omitempty" yaml:"tooltips,omitempty"`
+	Cycle                   color.Cycle            `json:"cycle,omitempty" toml:"cycle,omitempty" yaml:"cycle,omitempty"`
+	hash                    uint64
+	Version                 int  `json:"version" toml:"version" yaml:"version"`
+	Streaming               int  `json:"streaming,omitempty" toml:"streaming,omitempty" yaml:"streaming,omitempty"`
+	Async                   bool `json:"async,omitempty" toml:"async,omitempty" yaml:"async,omitempty"`
+	ShellIntegration        bool `json:"shell_integration,omitempty" toml:"shell_integration,omitempty" yaml:"shell_integration,omitempty"`
+	FinalSpace              bool `json:"final_space,omitempty" toml:"final_space,omitempty" yaml:"final_space,omitempty"`
+	UpgradeNotice           bool `json:"-" toml:"-" yaml:"-"`
+	extended                bool
+	PatchPwshBleed          bool `json:"patch_pwsh_bleed,omitempty" toml:"patch_pwsh_bleed,omitempty" yaml:"patch_pwsh_bleed,omitempty"`
+	AutoUpgrade             bool `json:"-" toml:"-" yaml:"-"`
+	EnableCursorPositioning bool `json:"enable_cursor_positioning,omitempty" toml:"enable_cursor_positioning,omitempty" yaml:"enable_cursor_positioning,omitempty"`
+	MigrateGlyphs           bool `json:"-" toml:"-" yaml:"-"`
+	// FieldSetsVersion records which analyzer generation stamped this
+	// config's segments with their template field sets (see
+	// fieldSetAnalysisVersion); zero means unstamped. Exported, and kept out
+	// of every config format, so the session cache's gob round trip carries
+	// the marker and restored configs skip re-analysis exactly when their
+	// stamps are current.
+	FieldSetsVersion int `json:"-" toml:"-" yaml:"-"`
+}
+
+func (cfg *Config) MakeColors(env runtime.Environment) color.String {
+	cacheDisabled := env.Getenv("OMP_CACHE_DISABLED") == "1"
+	return color.MakeColors(cfg.getPalette(), !cacheDisabled, cfg.AccentColor, env)
+}
+
+func (cfg *Config) getPalette() color.Palette {
+	if cfg.Palettes == nil {
+		return cfg.Palette
+	}
+
+	key, err := template.RenderTrusted(cfg.Palettes.Template, nil)
+	if err != nil {
+		return cfg.Palette
+	}
+
+	palette, ok := cfg.Palettes.List[key]
+	if !ok {
+		return cfg.Palette
+	}
+
+	for key, color := range cfg.Palette {
+		if _, ok := palette[key]; ok {
+			continue
+		}
+
+		palette[key] = color
+	}
+
+	return palette
+}
+
+// streamingEnabled reports whether streaming should be enabled: it's configured.
+func (cfg *Config) streamingEnabled(_ runtime.Environment) bool {
+	return cfg.Streaming > 0
+}
+
+func (cfg *Config) Features(env runtime.Environment) shell.Features {
+	var feats shell.Features
+
+	asyncShells := []string{shell.BASH, shell.ZSH, shell.FISH, shell.PWSH}
+
+	if cfg.Async && slices.Contains(asyncShells, env.Shell()) {
+		log.Debug("async enabled")
+		feats |= shell.Async
+	}
+
+	if cfg.TransientPrompt != nil {
+		log.Debug("transient prompt enabled")
+		feats |= shell.Transient
+
+		if env.Shell() == shell.FISH && len(cfg.TransientPrompt.RightTemplate) != 0 {
+			log.Debug("transient right prompt enabled")
+			feats |= shell.TransientRPrompt
+		}
+	}
+
+	if cfg.streamingEnabled(env) {
+		log.Debug("streaming enabled")
+		feats |= shell.Streaming
+	}
+
+	if feats&(shell.Streaming|shell.Transient) != 0 {
+		feats |= shell.KeyHandlers
+	}
+
+	unsupportedShells := []string{shell.ELVISH, shell.XONSH}
+	if slices.Contains(unsupportedShells, env.Shell()) {
+		cfg.ShellIntegration = false
+	}
+
+	if cfg.ShellIntegration {
+		log.Debug("shell integration enabled")
+		feats |= shell.FTCSMarks
+		// PowerShell emits FTCS_COMMAND_EXECUTED (OSC 133;C) inside the Enter key handler,
+		// so KeyHandlers must be enabled whenever shell integration is active.
+		if env.Shell() == shell.PWSH {
+			feats |= shell.KeyHandlers
+		}
+	}
+
+	// do not enable upgrade features when async is enabled
+	if feats&shell.Async == 0 {
+		feats |= cfg.upgradeFeatures()
+	}
+
+	if cfg.ErrorLine != nil || cfg.ValidLine != nil {
+		log.Debug("error or valid line enabled")
+		feats |= shell.LineError
+	}
+
+	if len(cfg.Tooltips) > 0 {
+		log.Debug("tooltips enabled")
+		feats |= shell.Tooltips
+	}
+
+	if env.Shell() == shell.FISH && cfg.ITermFeatures != nil && cfg.ITermFeatures.Contains(terminal.PromptMark) {
+		log.Debug("prompt mark enabled")
+		feats |= shell.PromptMark
+	}
+
+	for i, block := range cfg.Blocks {
+		if (i == 0 && block.Newline) && cfg.EnableCursorPositioning {
+			log.Debug("cursor positioning enabled")
+			feats |= shell.CursorPositioning
+		}
+
+		if block.Type == RPrompt {
+			log.Debug("rprompt enabled")
+			feats |= shell.RPrompt
+		}
+
+		for _, segment := range block.Segments {
+			if segment.Type == AZ {
+				source := segment.Options.String(sourceOption, firstMatch)
+				if strings.Contains(source, pwshSource) {
+					log.Debug("azure enabled")
+					feats |= shell.Azure
+				}
+			}
+
+			if segment.Type == GIT {
+				source := segment.Options.String(sourceOption, cliSource)
+				if source == pwshSource {
+					log.Debug("posh-git enabled")
+					feats |= shell.PoshGit
+				}
+			}
+
+			if segment.Type == VIMODE && slices.Contains([]string{shell.ZSH, shell.PWSH, shell.FISH}, env.Shell()) {
+				log.Debug("vi mode tracking enabled")
+				feats |= shell.VIMode
+			}
+		}
+	}
+
+	return feats
+}
+
+func (cfg *Config) upgradeFeatures() shell.Features {
+	var feats shell.Features
+
+	autoUpgrade := cfg.Upgrade.Auto
+	if val, OK := cache.Device.Get[bool](AUTOUPGRADE); OK {
+		log.Debug("auto upgrade key found, overriding config")
+		autoUpgrade = val
+	}
+
+	upgradeNotice := cfg.Upgrade.DisplayNotice
+	if val, OK := cache.Device.Get[bool](UPGRADENOTICE); OK {
+		log.Debug("upgrade notice key found, overriding config")
+		upgradeNotice = val
+	}
+
+	if upgradeNotice && !autoUpgrade {
+		log.Debug("notice enabled, no auto upgrade")
+		feats |= shell.Notice
+	}
+
+	if autoUpgrade {
+		log.Debug("auto upgrade enabled")
+		feats |= shell.Upgrade
+	}
+
+	return feats
+}
+
+func (cfg *Config) Hash() uint64 {
+	return cfg.hash
+}
+
+// A nil presentFields map means presence was never recorded (e.g. a struct
+// literal built without read()), in which case every field is treated as
+// present, preserving merge's legacy unconditional-overwrite behavior for
+// such configs. name is the json tag key.
+func (cfg *Config) fieldPresent(name string) bool {
+	if cfg.presentFields == nil {
+		return true
+	}
+
+	return cfg.presentFields[name]
+}
+
+// Needed for TOML configs since go-toml/v2 doesn't support custom unmarshalers.
+func (cfg *Config) migrateSegmentProperties() {
+	for _, block := range cfg.Blocks {
+		for _, segment := range block.Segments {
+			segment.MigratePropertiesToOptions()
+		}
+	}
+}
+
+func (cfg *Config) toggleSegments() {
+	currentToggleSet, _ := cache.Session.Get[map[string]bool](cache.TOGGLECACHE)
+	if currentToggleSet == nil {
+		currentToggleSet = make(map[string]bool)
+	}
+
+	for _, block := range cfg.Blocks {
+		for _, segment := range block.Segments {
+			if segment.Toggled {
+				segmentName := segment.Alias
+				if segmentName == "" {
+					segmentName = string(segment.Type)
+				}
+
+				currentToggleSet[segmentName] = true
+			}
+		}
+	}
+
+	// Update cache with the map directly
+	cache.Session.Set(cache.TOGGLECACHE, currentToggleSet, cache.INFINITE)
+}

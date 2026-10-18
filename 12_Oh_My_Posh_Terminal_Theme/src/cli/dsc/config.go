@@ -1,0 +1,143 @@
+package dsc
+
+import (
+	_ "embed"
+	"encoding/gob"
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/config"
+	basedsc "github.com/jandedobbeleer/oh-my-posh/src/dsc"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/path"
+)
+
+func init() {
+	gob.Register([]*Configuration{})
+
+	config.NewDSCTracker = func() config.DSCTracker {
+		return ConfigDSC()
+	}
+}
+
+type ConfigResource struct {
+	basedsc.Resource[*Configuration]
+}
+
+//go:embed configuration.schema.json
+var configurationSchema string
+
+func ConfigDSC() *ConfigResource {
+	return &ConfigResource{
+		SchemaJSON: configurationSchema,
+	}
+}
+
+type Configuration struct {
+	Format string `json:"format,omitempty" jsonschema:"title=Format,description=The format of the configuration file,enum=json,enum=jsonc,enum=yaml,enum=yml,enum=toml,enum=tml"`
+	Source string `json:"source,omitempty" jsonschema:"title=Source,description=The source of the configuration file"`
+	config.Config
+	resolved bool `json:"-"`
+}
+
+func (s *ConfigResource) Add(configPath string) {
+	if configPath == "" || strings.HasPrefix(configPath, "http") {
+		log.Debug("local configuration not provided or remote configuration, skipping")
+		return
+	}
+
+	// replace $HOME with tilde as we can't guarantee the home path
+	configPath = filepath.Clean(configPath)
+	configPath = strings.ReplaceAll(configPath, path.Home(), "~")
+
+	s.Resource.Add(&Configuration{
+		Source: configPath,
+	})
+}
+
+func (s *ConfigResource) ToJSON() string {
+	output := s.Resource.ToJSON()
+	return config.EscapeGlyphs(output, false)
+}
+
+func (c *Configuration) Apply() error {
+	if c == nil {
+		return nil
+	}
+
+	formats := map[string][]string{
+		config.JSON: {".json", ".jsonc"},
+		config.YAML: {".yaml", ".yml"},
+		config.TOML: {".toml", ".tml"},
+	}
+
+	if !slices.Contains(formats[c.Format], filepath.Ext(c.Source)) {
+		return fmt.Errorf("source file %s does not match format %s", c.Source, c.Format)
+	}
+
+	log.Debug("Applying configuration %s", c.Source)
+
+	// Expand tilde to home directory for file operations
+	filePath := strings.ReplaceAll(c.Source, "~", path.Home())
+
+	// Create directory if it doesn't exist
+	dir := filepath.Dir(filePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", dir, err)
+	}
+
+	data := c.Export(c.Format)
+
+	// Write file
+	if err := os.WriteFile(filePath, []byte(data), 0644); err != nil {
+		return fmt.Errorf("failed to write configuration file %s: %w", filePath, err)
+	}
+
+	log.Debug("Configuration written to %s", filePath)
+	return nil
+}
+
+func (c *Configuration) Equal(other *Configuration) bool {
+	if other == nil {
+		return false
+	}
+
+	return c.Source == other.Source
+}
+
+func (c *Configuration) Resolve() (*Configuration, bool) {
+	log.Debug("Resolving configuration %s", c.Source)
+
+	if c.resolved {
+		log.Debug("Configuration already resolved")
+		return c, true
+	}
+
+	c.resolved = true
+
+	// we use pwsh as that will never omit any feature
+	data := config.Load(c.Source)
+	if data == nil {
+		log.Debug("No configuration data found")
+		return nil, false
+	}
+
+	c.Config = *data
+	c.Format = data.Format
+
+	// Skip if no extends, http URL
+	if data.Extends == "" || strings.HasPrefix(data.Extends, "http") {
+		log.Debug("No extends found or remote configuration")
+		return c, false
+	}
+
+	// Resolve the extends configuration
+	parent := &Configuration{
+		Source: data.Extends,
+	}
+
+	return parent, true
+}

@@ -1,0 +1,311 @@
+// Copyright © 2017 - 2025 Chocolatey Software, Inc
+// Copyright © 2011 - 2017 RealDimensions Software, LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Security.Principal;
+using chocolatey.infrastructure.adapters;
+using chocolatey.infrastructure.filesystem;
+using Environment = System.Environment;
+using chocolatey.infrastructure.platforms;
+using chocolatey.infrastructure.information;
+using static chocolatey.StringResources;
+
+namespace chocolatey.infrastructure.app
+{
+    /// <summary>
+    ///   Application constants and settings for the application
+    /// </summary>
+    public static class ApplicationParameters
+    {
+        private static readonly IFileSystem _fileSystem = new DotNetFileSystem();
+        [Obsolete("Use StringResources.EnvironmentVariables.System.ChocolateyInstall instead", error: false)]
+        public static readonly string ChocolateyInstallEnvironmentVariableName = EnvironmentVariables.System.ChocolateyInstall;
+        public static readonly string Name = "Chocolatey";
+
+#if FORCE_CHOCOLATEY_OFFICIAL_KEY
+        // always look at the official location of the machine installation
+        public static readonly string InstallLocation = System.Environment.GetEnvironmentVariable(EnvironmentVariables.System.ChocolateyInstall) ?? _fileSystem.GetDirectoryName(_fileSystem.GetCurrentAssemblyPath());
+        public static readonly string LicensedAssemblyLocation = _fileSystem.CombinePaths(InstallLocation, "extensions", "chocolatey", "chocolatey.licensed.dll");
+#elif DEBUG
+        // Install location is choco.exe or chocolatey.dll
+        public static readonly string InstallLocation = _fileSystem.GetDirectoryName(_fileSystem.GetCurrentAssemblyPath());
+        // when being used as a reference, start by looking next to Chocolatey, then in a subfolder.
+        public static readonly string LicensedAssemblyLocation = _fileSystem.FileExists(_fileSystem.CombinePaths(InstallLocation, "chocolatey.licensed.dll")) ? _fileSystem.CombinePaths(InstallLocation, "chocolatey.licensed.dll") : _fileSystem.CombinePaths(InstallLocation, "extensions", "chocolatey", "chocolatey.licensed.dll");
+#else
+        // Install locations is Chocolatey.dll or choco.exe - In Release mode
+        // we might be testing on a server or in the local debugger. Either way,
+        // start from the assembly location and if unfound, head to the machine
+        // locations instead. This is a merge of official and Debug modes.
+        private static IAssembly _assemblyForLocation = Assembly.GetEntryAssembly().UnderlyingType != null ? Assembly.GetEntryAssembly() : Assembly.GetExecutingAssembly();
+        public static readonly string InstallLocation = _fileSystem.FileExists(_fileSystem.CombinePaths(_fileSystem.GetDirectoryName(_assemblyForLocation.CodeBase.Replace(Platform.GetPlatform() == PlatformType.Windows ? "file:///" : "file://", string.Empty)), "chocolatey.dll")) ||
+                                                        _fileSystem.FileExists(_fileSystem.CombinePaths(_fileSystem.GetDirectoryName(_assemblyForLocation.CodeBase.Replace(Platform.GetPlatform() == PlatformType.Windows ? "file:///" : "file://", string.Empty)), "choco.exe")) ?
+                _fileSystem.GetDirectoryName(_assemblyForLocation.CodeBase.Replace(Platform.GetPlatform() == PlatformType.Windows ? "file:///" : "file://", string.Empty)) :
+                !string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable(EnvironmentVariables.System.ChocolateyInstall)) ?
+                    System.Environment.GetEnvironmentVariable(EnvironmentVariables.System.ChocolateyInstall) :
+                    @"C:\ProgramData\Chocolatey"
+            ;
+
+        // when being used as a reference, start by looking next to Chocolatey, then in a subfolder.
+        public static readonly string LicensedAssemblyLocation = _fileSystem.FileExists(_fileSystem.CombinePaths(InstallLocation, "chocolatey.licensed.dll")) ? _fileSystem.CombinePaths(InstallLocation, "chocolatey.licensed.dll") : _fileSystem.CombinePaths(InstallLocation, "extensions", "chocolatey", "chocolatey.licensed.dll");
+#endif
+
+        internal static readonly string ChocolateyPowerShellAssemblySimpleName = "Chocolatey.PowerShell";
+        internal static readonly string ChocolateyPowerShellAssemblyLocation = _fileSystem.FileExists(_fileSystem.CombinePaths(InstallLocation, "Chocolatey.PowerShell.dll"))
+            ? _fileSystem.CombinePaths(InstallLocation, "Chocolatey.PowerShell.dll")
+            : _fileSystem.CombinePaths(InstallLocation, "helpers", "Chocolatey.PowerShell.dll");
+
+        public static readonly string CommonAppDataChocolatey = _fileSystem.CombinePaths(System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonApplicationData), Name);
+        public static readonly string LoggingLocation = _fileSystem.CombinePaths(InstallLocation, "logs");
+        public static readonly string LoggingFile = @"chocolatey.log";
+        public static readonly string LoggingSummaryFile = @"choco.summary.log";
+        public static readonly string Log4NetConfigurationAssembly = @"chocolatey";
+        public static string Log4NetConfigurationResource = @"chocolatey.infrastructure.logging.log4net.config.xml";
+        public static readonly string ChocolateyFileResources = "chocolatey.resources";
+        public static readonly string ChocolateyConfigFileResource = @"chocolatey.infrastructure.app.configuration.chocolatey.config";
+        public static readonly string GlobalConfigFileLocation = _fileSystem.CombinePaths(InstallLocation, "config", "chocolatey.config");
+        public static readonly string LicenseFileLocation = _fileSystem.CombinePaths(InstallLocation, "license", "chocolatey.license.xml");
+        public static readonly string UserProfilePath = !string.IsNullOrWhiteSpace(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile, System.Environment.SpecialFolderOption.DoNotVerify)) ?
+              System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile, System.Environment.SpecialFolderOption.DoNotVerify)
+            : CommonAppDataChocolatey;
+        public static readonly string HttpCacheUserLocation = _fileSystem.CombinePaths(UserProfilePath, ".chocolatey", "http-cache");
+        // CommonAppDataChocolatey is always set to ProgramData\Chocolatey.
+        // So we append HttpCache to that name if it is possible.
+        public static readonly string HttpCacheSystemLocation = CommonAppDataChocolatey + "HttpCache";
+        public static readonly string HttpCacheLocation = GetHttpCacheLocation();
+
+        public static readonly string UserLicenseFileLocation = _fileSystem.CombinePaths(UserProfilePath, "chocolatey.license.xml");
+        public static readonly string LicensedChocolateyAssemblySimpleName = "chocolatey.licensed";
+        public static readonly string LicensedComponentRegistry = @"chocolatey.licensed.infrastructure.app.registration.ContainerBinding";
+        public static readonly string LicensedConfigurationBuilder = @"chocolatey.licensed.infrastructure.app.builders.ConfigurationBuilder";
+        public static readonly string LicensedEnvironmentSettings = @"chocolatey.licensed.infrastructure.app.configuration.EnvironmentSettings";
+        public static readonly string PackageNamesSeparator = ";";
+        public static readonly string UnofficialChocolateyPublicKey = "fd112f53c3ab578c";
+        public static readonly string OfficialChocolateyPublicKey = "79d02ea9cad655eb";
+
+        public static string PackagesLocation = _fileSystem.CombinePaths(InstallLocation, "lib");
+        public static readonly string PackageFailuresLocation = _fileSystem.CombinePaths(InstallLocation, "lib-bad");
+        public static readonly string PackageBackupLocation = _fileSystem.CombinePaths(InstallLocation, "lib-bkp");
+        public static readonly string ShimsLocation = _fileSystem.CombinePaths(InstallLocation, "bin");
+        public static readonly string ChocolateyPackageInfoStoreLocation = _fileSystem.CombinePaths(InstallLocation, ".chocolatey");
+        public static readonly string ExtensionsLocation = _fileSystem.CombinePaths(InstallLocation, "extensions");
+        public static readonly string TemplatesLocation = _fileSystem.CombinePaths(InstallLocation, "templates");
+        public static readonly string HooksLocation = _fileSystem.CombinePaths(InstallLocation, "hooks");
+        public static readonly string HookPackageIdExtension = ".hook";
+        public static readonly string ChocolateyCommunityFeedPushSourceOld = "https://chocolatey.org/";
+        public static readonly string ChocolateyCommunityFeedPushSource = "https://push.chocolatey.org/";
+        public static readonly string ChocolateyCommunityGalleryUrl = "https://community.chocolatey.org/";
+        public static readonly string ChocolateyCommunityFeedSource = "https://community.chocolatey.org/api/v2/";
+        public static readonly string NuGetPublicFeedSourceV2 = "https://www.nuget.org/api/v2/";
+        public static readonly string NuGetPublicFeedSourceV3 = "https://api.nuget.org/v3/index.json";
+        public static readonly string ChocolateyLicensedFeedSource = "https://licensedpackages.chocolatey.org/api/v2/";
+        public static readonly string ChocolateyLicensedFeedSourceName = "chocolatey.licensed";
+        public static readonly string UserAgent = "Chocolatey Command Line";
+        public static readonly string RegistryValueInstallLocation = "InstallLocation";
+        public static readonly string AllPackages = "all";
+        public static readonly string PowerShellModulePathProcessProgramFiles = _fileSystem.CombinePaths(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles), "WindowsPowerShell\\Modules");
+        public static readonly string PowerShellModulePathProcessDocuments = _fileSystem.CombinePaths(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), "WindowsPowerShell\\Modules");
+        public static readonly string LocalSystemSidString = "S-1-5-18";
+        public static readonly SecurityIdentifier LocalSystemSid = new SecurityIdentifier(LocalSystemSidString);
+        public static readonly List<string> PublicNuGetSources = new List<string>()
+        {
+            ChocolateyCommunityFeedSource,
+            ChocolateyCommunityFeedPushSource,
+            ChocolateyCommunityFeedPushSourceOld,
+            NuGetPublicFeedSourceV2,
+            NuGetPublicFeedSourceV3,
+            ChocolateyLicensedFeedSource,
+        };
+
+        private static string GetHttpCacheLocation()
+        {
+            if (ProcessInformation.IsElevated() || string.IsNullOrEmpty(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile, System.Environment.SpecialFolderOption.DoNotVerify)))
+            {
+                return HttpCacheSystemLocation;
+            }
+            else
+            {
+                return HttpCacheUserLocation;
+            }
+        }
+
+        public static class Environment
+        {
+            public static readonly string SystemUserName = "SYSTEM";
+            public const string Arm64ProcessorArchitecture = "ARM64";
+            public static readonly string EnvironmentSeparator = ";";
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.System.Path instead", error: false)]
+            public static readonly string Path = EnvironmentVariables.System.Path;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.System.PathExtensions instead", error: false)]
+            public static readonly string PathExtensions = EnvironmentVariables.System.PathExtensions;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.System.PSModulePath instead", error: false)]
+            public static readonly string PsModulePath = EnvironmentVariables.System.PSModulePath;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.System.Temp instead", error: false)]
+            public static readonly string Temp = EnvironmentVariables.System.Temp;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.System.Username instead", error: false)]
+            public static readonly string Username = EnvironmentVariables.System.Username;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.System.ProcessorArchitecture instead", error: false)]
+            public static readonly string ProcessorArchitecture = EnvironmentVariables.System.ProcessorArchitecture;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.System.ChocolateyToolsLocation instead", error: false)]
+            public static readonly string ChocolateyToolsLocation = EnvironmentVariables.System.ChocolateyToolsLocation;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.Package.ChocolateyPackageInstallLocation instead", error: false)]
+            public static readonly string ChocolateyPackageInstallLocation = EnvironmentVariables.Package.ChocolateyPackageInstallLocation;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.Package.ChocolateyInstallerType instead", error: false)]
+            public static readonly string ChocolateyPackageInstallerType = EnvironmentVariables.Package.ChocolateyInstallerType;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.Package.ChocolateyExitCode instead", error: false)]
+            public static readonly string ChocolateyPackageExitCode = EnvironmentVariables.Package.ChocolateyExitCode;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.Package.ChocolateyIgnoreChecksums instead", error: false)]
+            public static readonly string ChocolateyIgnoreChecksums = EnvironmentVariables.Package.ChocolateyIgnoreChecksums;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.Package.ChocolateyAllowEmptyChecksums instead", error: false)]
+            public static readonly string ChocolateyAllowEmptyChecksums = EnvironmentVariables.Package.ChocolateyAllowEmptyChecksums;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.Package.ChocolateyAllowEmptyChecksumsSecure instead", error: false)]
+            public static readonly string ChocolateyAllowEmptyChecksumsSecure = EnvironmentVariables.Package.ChocolateyAllowEmptyChecksumsSecure;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.Package.ChocolateyPowerShellHost instead", error: false)]
+            public static readonly string ChocolateyPowerShellHost = EnvironmentVariables.Package.ChocolateyPowerShellHost;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.Package.ChocolateyForce instead", error: false)]
+            public static readonly string ChocolateyForce = EnvironmentVariables.Package.ChocolateyForce;
+
+            [Obsolete("Use alternative variable in StringResources.EnvironmentVariables.Package.ChocolateyExitOnRebootDetected instead", error: false)]
+            public static readonly string ChocolateyExitOnRebootDetected = EnvironmentVariables.Package.ChocolateyExitOnRebootDetected;
+        }
+
+        /// <summary>
+        ///   Default is 45 minutes
+        /// </summary>
+        public static int DefaultWaitForExitInSeconds = 2700;
+        public static int DefaultWebRequestTimeoutInSeconds = 30;
+        public static readonly string[] ConfigFileExtensions = new string[] { ".autoconf", ".config", ".conf", ".cfg", ".jsc", ".json", ".jsonp", ".ini", ".xml", ".yaml" };
+        public static readonly string ConfigFileTransformExtension = ".install.xdt";
+        public static readonly string[] ShimDirectorFileExtensions = new string[] { ".gui", ".ignore" };
+
+        public static readonly string HashProviderFileLocked = "UnableToDetectChanges_FileLocked";
+
+        /// <summary>
+        /// This is a readonly bool set to true. It is only shifted for specs.
+        /// </summary>
+        public static readonly bool LockTransactionalInstallFiles = true;
+        public static readonly string PackagePendingFileName = ".chocolateyPending";
+
+        /// <summary>
+        /// This is a readonly bool set to true. It is only shifted for specs.
+        /// </summary>
+        public static readonly bool AllowPrompts = true;
+
+        public static class ExitCodes
+        {
+            public static readonly int ErrorFailNoActionReboot = 350;
+            public static readonly int ErrorInstallSuspend = 1604;
+        }
+
+        public static class Tools
+        {
+            public static readonly string ShimGenExe = _fileSystem.CombinePaths(InstallLocation, "tools", "shimgen.exe");
+        }
+
+        public static class ConfigSettings
+        {
+            public static readonly string CacheLocation = "cacheLocation";
+            public static readonly string CommandExecutionTimeoutSeconds = "commandExecutionTimeoutSeconds";
+            public static readonly string Proxy = "proxy";
+            public static readonly string ProxyUser = "proxyUser";
+            public static readonly string ProxyPassword = "proxyPassword";
+            public static readonly string ProxyBypassList = "proxyBypassList";
+            public static readonly string ProxyBypassOnLocal = "proxyBypassOnLocal";
+            public static readonly string WebRequestTimeoutSeconds = "webRequestTimeoutSeconds";
+            public static readonly string UpgradeAllExceptions = "upgradeAllExceptions";
+            public static readonly string DefaultTemplateName = "defaultTemplateName";
+            public static readonly string DefaultPushSource = "defaultPushSource";
+        }
+
+        public static class Features
+        {
+            public static readonly string ChecksumFiles = "checksumFiles";
+            public static readonly string AllowEmptyChecksums = "allowEmptyChecksums";
+            public static readonly string AllowEmptyChecksumsSecure = "allowEmptyChecksumsSecure";
+            public static readonly string AutoUninstaller = "autoUninstaller";
+            public static readonly string FailOnAutoUninstaller = "failOnAutoUninstaller";
+            public static readonly string AllowGlobalConfirmation = "allowGlobalConfirmation";
+            public static readonly string FailOnStandardError = "failOnStandardError";
+            public static readonly string UsePowerShellHost = "powershellHost";
+            public static readonly string LogEnvironmentValues = "logEnvironmentValues";
+            public static readonly string VirusCheck = "virusCheck";
+            public static readonly string FailOnInvalidOrMissingLicense = "failOnInvalidOrMissingLicense";
+            public static readonly string IgnoreInvalidOptionsSwitches = "ignoreInvalidOptionsSwitches";
+            public static readonly string UsePackageExitCodes = "usePackageExitCodes";
+            public static readonly string UseEnhancedExitCodes = "useEnhancedExitCodes";
+            public static readonly string UseFipsCompliantChecksums = "useFipsCompliantChecksums";
+            public static readonly string ShowNonElevatedWarnings = "showNonElevatedWarnings";
+            public static readonly string ShowDownloadProgress = "showDownloadProgress";
+            public static readonly string StopOnFirstPackageFailure = "stopOnFirstPackageFailure";
+            public static readonly string UseRememberedArgumentsForUpgrades = "useRememberedArgumentsForUpgrades";
+            public static readonly string IgnoreUnfoundPackagesOnUpgradeOutdated = "ignoreUnfoundPackagesOnUpgradeOutdated";
+            public static readonly string SkipPackageUpgradesWhenNotInstalled = "skipPackageUpgradesWhenNotInstalled";
+            public static readonly string RemovePackageInformationOnUninstall = "removePackageInformationOnUninstall";
+            public static readonly string LogWithoutColor = "logWithoutColor";
+            public static readonly string ExitOnRebootDetected = "exitOnRebootDetected";
+            public static readonly string LogValidationResultsOnWarnings = "logValidationResultsOnWarnings";
+            public static readonly string UsePackageRepositoryOptimizations = "usePackageRepositoryOptimizations";
+            public static readonly string DisableCompatibilityChecks = "disableCompatibilityChecks";
+            public static readonly string UsePackageHashValidation = "usePackageHashValidation";
+            public static readonly string AlwaysIncludeHeaders = "alwaysIncludeHeaders";
+            public static readonly string UseHttpCache = "useHttpCache";
+        }
+
+        public static class Messages
+        {
+            public static readonly string ContinueChocolateyAction = "Moving forward with chocolatey actions.";
+            public static readonly string NugetEventActionHeader = "Nuget called an event";
+        }
+
+        public static bool IsDebugModeCliPrimitive()
+        {
+            var args = System.Environment.GetCommandLineArgs();
+            var isDebug = false;
+            // no access to the good stuff here, need to go a bit primitive in parsing args
+            foreach (var arg in args.OrEmpty())
+            {
+                if (arg.ContainsSafe("-debug") || arg.IsEqualTo("-d") || arg.IsEqualTo("/d"))
+                {
+                    isDebug = true;
+                    break;
+                }
+            }
+
+            return isDebug;
+        }
+
+#pragma warning disable IDE0022, IDE1006
+        [Obsolete("This overload is deprecated and will be removed in v3.")]
+        public static bool is_debug_mode_cli_primitive()
+            => IsDebugModeCliPrimitive();
+#pragma warning restore IDE0022, IDE1006
+    }
+}

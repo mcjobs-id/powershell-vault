@@ -1,0 +1,583 @@
+package config
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"hash/fnv"
+	"io"
+	"os"
+	"path/filepath"
+	runtimelib "runtime"
+	"strings"
+	"time"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/build"
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/cli/upgrade"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/http"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/path"
+	"github.com/jandedobbeleer/oh-my-posh/src/text"
+
+	toml "github.com/pelletier/go-toml/v2"
+	yaml "go.yaml.in/yaml/v3"
+)
+
+type Error struct {
+	message string
+}
+
+func (e Error) Error() string {
+	return fmt.Sprintf(" %s ", e.message)
+}
+
+var (
+	ErrFileNotFound     = Error{"CONFIG NOT FOUND"}
+	ErrInvalidExtension = Error{"INVALID CONFIG EXTENSION"}
+	ErrInvalidTheme     = Error{"INVALID CONFIG THEME"}
+	ErrURLFetch         = Error{"CONFIG URL FETCH FAILED"}
+	ErrParse            = Error{"CONFIG PARSE ERROR"}
+	ErrNoConfig         = Error{"NO CONFIG"}
+)
+
+func Load(configFile string) *Config {
+	defer log.Trace(time.Now())
+
+	cfg, err := Parse(configFile)
+	if err != nil {
+		cfg = Default(err)
+	}
+
+	return cfg
+}
+
+func resolveConfigLocation(config string) string {
+	defer log.Trace(time.Now())
+
+	if strings.HasPrefix(config, "https://") {
+		return config
+	}
+
+	if url, OK := isTheme(config); OK {
+		log.Debug("theme detected, using theme file")
+		return url
+	}
+
+	// Clean the config path so it works regardless of the OS
+	config = filepath.ToSlash(config)
+
+	// Cygwin path always needs the full path as we're on Windows but not really.
+	// Doing filepath actions will convert it to a Windows path and break the init script.
+	if isCygwin() {
+		log.Debug("cygwin detected, using full path for config")
+		return config
+	}
+
+	configFile := path.ReplaceTildePrefixWithHomeDir(config)
+
+	abs, err := filepath.Abs(configFile)
+	if err != nil {
+		log.Error(err)
+		return filepath.Clean(configFile)
+	}
+
+	return abs
+}
+
+type hashWriter interface {
+	Write(p []byte) (n int, err error)
+}
+
+func Parse(configFile string) (*Config, error) {
+	defer log.Trace(time.Now())
+
+	if configFile == "" {
+		log.Debug("no config file specified")
+		return nil, ErrNoConfig
+	}
+
+	configFile = resolveConfigLocation(configFile)
+
+	configDSC := newDSCTracker()
+	if configDSC != nil {
+		configDSC.Load()
+		configDSC.Add(configFile)
+
+		defer configDSC.Save()
+	}
+
+	h := fnv.New64a()
+
+	cfg, err := read(configFile, h)
+	if err != nil {
+		log.Errorf("failed to read config: %s", configFile)
+		return nil, err
+	}
+
+	parentFolder := filepath.Dir(configFile)
+	visited := map[string]bool{configFile: true}
+
+	for cfg.Extends != "" {
+		cfg.Extends = resolvePath(cfg.Extends, parentFolder)
+
+		if visited[cfg.Extends] {
+			log.Errorf("circular extends detected: %s", cfg.Extends)
+			break
+		}
+
+		visited[cfg.Extends] = true
+
+		base, err := read(cfg.Extends, h)
+		if err != nil {
+			log.Errorf("failed to read extended config: %s", cfg.Extends)
+			break
+		}
+
+		if configDSC != nil {
+			configDSC.Add(cfg.Extends)
+		}
+
+		// anchor the next hop's relative extends path against this hop's own
+		// directory, not the directory of the config that started the chain
+		if !strings.HasPrefix(cfg.Extends, "https://") {
+			parentFolder = filepath.Dir(cfg.Extends)
+		}
+
+		err = base.merge(cfg)
+		if err != nil {
+			log.Error(err)
+			break
+		}
+
+		cfg = base
+	}
+
+	cfg.Source = configFile
+	cfg.hash = h.Sum64()
+	// Migrate segment properties to options for TOML configs
+	// (go-toml/v2 doesn't support custom unmarshalers)
+	cfg.migrateSegmentProperties()
+
+	cfg.toggleSegments()
+
+	if cfg.Upgrade == nil {
+		cfg.Upgrade = &upgrade.Config{
+			Source:        upgrade.CDN,
+			DisplayNotice: cfg.UpgradeNotice,
+			Auto:          cfg.AutoUpgrade,
+			Interval:      cache.ONEWEEK,
+		}
+	}
+
+	if cfg.Upgrade.Interval.IsEmpty() {
+		cfg.Upgrade.Interval = cache.ONEWEEK
+	}
+
+	return cfg, nil
+}
+
+func resolvePath(configFile, parentFolder string) string {
+	if url, OK := isTheme(configFile); OK {
+		return url
+	}
+
+	if strings.HasPrefix(configFile, "https://") {
+		return configFile
+	}
+
+	configFile = path.ReplaceTildePrefixWithHomeDir(configFile)
+
+	if filepath.IsAbs(configFile) {
+		return configFile
+	}
+
+	return filepath.Join(parentFolder, configFile)
+}
+
+func read(configFile string, h hashWriter) (*Config, error) {
+	defer log.Trace(time.Now())
+
+	if configFile == "" {
+		log.Debug("no config file specified, using default")
+		return Default(nil), nil
+	}
+
+	format := strings.TrimPrefix(filepath.Ext(configFile), ".")
+
+	data, err := getData(configFile)
+	if err != nil {
+		// Determine the type of error
+		if strings.HasPrefix(configFile, "https://") {
+			log.Errorf("failed to fetch config from URL: %v", err)
+			return nil, ErrURLFetch
+		}
+		if errors.Is(err, os.ErrNotExist) {
+			log.Errorf("config file not found: %v", err)
+			return nil, ErrFileNotFound
+		}
+		log.Errorf("failed to read config: %v", err)
+		return nil, ErrFileNotFound
+	}
+
+	cfg, err := ParseBytes(format, data)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.Source = configFile
+
+	// Hashed over the bytes exactly as fetched, not the JSONC-with-comments-
+	// stripped form ParseBytes parses internally: this hash only has to be a
+	// stable per-content fingerprint (cli/init.go uses it as ConfigHash, a
+	// cache key for the generated init script), and hashing the fetched bytes
+	// directly means read never has to reach back into ParseBytes for the
+	// normalized copy it produced for itself. The one observable difference
+	// is that editing only a comment in a JSONC config now changes the hash
+	// too (it previously didn't, since the stripped bytes were identical) -
+	// a strictly harmless extra cache miss, not a correctness issue, and
+	// nothing pins the old behavior in a test.
+	if _, err := h.Write(data); err != nil {
+		log.Error(err)
+	}
+
+	return cfg, nil
+}
+
+// ParseBytes parses config data already in memory: the format switch and the
+// presence/normalisation work read used to do inline once it had the file's
+// bytes in hand, split out so a caller with no file to read from - the
+// js/wasm entrypoint (wasm/main.go), handed a studio's config text directly -
+// can reach the exact same decode path without going through read's own
+// file/URL fetch. format is the config's file-extension label (json, jsonc,
+// yaml, yml, toml, tml), the same value read derives from a config path's
+// own extension; ParseBytes never derives it itself, since a caller parsing
+// from memory usually has no file path to derive it from - the wasm
+// entrypoint's caller (the studio) already knows its own format.
+//
+// This only reaches as far as read's own single-file decode: the Parse
+// extends loop, migrateSegmentProperties, toggleSegments, and the Upgrade
+// defaulting all happen one level up in Parse, after read (or a caller of
+// ParseBytes) has already produced a *Config - none of that runs here.
+// Concretely, a config built through ParseBytes can never pull in a remote
+// config via "extends" (parsing from memory bypasses the loop that walks it
+// entirely) and a legacy TOML config's segment "properties" never get
+// migrated to "options". The wasm entrypoint's studio config is expected to
+// be self-contained and current, so neither gap matters for that caller; do
+// not wire an extends fetch onto this path to close the first one - a
+// caller that must not touch the network at all is the entire reason this
+// path exists.
+func ParseBytes(format string, data []byte) (*Config, error) {
+	var cfg Config
+	cfg.Format = format
+
+	var parseErr error
+
+	switch cfg.Format {
+	case YAML, YML:
+		cfg.Format = YAML
+		parseErr = yaml.Unmarshal(data, &cfg)
+	case JSONC, JSON:
+		cfg.Format = JSON
+
+		str := text.StripJSONComments(string(data))
+		data = []byte(str)
+
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		parseErr = decoder.Decode(&cfg)
+
+		// decoder.Decode only reads the first JSON value and, unlike
+		// json.Unmarshal, never checks what follows it - a stray character
+		// after the closing brace (a leftover paste, a misplaced comma) would
+		// otherwise be silently ignored rather than reported as the parse
+		// error it is.
+		if parseErr == nil {
+			if _, tokErr := decoder.Token(); tokErr != io.EOF {
+				parseErr = fmt.Errorf("unexpected data after top-level value")
+			}
+		}
+	case TOML, TML:
+		cfg.Format = TOML
+		parseErr = toml.Unmarshal(data, &cfg)
+	default:
+		log.Errorf("unsupported config file format: %s", cfg.Format)
+		return nil, ErrInvalidExtension
+	}
+
+	if parseErr != nil {
+		log.Errorf("failed to parse config: %v", parseErr)
+		return nil, ErrParse
+	}
+
+	populatePresence(&cfg, data)
+
+	return &cfg, nil
+}
+
+// populatePresence records which top-level keys - and, within them, which
+// block and segment keys - were present in the decoded source config. merge()
+// consults this to distinguish an explicitly set zero value from a field the
+// source never mentioned for bool/int/uint/float fields (see merge.go).
+// It re-decodes data generically using the same per-format decoder already
+// selected for cfg.Format; a decode failure here is non-fatal and only means
+// presence tracking is skipped for this config (cfg keeps its already-parsed
+// values, merge falls back to legacy isZeroValue semantics for it).
+func populatePresence(cfg *Config, data []byte) {
+	var generic map[string]any
+
+	var err error
+	switch cfg.Format {
+	case YAML:
+		err = yaml.Unmarshal(data, &generic)
+	case JSON:
+		err = json.Unmarshal(data, &generic)
+	case TOML:
+		err = toml.Unmarshal(data, &generic)
+	}
+
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	root, err := normalize(generic)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	cfg.presentFields = presenceSet(root)
+
+	populateBlockPresence(cfg, root)
+}
+
+func populateBlockPresence(cfg *Config, root map[string]json.RawMessage) {
+	blocksRaw, OK := root["blocks"]
+	if !OK {
+		return
+	}
+
+	var rawBlocks []map[string]json.RawMessage
+	if err := json.Unmarshal(blocksRaw, &rawBlocks); err != nil {
+		log.Error(err)
+		return
+	}
+
+	if len(rawBlocks) != len(cfg.Blocks) {
+		return
+	}
+
+	for i, rawBlock := range rawBlocks {
+		cfg.Blocks[i].presentFields = presenceSet(rawBlock)
+		populateSegmentPresence(cfg.Blocks[i], rawBlock)
+	}
+}
+
+func populateSegmentPresence(block *Block, rawBlock map[string]json.RawMessage) {
+	segmentsRaw, OK := rawBlock["segments"]
+	if !OK {
+		return
+	}
+
+	var rawSegments []map[string]json.RawMessage
+	if err := json.Unmarshal(segmentsRaw, &rawSegments); err != nil {
+		log.Error(err)
+		return
+	}
+
+	if len(rawSegments) != len(block.Segments) {
+		return
+	}
+
+	for i, rawSegment := range rawSegments {
+		block.Segments[i].presentFields = presenceSet(rawSegment)
+	}
+}
+
+func presenceSet(root map[string]json.RawMessage) map[string]bool {
+	presence := make(map[string]bool, len(root))
+	for key := range root {
+		presence[key] = true
+	}
+
+	return presence
+}
+
+func getData(configFile string) ([]byte, error) {
+	if !strings.HasPrefix(configFile, "https://") {
+		return os.ReadFile(configFile)
+	}
+
+	return http.Download(configFile, true)
+}
+
+func isCygwin() bool {
+	return runtimelib.GOOS == "windows" && len(os.Getenv("OSTYPE")) > 0
+}
+
+// Package-level var (instead of a local literal) so isTheme doesn't rebuild it on every call.
+var themes = map[string]string{
+	"1_shell":                  "1_shell.omp.json",
+	"m365princess":             "M365Princess.omp.json",
+	"agnoster":                 "agnoster.omp.json",
+	"agnoster.minimal":         "agnoster.minimal.omp.json",
+	"agnosterplus":             "agnosterplus.omp.json",
+	"aliens":                   "aliens.omp.json",
+	"amro":                     "amro.omp.json",
+	"atomic":                   "atomic.omp.json",
+	"atomicbit":                "atomicBit.omp.json",
+	"avit":                     "avit.omp.json",
+	"blue-owl":                 "blue-owl.omp.json",
+	"blueish":                  "blueish.omp.json",
+	"bubbles":                  "bubbles.omp.json",
+	"bubblesextra":             "bubblesextra.omp.json",
+	"bubblesline":              "bubblesline.omp.json",
+	"capr4n":                   "capr4n.omp.json",
+	"catppuccin":               "catppuccin.omp.json",
+	"catppuccin_frappe":        "catppuccin_frappe.omp.json",
+	"catppuccin_latte":         "catppuccin_latte.omp.json",
+	"catppuccin_macchiato":     "catppuccin_macchiato.omp.json",
+	"catppuccin_mocha":         "catppuccin_mocha.omp.json",
+	"cert":                     "cert.omp.json",
+	"chips":                    "chips.omp.json",
+	"cinnamon":                 "cinnamon.omp.json",
+	"clean-detailed":           "clean-detailed.omp.json",
+	"cloud-context":            "cloud-context.omp.json",
+	"cloud-native-azure":       "cloud-native-azure.omp.json",
+	"cobalt2":                  "cobalt2.omp.json",
+	"craver":                   "craver.omp.json",
+	"darkblood":                "darkblood.omp.json",
+	"devious-diamonds":         "devious-diamonds.omp.yaml",
+	"di4am0nd":                 "di4am0nd.omp.json",
+	"dracula":                  "dracula.omp.json",
+	"easy-term":                "easy-term.omp.json",
+	"emodipt":                  "emodipt.omp.json",
+	"emodipt-extend":           "emodipt-extend.omp.json",
+	"fish":                     "fish.omp.json",
+	"free-ukraine":             "free-ukraine.omp.json",
+	"froczh":                   "froczh.omp.json",
+	"glowsticks":               "glowsticks.omp.yaml",
+	"gmay":                     "gmay.omp.json",
+	"grandpa-style":            "grandpa-style.omp.json",
+	"gruvbox":                  "gruvbox.omp.json",
+	"half-life":                "half-life.omp.json",
+	"honukai":                  "honukai.omp.json",
+	"hotstick.minimal":         "hotstick.minimal.omp.json",
+	"hul10":                    "hul10.omp.json",
+	"hunk":                     "hunk.omp.json",
+	"huvix":                    "huvix.omp.json",
+	"if_tea":                   "if_tea.omp.json",
+	"illusi0n":                 "illusi0n.omp.json",
+	"iterm2":                   "iterm2.omp.json",
+	"jandedobbeleer":           "jandedobbeleer.omp.json",
+	"jblab_2021":               "jblab_2021.omp.json",
+	"jonnychipz":               "jonnychipz.omp.json",
+	"json":                     "json.omp.json",
+	"jtracey93":                "jtracey93.omp.json",
+	"jv_sitecorian":            "jv_sitecorian.omp.json",
+	"kali":                     "kali.omp.json",
+	"kushal":                   "kushal.omp.json",
+	"lambda":                   "lambda.omp.json",
+	"lambdageneration":         "lambdageneration.omp.json",
+	"larserikfinholt":          "larserikfinholt.omp.json",
+	"lightgreen":               "lightgreen.omp.json",
+	"marcduiker":               "marcduiker.omp.json",
+	"markbull":                 "markbull.omp.json",
+	"material":                 "material.omp.json",
+	"microverse-power":         "microverse-power.omp.json",
+	"mojada":                   "mojada.omp.json",
+	"montys":                   "montys.omp.json",
+	"mt":                       "mt.omp.json",
+	"multiverse-neon":          "multiverse-neon.omp.json",
+	"negligible":               "negligible.omp.json",
+	"neko":                     "neko.omp.json",
+	"night-owl":                "night-owl.omp.json",
+	"nordtron":                 "nordtron.omp.json",
+	"nu4a":                     "nu4a.omp.json",
+	"onehalf.minimal":          "onehalf.minimal.omp.json",
+	"paradox":                  "paradox.omp.json",
+	"pararussel":               "pararussel.omp.json",
+	"patriksvensson":           "patriksvensson.omp.json",
+	"peru":                     "peru.omp.json",
+	"pixelrobots":              "pixelrobots.omp.json",
+	"plague":                   "plague.omp.json",
+	"poshmon":                  "poshmon.omp.json",
+	"powerlevel10k_classic":    "powerlevel10k_classic.omp.json",
+	"powerlevel10k_lean":       "powerlevel10k_lean.omp.json",
+	"powerlevel10k_modern":     "powerlevel10k_modern.omp.json",
+	"powerlevel10k_rainbow":    "powerlevel10k_rainbow.omp.json",
+	"powerline":                "powerline.omp.json",
+	"probua.minimal":           "probua.minimal.omp.json",
+	"pure":                     "pure.omp.json",
+	"quick-term":               "quick-term.omp.json",
+	"remk":                     "remk.omp.json",
+	"robbyrussell":             "robbyrussell.omp.json",
+	"rudolfs-dark":             "rudolfs-dark.omp.json",
+	"rudolfs-light":            "rudolfs-light.omp.json",
+	"sim-web":                  "sim-web.omp.json",
+	"slim":                     "slim.omp.json",
+	"slimfat":                  "slimfat.omp.json",
+	"smoothie":                 "smoothie.omp.json",
+	"sonicboom_dark":           "sonicboom_dark.omp.json",
+	"sonicboom_light":          "sonicboom_light.omp.json",
+	"sorin":                    "sorin.omp.json",
+	"space":                    "space.omp.json",
+	"spaceship":                "spaceship.omp.json",
+	"star":                     "star.omp.json",
+	"stelbent-compact.minimal": "stelbent-compact.minimal.omp.json",
+	"stelbent.minimal":         "stelbent.minimal.omp.json",
+	"takuya":                   "takuya.omp.json",
+	"the-unnamed":              "the-unnamed.omp.json",
+	"thecyberden":              "thecyberden.omp.json",
+	"tiwahu":                   "tiwahu.omp.json",
+	"tokyo":                    "tokyo.omp.json",
+	"tokyonight_storm":         "tokyonight_storm.omp.json",
+	"tonybaloney":              "tonybaloney.omp.json",
+	"uew":                      "uew.omp.json",
+	"unicorn":                  "unicorn.omp.json",
+	"velvet":                   "velvet.omp.json",
+	"wholespace":               "wholespace.omp.json",
+	"wopian":                   "wopian.omp.json",
+	"xtoys":                    "xtoys.omp.json",
+	"ys":                       "ys.omp.json",
+	"zash":                     "zash.omp.json",
+}
+
+func isTheme(config string) (string, bool) {
+	themeFile, OK := themes[config]
+	if !OK {
+		log.Debug(config, "is not a theme")
+		return "", false
+	}
+
+	log.Debug(config, "is a theme")
+
+	if themeFilePath, err := getMSIXThemePath(themeFile); err == nil {
+		return themeFilePath, true
+	}
+
+	log.Debug("building theme URL for:", themeFile)
+	url := fmt.Sprintf("https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/refs/tags/v%s/themes/%s", build.Version, themeFile)
+	return url, true
+}
+
+func getMSIXThemePath(themeFile string) (string, error) {
+	log.Trace(time.Now(), themeFile)
+
+	// For MSIX packages, the executable location is the package root
+	exePath, err := os.Executable()
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
+
+	themeFilePath := filepath.Join(filepath.Dir(exePath), "themes", themeFile)
+	if _, err := os.Stat(themeFilePath); err != nil {
+		log.Error(err)
+		return "", err
+	}
+
+	log.Debug("found theme in MSIX installation:", themeFilePath)
+	return themeFilePath, nil
+}

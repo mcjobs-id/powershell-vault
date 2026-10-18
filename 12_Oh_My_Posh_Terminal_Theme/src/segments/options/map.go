@@ -1,0 +1,311 @@
+package options
+
+import (
+	"encoding/gob"
+	"fmt"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/color"
+	"github.com/jandedobbeleer/oh-my-posh/src/generics"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/jandedobbeleer/oh-my-posh/src/regex"
+	"github.com/jandedobbeleer/oh-my-posh/src/template"
+)
+
+func init() {
+	gob.Register([]any{})
+	gob.Register(map[string]any{})
+	gob.Register(map[any]any{})
+	gob.Register([]string{})
+	gob.Register(map[string]string{})
+	gob.Register([]int{})
+	gob.Register([]float64{})
+	gob.Register([]bool{})
+	gob.Register(int64(0))
+	gob.Register(uint64(0))
+	gob.Register(float32(0))
+	gob.Register(Map{})
+	gob.Register((*Option)(nil))
+	gob.Register(map[Option]any{})
+}
+
+type Provider interface {
+	Color(option Option, defaultValue color.Ansi) color.Ansi
+	Bool(option Option, defaultValue bool) bool
+	String(option Option, defaultValue string) string
+	Markup(option Option, defaultValue string) template.Markup
+	Template(option Option, defaultValue string, context any) string
+	Float64(option Option, defaultValue float64) float64
+	Int(option Option, defaultValue int) int
+	KeyValueMap(option Option, defaultValue map[string]string) map[string]string
+	StringArray(option Option, defaultValue []string) []string
+	Any(option Option, defaultValue any) any
+}
+
+type Option string
+
+// general options used across Segments
+const (
+	Style         Option = "style"
+	AlwaysEnabled Option = "always_enabled"
+	// VersionURLTemplate is the template to use when building language segment hyperlink
+	VersionURLTemplate Option = "version_url_template"
+	DisplayError       Option = "display_error"
+	DisplayDefault     Option = "display_default"
+	AccessToken        Option = "access_token"
+	RefreshToken       Option = "refresh_token"
+	HTTPTimeout        Option = "http_timeout"
+	DefaultHTTPTimeout        = 20
+	Files              Option = "files"
+	CacheDuration      Option = "cache_duration"
+)
+
+type Map map[Option]any
+
+// Skips the fmt.Sprintf call when logging is disabled: accessor methods below are on the
+// segment render hot path and are called several times per segment per render.
+func debugf(format string, args ...any) {
+	if !log.Enabled() {
+		return
+	}
+
+	log.Debug(fmt.Sprintf(format, args...))
+}
+
+func (m Map) String(option Option, defaultValue string) string {
+	val, found := m[option]
+	if !found {
+		debugf("%s: %s", option, defaultValue)
+		return defaultValue
+	}
+	value := fmt.Sprint(val)
+	debugf("%s: %s", option, value)
+	return value
+}
+
+// Markup returns the option's value as trusted terminal markup: option values
+// are user configuration and may carry <...> anchors, unlike data a segment
+// reads from the filesystem, a VCS, or the network.
+func (m Map) Markup(option Option, defaultValue string) template.Markup {
+	return template.RawMarkup(m.String(option, defaultValue))
+}
+
+// Supports template syntax like {{ .Env.MY_API_KEY }} in configuration values; falls back to
+// the original string if rendering fails.
+func (m Map) Template(option Option, defaultValue string, context any) string {
+	value := m.String(option, defaultValue)
+	if value == "" {
+		return value
+	}
+
+	resolved, err := template.RenderTrusted(value, context)
+	if err != nil {
+		debugf("%s: template error, using raw value: %s", option, err)
+		return value
+	}
+
+	debugf("%s (template resolved): %s", option, resolved)
+	return resolved
+}
+
+func (m Map) Color(option Option, defaultValue color.Ansi) color.Ansi {
+	val, found := m[option]
+	if !found {
+		debugf("%s: %s", option, defaultValue)
+		return defaultValue
+	}
+
+	colorString := color.Ansi(fmt.Sprint(val))
+	if color.IsAnsiColorName(colorString) {
+		debugf("%s: %s", option, colorString)
+		return colorString
+	}
+
+	values := regex.FindNamedRegexMatch(`(?P<color>#[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3}|p:.*)`, colorString.String())
+	if values != nil && values["color"] != "" {
+		value := color.Ansi(values["color"])
+		debugf("%s: %s", option, value)
+		return value
+	}
+
+	debugf("%s: %s", option, defaultValue)
+	return defaultValue
+}
+
+func (m Map) Bool(option Option, defaultValue bool) bool {
+	val, found := m[option]
+	if !found {
+		debugf("%s: %t", option, defaultValue)
+		return defaultValue
+	}
+	boolValue, ok := val.(bool)
+	if !ok {
+		debugf("%s: %t", option, defaultValue)
+		return defaultValue
+	}
+	debugf("%s: %t", option, boolValue)
+	return boolValue
+}
+
+func (m Map) Float64(option Option, defaultValue float64) float64 {
+	val, found := m[option]
+	if !found {
+		debugf("%s: %f", option, defaultValue)
+		return defaultValue
+	}
+
+	// Direct type conversions for common numeric types
+	switch v := val.(type) {
+	case float64:
+		debugf("%s: %f", option, v)
+		return v
+	case int:
+		value := float64(v)
+		debugf("%s: %f", option, value)
+		return value
+	case int64:
+		value := float64(v)
+		debugf("%s: %f", option, value)
+		return value
+	case uint64:
+		value := float64(v)
+		debugf("%s: %f", option, value)
+		return value
+	default:
+		debugf("%s: %f", option, defaultValue)
+		return defaultValue
+	}
+}
+
+func (m Map) Int(option Option, defaultValue int) int {
+	val, found := m[option]
+	if !found {
+		debugf("%s: %d", option, defaultValue)
+		return defaultValue
+	}
+
+	// Direct type conversions for common numeric types
+	switch v := val.(type) {
+	case int:
+		debugf("%s: %d", option, v)
+		return v
+	case int64:
+		value := int(v)
+		debugf("%s: %d", option, value)
+		return value
+	case uint64:
+		value := int(v)
+		debugf("%s: %d", option, value)
+		return value
+	case float64:
+		value := int(v)
+		debugf("%s: %d", option, value)
+		return value
+	default:
+		debugf("%s: %d", option, defaultValue)
+		return defaultValue
+	}
+}
+
+func (m Map) KeyValueMap(option Option, defaultValue map[string]string) map[string]string {
+	val, found := m[option]
+	if !found {
+		debugf("%s: %v", option, defaultValue)
+		return defaultValue
+	}
+
+	keyValues := parseKeyValueArray(val)
+	debugf("%s: %v", option, keyValues)
+	return keyValues
+}
+
+func (m Map) StringArray(option Option, defaultValue []string) []string {
+	val, found := m[option]
+	if !found {
+		debugf("%s: %v", option, defaultValue)
+		return defaultValue
+	}
+
+	keyValues := ParseStringArray(val)
+	debugf("%s: %v", option, keyValues)
+	return keyValues
+}
+
+func (m Map) Any(option Option, defaultValue any) any {
+	val, found := m[option]
+	if !found {
+		debugf("%s: %v", option, defaultValue)
+		return defaultValue
+	}
+
+	debugf("%s: %v", option, val)
+	return val
+}
+
+func ParseStringArray(param any) []string {
+	return generics.ParseStringSlice(param)
+}
+
+func parseKeyValueArray(param any) map[string]string {
+	switch v := param.(type) {
+	default:
+		return map[string]string{}
+	case map[any]any:
+		keyValueArray := make(map[string]string)
+		for key, value := range v {
+			val := fmt.Sprint(value)
+			keyString := fmt.Sprintf("%v", key)
+			keyValueArray[keyString] = val
+		}
+		return keyValueArray
+	case map[string]any:
+		keyValueArray := make(map[string]string)
+		for key, value := range v {
+			val := fmt.Sprint(value)
+			keyValueArray[key] = val
+		}
+		return keyValueArray
+	case []any:
+		keyValueArray := make(map[string]string)
+		for _, s := range v {
+			l := ParseStringArray(s)
+			if len(l) == 2 {
+				key := l[0]
+				val := l[1]
+				keyValueArray[key] = val
+			}
+		}
+		return keyValueArray
+	case Map:
+		keyValueArray := make(map[string]string)
+		for key, value := range v {
+			val := fmt.Sprint(value)
+			keyString := fmt.Sprintf("%v", key)
+			keyValueArray[keyString] = val
+		}
+		return keyValueArray
+	case map[string]string:
+		return v
+	}
+}
+
+// Generic functions
+
+type Value interface {
+	string | int | []string | float64 | bool
+}
+
+func OneOf[T Value](options Provider, defaultValue T, props ...Option) T {
+	for _, prop := range props {
+		// get value on a generic get, then see if we can cast to T?
+		val := options.Any(prop, nil)
+		if val == nil {
+			continue
+		}
+
+		if v, ok := val.(T); ok {
+			return v
+		}
+	}
+
+	return defaultValue
+}

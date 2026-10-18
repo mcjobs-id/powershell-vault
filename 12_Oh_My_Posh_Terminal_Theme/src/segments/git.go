@@ -1,0 +1,1649 @@
+package segments
+
+import (
+	"fmt"
+	url2 "net/url"
+	"path/filepath"
+	"slices"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/gitstatus"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/jandedobbeleer/oh-my-posh/src/regex"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/path"
+	"github.com/jandedobbeleer/oh-my-posh/src/segments/options"
+	"github.com/jandedobbeleer/oh-my-posh/src/template"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/ini"
+)
+
+type Commit struct {
+	Timestamp time.Time
+	Author    *User
+	Committer *User
+	Refs      *Refs
+	Subject   string
+	Sha       string
+}
+
+type Refs struct {
+	Heads   []string
+	Tags    []string
+	Remotes []string
+}
+
+type User struct {
+	Name  string
+	Email string
+}
+
+type GitStatus struct {
+	ScmStatus
+}
+
+func (s *GitStatus) add(code string) {
+	switch code {
+	case ".":
+		return
+	case "D":
+		s.Deleted++
+	case "A":
+		s.Added++
+	case "?":
+		s.Untracked++
+	case "U", "AA":
+		s.Unmerged++
+	case "M", "R", "C", "m":
+		s.Modified++
+	}
+}
+
+const (
+	NativeStatus        options.Option = "native_status"
+	IgnoreStatus        options.Option = "ignore_status"
+	UntrackedModes      options.Option = "untracked_modes"
+	IgnoreSubmodules    options.Option = "ignore_submodules"
+	MappedBranches      options.Option = "mapped_branches"
+	ResolveRebaseTarget options.Option = "resolve_rebase_target"
+	// Disables the git segment when a .jj directory exists in the parent file path
+	DisableWithJJ options.Option = "disable_with_jj"
+
+	BranchIcon          options.Option = "branch_icon"
+	BranchIdenticalIcon options.Option = "branch_identical_icon"
+	BranchAheadIcon     options.Option = "branch_ahead_icon"
+	BranchBehindIcon    options.Option = "branch_behind_icon"
+	BranchGoneIcon      options.Option = "branch_gone_icon"
+	RebaseIcon          options.Option = "rebase_icon"
+	CherryPickIcon      options.Option = "cherry_pick_icon"
+	RevertIcon          options.Option = "revert_icon"
+	CommitIcon          options.Option = "commit_icon"
+	NoCommitsIcon       options.Option = "no_commits_icon"
+	TagIcon             options.Option = "tag_icon"
+	MergeIcon           options.Option = "merge_icon"
+	UpstreamIcons       options.Option = "upstream_icons"
+	GithubIcon          options.Option = "github_icon"
+	BitbucketIcon       options.Option = "bitbucket_icon"
+	AzureDevOpsIcon     options.Option = "azure_devops_icon"
+	CodeCommit          options.Option = "codecommit_icon"
+	CodebergIcon        options.Option = "codeberg_icon"
+	GitlabIcon          options.Option = "gitlab_icon"
+	// Fallback icon when the upstream host can't be identified
+	GitIcon options.Option = "git_icon"
+
+	DETACHED     = "(detached)"
+	BRANCHPREFIX = "ref: refs/heads/"
+	GITCOMMAND   = "git"
+
+	trueStr = "true"
+	origin  = "origin"
+
+	mainWorktreeCacheKey = "git_main_worktree"
+)
+
+type Rebase struct {
+	HEAD    template.Markup
+	Onto    template.Markup
+	Current int
+	Total   int
+}
+
+// Optional git probes and the template-visible fields each one populates.
+// A probe runs iff the config references one of its fields (exactly, or via
+// the heuristic fallback for unanalyzable configs; see FieldRefs).
+var (
+	// setStatus with setHEADStatus and setBranchStatus. PushAhead/PushBehind
+	// belong to the push probe but are listed here too: that probe only ever
+	// runs nested inside the status fetch, so referencing its fields must
+	// switch the status fetch on as well.
+	gitStatusFields = []string{
+		workingField, "Staging", "Ahead", "Behind", "BranchStatus", "Upstream", "UpstreamGone",
+		"Hash", "ShortHash", "Rebase", "Merge", "CherryPick", "Revert", "PushAhead", "PushBehind",
+	}
+	gitPushStatusFields = []string{"PushAhead", "PushBehind"}
+	// Upstream maps to both units: the status probe populates it in normal
+	// repos, but the bare-repo path (getBareRepoInfo) only fills it under
+	// the upstream-icon probe, so a bare-repo template referencing
+	// .Upstream must trigger that probe as well.
+	gitUpstreamIconFields = []string{"UpstreamIcon", "UpstreamURL", "RawUpstreamURL", "Upstream"}
+	gitUserFields         = []string{"User"}
+	gitBareFields         = []string{"IsBare"}
+)
+
+type Git struct {
+	commonCfgErr   error
+	Working        *GitStatus
+	Staging        *GitStatus
+	commit         *Commit
+	Rebase         *Rebase
+	User           *User
+	commonCfg      *ini.File
+	Hash           string
+	HEAD           template.Markup
+	UpstreamIcon   template.Markup
+	UpstreamURL    string
+	Ref            string
+	RawUpstreamURL string
+	mainWorktree   string
+	BranchStatus   template.Markup
+	ShortHash      string
+	Scm
+	FieldRefs
+	stashCount       int
+	Ahead            int
+	PushAhead        int
+	PushBehind       int
+	Behind           int
+	worktreeCount    int
+	commonCfgOnce    sync.Once
+	mainWorktreeOnce sync.Once
+	IsWorkTree       bool
+	Merge            bool
+	CherryPick       bool
+	Revert           bool
+	poshgit          bool
+	Detached         bool
+	IsBare           bool
+	UpstreamGone     bool
+}
+
+func (g *Git) Template() string {
+	return " {{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }} \uF044 {{ .Working.String }}{{ end }}{{ if and (.Staging.Changed) (.Working.Changed) }} |{{ end }}{{ if .Staging.Changed }} \uF046 {{ .Staging.String }}{{ end }} " //nolint: lll
+}
+
+// Activation gates on the repository marker: the same upward .git search
+// shouldDisplay runs (memoized at the runtime level, so the double lookup is
+// one walk). Everything else - git command presence, worktree/bare
+// resolution, disable_with_jj - stays in Enabled(), for which the marker's
+// presence is a strict precondition.
+func (g *Git) Activation() Activation {
+	return Activation{ProjectFiles: []string{".git"}}
+}
+
+func (g *Git) Enabled() bool {
+	g.User = &User{}
+	g.Working = &GitStatus{}
+	g.Staging = &GitStatus{}
+
+	if !g.shouldDisplay() {
+		return false
+	}
+
+	fetchUser := g.fetchUnit(gitUserFields...)
+	g.RepoName = g.repoName()
+
+	if g.IsBare {
+		if fetchUser {
+			g.setUser()
+		}
+
+		g.getBareRepoInfo()
+		return true
+	}
+
+	source := g.options.String(Source, Cli)
+	if source == Pwsh && g.hasPoshGitStatus() {
+		return true
+	}
+
+	displayStatus := g.fetchUnit(gitStatusFields...)
+	if displayStatus && g.shouldIgnoreStatus() {
+		displayStatus = false
+	}
+
+	// Phase 1: setUser is independent, run it alongside setStatus
+	var wg sync.WaitGroup
+
+	if fetchUser {
+		wg.Go(g.setUser)
+	}
+
+	if displayStatus {
+		g.setStatus()
+
+		// Phase 2: fan out work that depends only on setStatus results
+		wg.Go(g.setHEADStatus)
+		wg.Go(g.setPushStatus)
+
+		if g.fetchUnit(gitUpstreamIconFields...) {
+			wg.Go(func() {
+				g.UpstreamIcon = g.getUpstreamIcon(remoteNameOrOrigin(g.Upstream))
+			})
+		}
+
+		g.setBranchStatus()
+	} else {
+		g.updateHEADReference()
+
+		if g.fetchUnit(gitUpstreamIconFields...) {
+			g.UpstreamIcon = g.getUpstreamIcon(remoteNameOrOrigin(g.Upstream))
+		}
+	}
+
+	wg.Wait()
+	return true
+}
+
+func (g *Git) CacheKey() (string, bool) {
+	dir, err := g.env.HasParentFilePath(".git", true)
+	if err != nil {
+		return "", false
+	}
+
+	if !g.isRepo(dir) {
+		return "", false
+	}
+
+	ref := g.fileContent(g.mainSCMDir, "HEAD")
+	ref = strings.Replace(ref, "ref: refs/heads/", "", 1)
+
+	// Use the repo clone in the cache key so the mapped path is consistent
+	// for primary and worktree repos.
+	return fmt.Sprintf("%s@%s", dir.Path, ref), true
+}
+
+func (g *Git) Commit() *Commit {
+	if g.commit != nil {
+		return g.commit
+	}
+
+	g.commit = &Commit{
+		Author:    &User{},
+		Committer: &User{},
+		Refs:      &Refs{},
+	}
+
+	if g.options.Bool(NativeStatus, false) && g.setCommitNative() {
+		return g.commit
+	}
+
+	commitBody := g.getGitCommandOutput("log", "-1", "--pretty=format:an:%an%nae:%ae%ncn:%cn%nce:%ce%nat:%at%nsu:%s%nha:%H%nrf:%D", "--decorate=full")
+	splitted := strings.SplitSeq(strings.TrimSpace(commitBody), "\n")
+	for line := range splitted {
+		line = strings.TrimSpace(line)
+		if len(line) <= 3 {
+			continue
+		}
+		anchor := line[:3]
+		line = line[3:]
+		switch anchor {
+		case "an:":
+			g.commit.Author.Name = line
+		case "ae:":
+			g.commit.Author.Email = line
+		case "cn:":
+			g.commit.Committer.Name = line
+		case "ce:":
+			g.commit.Committer.Email = line
+		case "at:":
+			if t, err := strconv.ParseInt(line, 10, 64); err == nil {
+				g.commit.Timestamp = time.Unix(t, 0)
+			}
+		case "su:":
+			g.commit.Subject = line
+		case "ha:":
+			g.commit.Sha = line
+		case "rf:":
+			refs := strings.SplitSeq(line, ", ")
+			for ref := range refs {
+				ref = strings.TrimSpace(ref)
+				switch {
+				case strings.HasSuffix(ref, "HEAD"):
+					continue
+				case strings.HasPrefix(ref, "tag: refs/tags/"):
+					g.commit.Refs.Tags = append(g.commit.Refs.Tags, strings.TrimPrefix(ref, "tag: refs/tags/"))
+				case strings.HasPrefix(ref, "refs/remotes/"):
+					g.commit.Refs.Remotes = append(g.commit.Refs.Remotes, strings.TrimPrefix(ref, "refs/remotes/"))
+				case strings.HasPrefix(ref, "HEAD -> refs/heads/"):
+					g.commit.Refs.Heads = append(g.commit.Refs.Heads, strings.TrimPrefix(ref, "HEAD -> refs/heads/"))
+				case strings.HasPrefix(ref, "refs/heads/"):
+					g.commit.Refs.Heads = append(g.commit.Refs.Heads, strings.TrimPrefix(ref, "refs/heads/"))
+				default:
+					g.commit.Refs.Heads = append(g.commit.Refs.Heads, ref)
+				}
+			}
+		}
+	}
+	return g.commit
+}
+
+// setCommitNative populates g.commit using the built-in gitstatus engine
+// instead of spawning git. It returns false when HEAD or the commit it
+// points at can't be resolved natively, leaving g.commit untouched so the
+// caller falls back to the exec path.
+func (g *Git) setCommitNative() bool {
+	if g.scmDir == "" {
+		return false
+	}
+
+	if g.Hash == "" {
+		head, err := gitstatus.LoadHead(g.mainSCMDir, g.scmDir)
+		if err != nil {
+			return false
+		}
+		g.Hash = head.Hash
+	}
+
+	info, err := gitstatus.LoadCommit(g.scmDir, g.Hash)
+	if err != nil {
+		return false
+	}
+
+	g.commit.Author.Name = info.Author.Name
+	g.commit.Author.Email = info.Author.Email
+	g.commit.Committer.Name = info.Committer.Name
+	g.commit.Committer.Email = info.Committer.Email
+	g.commit.Timestamp = info.Timestamp
+	g.commit.Subject = info.Subject
+	g.commit.Sha = info.Hash
+	g.commit.Refs.Heads = info.Refs.Heads
+	g.commit.Refs.Tags = info.Refs.Tags
+	g.commit.Refs.Remotes = info.Refs.Remotes
+
+	return true
+}
+
+func (g *Git) StashCount() int {
+	if g.poshgit || g.stashCount != 0 {
+		return g.stashCount
+	}
+
+	if stashContent := g.fileContent(g.scmDir, "logs/refs/stash"); stashContent != "" {
+		g.stashCount = strings.Count(stashContent, "\n") + 1 // +1: fileContent() trims
+		return g.stashCount
+	}
+
+	stashCountStr := g.getGitCommandOutput("rev-list", "--walk-reflogs", "--ignore-missing", "--count", "refs/stash")
+	stashCountTrimmed := regex.ReplaceAllString(`[\r\n]*`, stashCountStr, "")
+	stashCountParsed, err := strconv.Atoi(stashCountTrimmed)
+	if err != nil {
+		return 0
+	}
+
+	g.stashCount = stashCountParsed
+	return g.stashCount
+}
+
+func (g *Git) Kraken() string {
+	root := g.getGitCommandOutput("rev-list", "--max-parents=0", "HEAD")
+	root, _, _ = strings.Cut(root, "\n")
+
+	// In a bare repository whose config references the upstream icon fields, getBareRepoInfo has
+	// already made the authoritative attribution: an empty RawUpstreamURL there means "no
+	// attributable remote", not "not tried yet". .Upstream may legitimately be a bare branch name
+	// (remote = .), which must never be read as a remote name.
+	bareAttributionDone := g.IsBare && g.fetchUnit(gitUpstreamIconFields...)
+
+	if g.RawUpstreamURL == "" && !bareAttributionDone {
+		g.RawUpstreamURL = g.getRemoteURL(remoteNameOrOrigin(g.Upstream))
+	}
+
+	if g.Hash == "" && g.scmDir != "" && g.options.Bool(NativeStatus, false) {
+		if head, err := gitstatus.LoadHead(g.mainSCMDir, g.scmDir); err == nil {
+			g.Hash = head.Hash
+		}
+	}
+
+	if g.Hash == "" {
+		g.Hash = g.getGitCommandOutput("rev-parse", "HEAD")
+	}
+
+	return fmt.Sprintf("gitkraken://repolink/%s/commit/%s?url=%s", root, g.Hash, url2.QueryEscape(g.RawUpstreamURL))
+}
+
+func (g *Git) LatestTag() string {
+	return g.getGitCommandOutput("describe", "--tags", "--abbrev=0")
+}
+
+func (g *Git) shouldDisplay() bool {
+	// Check if disable_with_jj is enabled and .jj directory exists
+	if g.options.Bool(DisableWithJJ, false) {
+		if _, err := g.env.HasParentFilePath(".jj", false); err == nil {
+			return false
+		}
+	}
+
+	gitdir, err := g.env.HasParentFilePath(".git", true)
+	if err != nil {
+		return false
+	}
+
+	if !g.hasCommand(GITCOMMAND) {
+		return false
+	}
+
+	if g.fetchUnit(gitBareFields...) {
+		g.IsBare = g.isBareRepo(gitdir)
+	}
+
+	return g.isRepo(gitdir)
+}
+
+func (g *Git) isRepo(gitdir *runtime.FileInfo) bool {
+	g.setDir(gitdir.Path)
+
+	if !gitdir.IsDir {
+		if g.hasWorktree(gitdir) {
+			g.repoRootDir = g.convertToWindowsPath(g.repoRootDir)
+			return true
+		}
+
+		return false
+	}
+
+	g.mainSCMDir = gitdir.Path
+	g.scmDir = gitdir.Path
+	// convert the worktree file path to a windows one when in a WSL shared folder
+	g.repoRootDir = strings.TrimSuffix(g.convertToWindowsPath(gitdir.Path), "/.git")
+	return true
+}
+
+func (g *Git) setUser() {
+	// user.name/user.email are very commonly set only in the user's global
+	// gitconfig, which commonConfig() never reads (repo-local config only).
+	// Trust the local read only when it has both keys; anything less falls
+	// back to exec git, which merges every config scope the way `git
+	// config` itself does.
+	if cfg, err := g.commonConfig(); err == nil {
+		section := cfg.Section("user")
+		name := section.Key("name").String()
+		email := section.Key("email").String()
+
+		if name != "" && email != "" {
+			g.User.Name = name
+			g.User.Email = email
+			return
+		}
+	}
+
+	output := g.getGitCommandOutput("config", "--get-regexp", "^user\\.")
+	for line := range strings.SplitSeq(output, "\n") {
+		key, val, ok := strings.Cut(line, " ")
+		if !ok {
+			continue
+		}
+
+		switch key {
+		case "user.name":
+			g.User.Name = val
+		case "user.email":
+			g.User.Email = val
+		}
+	}
+}
+
+func (g *Git) isBareRepo(gitDir *runtime.FileInfo) bool {
+	defer log.Trace(time.Now())
+
+	bareDir := gitDir.Path
+	if !gitDir.IsDir {
+		content := g.fileContent(gitDir.ParentFolder, ".git")
+		dir := strings.TrimPrefix(content, "gitdir: ")
+		bareDir = resolveGitPath(gitDir.ParentFolder, g.convertToLinuxPath(dir))
+	}
+
+	g.mainSCMDir = bareDir
+
+	cfg, err := loadGitConfig(g.env, bareDir)
+	if err != nil {
+		log.Error(err)
+		return false
+	}
+
+	coreSection := cfg.Section("core")
+	if coreSection == nil {
+		log.Debug("Git core section not found, not a bare repo")
+		return false
+	}
+
+	bare := coreSection.Key("bare").String()
+
+	return bare == trueStr
+}
+
+func (g *Git) getBareRepoInfo() {
+	// The non-bare resolver already reads HEAD from mainSCMDir and already handles the symbolic
+	// branch, the reftables sentinel and a detached HEAD. Sharing it is what keeps the two paths
+	// from diverging again.
+	g.updateHEADReference()
+	if !g.fetchUnit(gitUpstreamIconFields...) {
+		return
+	}
+
+	// Assigned before any early return: a local upstream (remote = .) is a real upstream even in a
+	// repository with no remotes at all. Assigned after updateHEADReference so a branch_template
+	// referencing .Upstream still sees the empty value it sees today.
+	upstream, remote := g.bareUpstream()
+	g.Upstream = upstream
+
+	// An upstream implies its remote exists, so the inventory is not needed.
+	if remote != "" {
+		g.UpstreamIcon = g.getUpstreamIcon(remote)
+		return
+	}
+
+	remotes := g.bareRemoteNames()
+	if len(remotes) == 0 {
+		return // no remote to attribute; UpstreamIcon and UpstreamURL stay empty, as today
+	}
+
+	g.UpstreamIcon = g.getUpstreamIcon(fallbackRemote(remotes))
+}
+
+// bareUpstream asks git for the upstream of HEAD's branch, and for the remote that upstream
+// resolves to. Letting git answer is not a convenience: git applies fetch-refspec mapping,
+// accepts merge refs outside refs/heads/, spells a local upstream as the bare branch name, and
+// reads the merged configuration from every scope.
+func (g *Git) bareUpstream() (string, string) {
+	// Ref can be a short hash or an exact tag name when detached, either of which can name a real
+	// branch, so a detached HEAD must never be looked up as one.
+	if g.Detached || g.Ref == "" {
+		return "", ""
+	}
+
+	ref := "refs/heads/" + g.Ref
+
+	// NUL-delimited so the fields survive RunCommand's whitespace trimming, the same reason
+	// MainWorktree uses -z.
+	output := g.getGitCommandOutput("for-each-ref",
+		"--format=%(upstream:short)%00%(upstream:remotename)%00%(refname)", ref)
+
+	upstream, rest, _ := strings.Cut(output, "\x00")
+	remote, refname, _ := strings.Cut(rest, "\x00")
+
+	// for-each-ref takes a pattern, and a pattern matches at "/" boundaries: querying
+	// refs/heads/feature also matches refs/heads/feature/x. Verify the matched ref before using it.
+	if refname != ref {
+		return "", ""
+	}
+
+	if remote == "." {
+		remote = ""
+	}
+
+	return upstream, remote
+}
+
+// bareRemoteNames returns the configured remote names. It asks git rather than parsing the config
+// file, because git reports the merged configuration - system, global, local and include.path - and a
+// remote supplied through an include or a global scope is visible today.
+func (g *Git) bareRemoteNames() []string {
+	// Trimmed here rather than relying on the command runner: cmd.RunWithEnv trims, but the test
+	// mock returns its canned string verbatim, so the contract belongs in this function.
+	output := strings.TrimSpace(g.getGitCommandOutput("remote"))
+	if output == "" {
+		return nil // Split would otherwise yield a one-element slice holding ""
+	}
+
+	return strings.Split(output, "\n")
+}
+
+// fallbackRemote picks a remote to attribute URLs to when HEAD has no upstream, or "" when nothing
+// ranks them. Push settings are deliberately absent: branch.<ref>.pushRemote and remote.pushDefault
+// name a push destination, not an upstream, and no other caller of getUpstreamIcon consults them.
+func fallbackRemote(remotes []string) string {
+	if slices.Contains(remotes, origin) {
+		return origin
+	}
+
+	if len(remotes) == 1 {
+		return remotes[0]
+	}
+
+	return "" // several unranked remotes: keep today's generic icon and empty URL
+}
+
+func (g *Git) setDir(dir string) {
+	dir = path.ReplaceHomeDirPrefixWithTilde(dir) // align with template PWD
+	if g.env.GOOS() == runtime.WINDOWS {
+		g.Dir = strings.TrimSuffix(dir, `\.git`)
+		return
+	}
+
+	g.Dir = strings.TrimSuffix(dir, "/.git")
+}
+
+func (g *Git) hasWorktree(gitdir *runtime.FileInfo) bool {
+	g.scmDir = gitdir.Path
+	content := g.env.FileContent(gitdir.Path)
+	content = strings.Trim(content, " \r\n")
+	matches := regex.FindNamedRegexMatch(`^gitdir: (?P<dir>.*)$`, content)
+
+	if len(matches) == 0 {
+		log.Debug("no matches found, directory isn't a worktree")
+		return false
+	}
+
+	// Convert before resolving because filepath.IsAbs("C:/repo/.git") is false on Linux.
+	raw := g.convertToLinuxPath(matches["dir"])
+	g.mainSCMDir = resolveGitPath(gitdir.ParentFolder, raw)
+
+	// The returned index only applies to the normalized path.
+	adminDir := filepath.ToSlash(filepath.Clean(g.mainSCMDir))
+	worktreeIndex := worktreeAdminIndex(adminDir)
+
+	// in submodules, the path looks like this: gitdir: ../.git/modules/test-submodule
+	// we need the parent folder to detect where the real .git folder is. Test raw rather
+	// than the resolved path: a checkout below a folder named modules would otherwise
+	// drag every genuine worktree in it into this branch.
+	if strings.Contains(raw, "/modules/") && g.isModuleAdminDir(g.mainSCMDir, gitdir.ParentFolder) {
+		g.scmDir = g.mainSCMDir
+		// this might be both a worktree and a submodule, where the path would look like
+		// this: path/.git/modules/module/path/worktrees/location. We cannot distinguish
+		// between worktree and a module path containing the word 'worktree,' however.
+		moduleDir := filepath.ToSlash(filepath.Clean(g.scmDir))
+		worktreeIndex = worktreeAdminIndex(moduleDir)
+		if worktreeIndex > -1 && g.env.HasFilesInDir(g.scmDir, "gitdir") {
+			gitDir := filepath.Join(g.scmDir, "gitdir")
+			realGitFolder := g.env.FileContent(gitDir)
+			g.repoRootDir = strings.TrimSuffix(strings.TrimRight(realGitFolder, "\n\r "), ".git")
+			g.repoRootDir = g.convertToLinuxPath(g.repoRootDir)
+			// resolve relative paths (worktree.useRelativePaths = true)
+			g.repoRootDir = resolveGitPath(g.scmDir, g.repoRootDir)
+			g.mainSCMDir = g.scmDir
+			g.scmDir = moduleDir[:worktreeIndex]
+			g.IsWorkTree = true
+			return true
+		}
+
+		g.repoRootDir = g.scmDir
+		g.mainSCMDir = g.scmDir
+		return true
+	}
+
+	if worktreeIndex > -1 {
+		gitDirContent := g.env.FileContent(filepath.Join(g.mainSCMDir, "gitdir"))
+		gitDirPath := strings.TrimRight(gitDirContent, "\n\r ")
+		root := strings.TrimSuffix(gitDirPath, ".git")
+		root = g.convertToLinuxPath(root)
+		// resolve relative paths (worktree.useRelativePaths = true)
+		root = resolveGitPath(g.mainSCMDir, root)
+
+		// A genuine worktree's metadata points back at the .git file we just read.
+		if gitDirPath != "" && filepath.Clean(root) == filepath.Clean(gitdir.ParentFolder) {
+			g.scmDir = adminDir[:worktreeIndex]
+			g.repoRootDir = root
+			g.IsWorkTree = true
+			return true
+		}
+	}
+
+	if g.env.HasFilesInDir(g.mainSCMDir, "HEAD") {
+		g.repoRootDir = strings.TrimSuffix(g.scmDir, ".git")
+		g.scmDir = g.mainSCMDir
+		return true
+	}
+
+	return false
+}
+
+func (g *Git) shouldIgnoreStatus() bool {
+	list := g.options.StringArray(IgnoreStatus, []string{})
+	return g.env.DirMatchesOneOf(g.repoRootDir, list)
+}
+
+func (g *Git) setBranchStatus() {
+	getBranchStatus := func() string {
+		if g.Ahead > 0 && g.Behind > 0 {
+			return fmt.Sprintf("%s%d %s%d", g.options.String(BranchAheadIcon, "\u2191"), g.Ahead, g.options.String(BranchBehindIcon, "\u2193"), g.Behind)
+		}
+		if g.Ahead > 0 {
+			return fmt.Sprintf("%s%d", g.options.String(BranchAheadIcon, "\u2191"), g.Ahead)
+		}
+		if g.Behind > 0 {
+			return fmt.Sprintf("%s%d", g.options.String(BranchBehindIcon, "\u2193"), g.Behind)
+		}
+		if g.UpstreamGone {
+			return g.options.String(BranchGoneIcon, "\u2262")
+		}
+		if g.Behind == 0 && g.Ahead == 0 && g.Upstream != "" {
+			return g.options.String(BranchIdenticalIcon, "\u2261")
+		}
+		return ""
+	}
+	g.BranchStatus = template.RawMarkup(getBranchStatus())
+}
+
+func (g *Git) setPushStatus() {
+	if !g.fetchUnit(gitPushStatusFields...) {
+		return
+	}
+
+	if g.Ref == "" || g.Ref == DETACHED {
+		return
+	}
+
+	pushRemote := g.pushRef()
+	if pushRemote == "" {
+		return
+	}
+
+	if g.options.Bool(NativeStatus, false) && g.setPushStatusNative(pushRemote) {
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Go(func() {
+		if v := g.getGitCommandOutput("rev-list", "--count", pushRemote+"..HEAD"); v != "" {
+			g.PushAhead, _ = strconv.Atoi(strings.TrimSpace(v))
+		}
+	})
+
+	wg.Go(func() {
+		if v := g.getGitCommandOutput("rev-list", "--count", "HEAD.."+pushRemote); v != "" {
+			g.PushBehind, _ = strconv.Atoi(strings.TrimSpace(v))
+		}
+	})
+
+	wg.Wait()
+}
+
+// setPushStatusNative computes PushAhead/PushBehind using the built-in
+// gitstatus engine instead of two `git rev-list --count` spawns. pushRemote
+// is a "<remote>/<branch>"-shaped rev the way getPushRemote returns it; the
+// overwhelming majority of the time that's a remote-tracking ref, so this
+// only tries the exact refs/remotes/<pushRemote> path and defers anything
+// else (a local branch, a tag with a matching name, ...) to exec git rather
+// than risk resolving the wrong ref.
+func (g *Git) setPushStatusNative(pushRemote string) bool {
+	if g.Hash == "" || g.scmDir == "" {
+		return false
+	}
+
+	theirs, found, err := gitstatus.ResolveRef(g.scmDir, "refs/remotes/"+pushRemote)
+	if err != nil || !found {
+		return false
+	}
+
+	ahead, behind, err := gitstatus.AheadBehind(g.scmDir, g.Hash, theirs)
+	if err != nil {
+		return false
+	}
+
+	g.PushAhead = ahead
+	g.PushBehind = behind
+	return true
+}
+
+// pushRef resolves the destination of a push once, so both counts below describe the
+// same comparison. An empty rev-list result is a genuine failure, never a retry signal.
+func (g *Git) pushRef() string {
+	if ref := g.getGitCommandOutput("rev-parse", "--abbrev-ref", "@{push}"); ref != "" {
+		return ref
+	}
+
+	return g.getPushRemote()
+}
+
+func (g *Git) getPushRemote() string {
+	branch := g.Ref
+	if branch == "" {
+		return ""
+	}
+
+	pushRemote := g.getGitCommandOutput("config", "--get", fmt.Sprintf("branch.%s.pushRemote", branch))
+	if pushRemote == "" {
+		pushRemote = g.getGitCommandOutput("config", "--get", "remote.pushDefault")
+	}
+
+	if pushRemote == "" {
+		pushRemote = regex.ReplaceAllString("/.*", g.Upstream, "")
+	}
+
+	if pushRemote == "" {
+		pushRemote = origin
+	}
+
+	return strings.TrimSpace(pushRemote) + "/" + branch
+}
+
+func loadGitConfigFile(env runtime.Environment, dir, file string) (*ini.File, error) {
+	if dir == "" {
+		return nil, fmt.Errorf("no git directory to read %s from", file)
+	}
+
+	configData := strings.Trim(env.FileContent(dir+"/"+file), " \r\n")
+	if configData == "" {
+		return nil, fmt.Errorf("%s not found", file)
+	}
+
+	return ini.Load(configData)
+}
+
+func loadGitConfig(env runtime.Environment, dir string) (*ini.File, error) {
+	return loadGitConfigFile(env, dir, "config")
+}
+
+// commonConfig reads the repository's shared config. It refuses to memoize a failure
+// against an unknown directory, which a cache-restored segment would otherwise poison.
+func (g *Git) commonConfig() (*ini.File, error) {
+	commonDir := g.commonGitDir()
+	if commonDir == "" {
+		return nil, fmt.Errorf("common git directory is unknown")
+	}
+
+	g.commonCfgOnce.Do(func() {
+		g.commonCfg, g.commonCfgErr = loadGitConfig(g.env, commonDir)
+	})
+
+	return g.commonCfg, g.commonCfgErr
+}
+
+func (g *Git) cleanUpstreamURL(url string) string {
+	// Azure DevOps
+	if strings.Contains(url, "dev.azure.com") {
+		match := regex.FindNamedRegexMatch(`^.*@(ssh.)?dev\.azure\.com(:v3)?/(?P<ORGANIZATION>[A-Za-z0-9_-]+)/(?P<PROJECT>[A-Za-z0-9_-]+)/(_git/)?(?P<REPOSITORY>[A-Za-z0-9_-]+)$`, url)
+		if len(match) == 4 {
+			return fmt.Sprintf("https://dev.azure.com/%s/%s/_git/%s", match["ORGANIZATION"], match["PROJECT"], match["REPOSITORY"])
+		}
+	}
+
+	if strings.HasPrefix(url, "http") {
+		return url
+	}
+
+	// /path/to/repo.git/
+	match := regex.FindNamedRegexMatch(`^(?P<URL>[a-z0-9./]+)$`, url)
+	if len(match) != 0 {
+		url := strings.Trim(match["URL"], "/")
+		url = strings.TrimSuffix(url, ".git")
+		return fmt.Sprintf("https://%s", strings.TrimPrefix(url, "/"))
+	}
+
+	// ssh://user@host.xz:1234/path/to/repo.git/
+	match = regex.FindNamedRegexMatch(`(ssh|ftp|git|rsync)://(.*@)?(?P<URL>[a-z0-9.-]+)(:[0-9]{1,5})?/(?P<PATH>.*).git`, url)
+	if len(match) == 0 {
+		// host.xz:/path/to/repo.git/
+		match = regex.FindNamedRegexMatch(`^(?P<URL>[a-z0-9.-]+):(?P<PATH>[\w.\-~/@]+)$`, url)
+	}
+
+	if len(match) != 0 {
+		repoPath := strings.Trim(match["PATH"], "/")
+		repoPath = strings.TrimSuffix(repoPath, ".git")
+		return fmt.Sprintf("https://%s/%s", match["URL"], repoPath)
+	}
+
+	// codecommit::region-identifier-id://repo-name
+	match = regex.FindNamedRegexMatch(`codecommit::(?P<URL>[a-z0-9-]+)://(?P<PATH>[\w\.@\:/\-~]+)`, url)
+	if len(match) != 0 {
+		return fmt.Sprintf("https://%s.console.aws.amazon.com/codesuite/codecommit/repositories/%s/browse?region=%s", match["URL"], match["PATH"], match["URL"])
+	}
+
+	// user@host.xz:/path/to/repo.git
+	match = regex.FindNamedRegexMatch(`.*@(?P<URL>.*):(?P<PATH>.*)`, url)
+	if len(match) == 0 {
+		return ""
+	}
+
+	return fmt.Sprintf("https://%s/%s", match["URL"], strings.TrimSuffix(match["PATH"], ".git"))
+}
+
+func (g *Git) getUpstreamIcon(remote string) template.Markup {
+	fallback := g.options.Markup(GitIcon, "\uE5FB ")
+
+	g.RawUpstreamURL = g.getRemoteURL(remote)
+	if g.RawUpstreamURL == "" {
+		return fallback
+	}
+
+	g.UpstreamURL = g.cleanUpstreamURL(g.RawUpstreamURL)
+
+	// allow overrides first
+	custom := g.options.KeyValueMap(UpstreamIcons, map[string]string{})
+	for key, value := range custom {
+		if strings.Contains(g.UpstreamURL, key) {
+			return template.RawMarkup(value)
+		}
+	}
+
+	defaults := map[string]struct {
+		Icon    options.Option
+		Default string
+	}{
+		"github":           {GithubIcon, "\uF408"},
+		"gitlab":           {GitlabIcon, "\uF296"},
+		"bitbucket":        {BitbucketIcon, "\uF171"},
+		"dev.azure.com":    {AzureDevOpsIcon, "\uEBE8"},
+		"visualstudio.com": {AzureDevOpsIcon, "\uEBE8"},
+		"codecommit":       {CodeCommit, "\uF270"},
+		"codeberg":         {CodebergIcon, "\uF330"},
+	}
+
+	for key, value := range defaults {
+		if strings.Contains(g.UpstreamURL, key) {
+			return g.options.Markup(value.Icon, value.Default)
+		}
+	}
+
+	return fallback
+}
+
+func (g *Git) setStatus() {
+	addToStatus := func(status string) {
+		const UNTRACKED = "?"
+		if strings.HasPrefix(status, UNTRACKED) {
+			g.Working.add(UNTRACKED)
+			return
+		}
+		if len(status) <= 4 {
+			return
+		}
+
+		// map conflicts separately when in a merge or rebase
+		if g.Rebase != nil || g.Merge {
+			conflict := "AA"
+			full := status[2:4]
+			if full == conflict {
+				g.Staging.add(conflict)
+				return
+			}
+		}
+
+		workingCode := status[3:4]
+		stagingCode := status[2:3]
+		g.Working.add(workingCode)
+		g.Staging.add(stagingCode)
+	}
+
+	const (
+		HASH         = "# branch.oid "
+		REF          = "# branch.head "
+		UPSTREAM     = "# branch.upstream "
+		BRANCHSTATUS = "# branch.ab "
+	)
+
+	// firstly assume that upstream is gone
+	g.UpstreamGone = true
+	statusFormats := g.options.KeyValueMap(StatusFormats, map[string]string{})
+
+	g.Working = &GitStatus{Formats: statusFormats}
+	g.Staging = &GitStatus{Formats: statusFormats}
+
+	if g.options.Bool(NativeStatus, false) && g.setStatusNative() {
+		return
+	}
+
+	untrackedMode := g.getUntrackedFilesMode()
+	args := []string{"status", untrackedMode, "--branch", "--porcelain=2"}
+	ignoreSubmodulesMode := g.getIgnoreSubmodulesMode()
+	if len(ignoreSubmodulesMode) > 0 {
+		args = append(args, ignoreSubmodulesMode)
+	}
+
+	output := g.getGitCommandOutput(args...)
+	for line := range strings.SplitSeq(output, "\n") {
+		if strings.HasPrefix(line, HASH) && len(line) >= len(HASH)+7 {
+			g.ShortHash = line[len(HASH) : len(HASH)+7]
+			g.Hash = line[len(HASH):]
+			continue
+		}
+
+		if strings.HasPrefix(line, REF) && len(line) > len(REF) {
+			g.Ref = line[len(REF):]
+			continue
+		}
+
+		if strings.HasPrefix(line, UPSTREAM) && len(line) > len(UPSTREAM) {
+			// status reports upstream, but upstream may be gone (must check BRANCHSTATUS)
+			g.Upstream = line[len(UPSTREAM):]
+			g.UpstreamGone = true
+			continue
+		}
+
+		if strings.HasPrefix(line, BRANCHSTATUS) && len(line) > len(BRANCHSTATUS) {
+			status := line[len(BRANCHSTATUS):]
+			splitted := strings.SplitN(status, " ", 3)
+			if len(splitted) >= 2 {
+				g.Ahead, _ = strconv.Atoi(splitted[0])
+				behind, _ := strconv.Atoi(splitted[1])
+				g.Behind = -behind
+			}
+			// confirmed: upstream exists
+			g.UpstreamGone = false
+			continue
+		}
+
+		addToStatus(line)
+	}
+}
+
+// setStatusNative computes the status using the built-in gitstatus engine
+// instead of spawning git. It returns false whenever the repo uses a
+// feature the engine doesn't support (or ignore_submodules is configured,
+// which the engine doesn't apply), leaving g.Working/g.Staging untouched so
+// the caller falls back to the exec path.
+func (g *Git) setStatusNative() bool {
+	if len(g.getIgnoreSubmodulesMode()) > 0 {
+		return false
+	}
+
+	opts := gitstatus.Options{
+		WorktreeGitDir: g.mainSCMDir,
+		CommonGitDir:   g.scmDir,
+		RepoRoot:       g.repoRootDir,
+		UntrackedMode:  strings.TrimPrefix(g.getUntrackedFilesMode(), "-u"),
+	}
+
+	result, err := gitstatus.Load(opts)
+	if err != nil {
+		log.Error(err)
+		return false
+	}
+
+	g.Working.Added = result.Working.Added
+	g.Working.Deleted = result.Working.Deleted
+	g.Working.Modified = result.Working.Modified
+	g.Working.Untracked = result.Working.Untracked
+	g.Working.Unmerged = result.Working.Unmerged
+
+	g.Staging.Added = result.Staging.Added
+	g.Staging.Deleted = result.Staging.Deleted
+	g.Staging.Modified = result.Staging.Modified
+	g.Staging.Untracked = result.Staging.Untracked
+	g.Staging.Unmerged = result.Staging.Unmerged
+
+	g.Hash = result.Hash
+	g.ShortHash = result.Hash
+	if len(result.Hash) >= 7 {
+		g.ShortHash = result.Hash[:7]
+	}
+
+	g.Ref = result.Ref
+	g.Upstream = result.Upstream
+	g.Ahead = result.Ahead
+	g.Behind = result.Behind
+	g.UpstreamGone = result.UpstreamGone
+
+	return true
+}
+
+func (g *Git) getGitCommandOutput(args ...string) string {
+	if g.command == "" {
+		return ""
+	}
+
+	args = append([]string{"-C", g.repoRootDir, "--no-optional-locks", "-c", "core.quotepath=false", "-c", "color.status=false"}, args...)
+	val, err := g.env.RunCommand(g.command, args...)
+	if err != nil {
+		return ""
+	}
+
+	return val
+}
+
+func (g *Git) setHEADStatus() {
+	branchIcon := g.options.Markup(BranchIcon, "\uE0A0")
+	if g.Ref == DETACHED {
+		g.Detached = true
+		g.resolveDetachedHEAD()
+	} else {
+		head := g.formatBranch(g.Ref)
+		g.HEAD = template.JoinMarkup(branchIcon, head)
+	}
+
+	formatDetached := func() template.Markup {
+		if g.Detached {
+			return template.JoinMarkup(branchIcon, template.RawMarkup("detached at "), g.HEAD)
+		}
+		return g.HEAD
+	}
+
+	getPrettyNameOrigin := func(file string) template.Markup {
+		var origin template.Markup
+		head := g.fileContent(g.mainSCMDir, file)
+		if head == "detached HEAD" {
+			origin = formatDetached()
+		} else {
+			head = strings.Replace(head, "refs/heads/", "", 1)
+			origin = template.JoinMarkup(branchIcon, g.formatBranch(head))
+		}
+		return origin
+	}
+
+	parseInt := func(file string) int {
+		val, _ := strconv.Atoi(g.fileContent(g.mainSCMDir, file))
+		return val
+	}
+
+	if g.env.HasFolder(g.mainSCMDir + "/rebase-merge") {
+		head := getPrettyNameOrigin("rebase-merge/head-name")
+		onto := g.getGitRefFileSymbolicName("rebase-merge/onto")
+		ontoMarkup := g.formatBranch(onto)
+		current := parseInt("rebase-merge/msgnum")
+		total := parseInt("rebase-merge/end")
+		icon := g.options.Markup(RebaseIcon, "\uE728 ")
+
+		g.Rebase = &Rebase{
+			HEAD:    head,
+			Onto:    ontoMarkup,
+			Current: current,
+			Total:   total,
+		}
+
+		progress := template.RawMarkup(fmt.Sprintf(" (%d/%d) at ", current, total))
+		g.HEAD = template.JoinMarkup(icon, head, template.RawMarkup(" onto "), branchIcon, ontoMarkup, progress, g.HEAD)
+		return
+	}
+
+	if g.env.HasFolder(g.mainSCMDir + "/rebase-apply") {
+		head := getPrettyNameOrigin("rebase-apply/head-name")
+		current := parseInt("rebase-apply/next")
+		total := parseInt("rebase-apply/last")
+		icon := g.options.Markup(RebaseIcon, "\uE728 ")
+
+		g.Rebase = &Rebase{
+			HEAD:    head,
+			Current: current,
+			Total:   total,
+		}
+
+		g.HEAD = template.JoinMarkup(icon, head, template.RawMarkup(fmt.Sprintf(" (%d/%d) at ", current, total)), g.HEAD)
+		return
+	}
+
+	// merge
+	commitIcon := g.options.Markup(CommitIcon, "\uF417")
+
+	if g.hasGitFile("MERGE_MSG") {
+		g.Merge = true
+		icon := g.options.Markup(MergeIcon, "\uE727 ")
+		mergeContext := g.fileContent(g.mainSCMDir, "MERGE_MSG")
+		matches := regex.FindNamedRegexMatch(`Merge (remote-tracking )?(?P<type>branch|commit|tag) '(?P<theirs>.*)'`, mergeContext)
+		// head := g.getGitRefFileSymbolicName("ORIG_HEAD")
+		if matches != nil && matches["theirs"] != "" {
+			var headIcon, theirs template.Markup
+			switch matches["type"] {
+			case "tag":
+				headIcon = g.options.Markup(TagIcon, "\uF412")
+				theirs = template.EscapeMarkup(matches["theirs"])
+			case "commit":
+				headIcon = commitIcon
+				theirs = template.EscapeMarkup(g.formatSHA(matches["theirs"]))
+			default:
+				headIcon = branchIcon
+				theirs = g.formatBranch(matches["theirs"])
+			}
+			g.HEAD = template.JoinMarkup(icon, headIcon, theirs, template.RawMarkup(" into "), formatDetached())
+			return
+		}
+	}
+
+	// sequencer status
+	// see if a cherry-pick or revert is in progress, if the user has committed a
+	// conflict resolution with 'git commit' in the middle of a sequence of picks or
+	// reverts then CHERRY_PICK_HEAD/REVERT_HEAD will not exist so we have to read
+	// the todo file.
+	if g.hasGitFile("CHERRY_PICK_HEAD") {
+		g.CherryPick = true
+		sha := g.fileContent(g.mainSCMDir, "CHERRY_PICK_HEAD")
+		cherry := g.options.Markup(CherryPickIcon, "\uE29B ")
+		g.HEAD = g.sequenceHEAD(cherry, commitIcon, sha, formatDetached())
+		return
+	}
+
+	if g.hasGitFile("REVERT_HEAD") {
+		g.Revert = true
+		sha := g.fileContent(g.mainSCMDir, "REVERT_HEAD")
+		revert := g.options.Markup(RevertIcon, "\uF0E2 ")
+		g.HEAD = g.sequenceHEAD(revert, commitIcon, sha, formatDetached())
+		return
+	}
+
+	if g.hasGitFile("sequencer/todo") {
+		todo := g.fileContent(g.mainSCMDir, "sequencer/todo")
+		matches := regex.FindNamedRegexMatch(`^(?P<action>p|pick|revert)\s+(?P<sha>\S+)`, todo)
+		if matches != nil && matches["sha"] != "" {
+			action := matches["action"]
+			sha := matches["sha"]
+			switch action {
+			case "p", "pick":
+				g.CherryPick = true
+				cherry := g.options.Markup(CherryPickIcon, "\uE29B ")
+				g.HEAD = g.sequenceHEAD(cherry, commitIcon, sha, formatDetached())
+				return
+			case "revert":
+				g.Revert = true
+				revert := g.options.Markup(RevertIcon, "\uF0E2 ")
+				g.HEAD = g.sequenceHEAD(revert, commitIcon, sha, formatDetached())
+				return
+			}
+		}
+	}
+
+	g.HEAD = formatDetached()
+}
+
+func (g *Git) sequenceHEAD(actionIcon, commitIcon template.Markup, sha string, detached template.Markup) template.Markup {
+	return template.JoinMarkup(actionIcon, commitIcon, template.EscapeMarkup(g.formatSHA(sha)), template.RawMarkup(" onto "), detached)
+}
+
+func (g *Git) formatSHA(sha string) string {
+	if len(sha) <= 7 {
+		return sha
+	}
+	return sha[0:7]
+}
+
+func (g *Git) hasGitFile(file string) bool {
+	return g.env.HasFilesInDir(g.mainSCMDir, file)
+}
+
+func (g *Git) getGitRefFileSymbolicName(refFile string) string {
+	ref := g.fileContent(g.mainSCMDir, refFile)
+	if !g.options.Bool(ResolveRebaseTarget, true) {
+		return g.formatSHA(ref)
+	}
+	return g.getGitCommandOutput("name-rev", "--name-only", "--exclude=tags/*", ref)
+}
+
+func (g *Git) updateHEADReference() {
+	HEADRef := g.fileContent(g.mainSCMDir, "HEAD")
+	log.Debug("HEADRef:", HEADRef)
+
+	// check if we are in a repo using reftables
+	if HEADRef == "ref: refs/heads/.invalid" {
+		log.Debug("repo is using reftables")
+
+		HEADRef = g.getGitCommandOutput("rev-parse", "--symbolic-full-name", "HEAD")
+
+		// this is a detached head
+		if strings.HasPrefix(HEADRef, "fatal:") {
+			log.Debug("detached HEAD detected")
+			g.Detached = true
+			g.resolveDetachedHEAD()
+			return
+		}
+
+		if strings.HasPrefix(HEADRef, "refs/heads/") {
+			HEADRef = "ref: " + HEADRef
+		}
+
+		log.Debug("resolved HEADRef:", HEADRef)
+	}
+
+	g.Detached = !strings.HasPrefix(HEADRef, "ref:")
+	if branchName, ok := strings.CutPrefix(HEADRef, BRANCHPREFIX); ok {
+		log.Debug("current HEAD is a branch:", branchName)
+
+		g.Ref = branchName
+		g.HEAD = template.JoinMarkup(g.options.Markup(BranchIcon, "\uE0A0"), g.formatBranch(branchName))
+
+		return
+	}
+
+	g.resolveDetachedHEAD()
+}
+
+func (g *Git) resolveDetachedHEAD() {
+	if !g.resolveDetachedHash() {
+		g.HEAD = g.options.Markup(NoCommitsIcon, "\U000F0095 ")
+		return
+	}
+
+	g.Ref = g.ShortHash
+
+	if tagName, found := g.resolveExactTag(); found {
+		g.Ref = tagName
+		g.HEAD = template.JoinMarkup(g.options.Markup(TagIcon, "\uF412"), template.EscapeMarkup(tagName))
+		return
+	}
+
+	g.HEAD = template.JoinMarkup(g.options.Markup(CommitIcon, "\uF417"), template.EscapeMarkup(g.ShortHash))
+}
+
+// resolveDetachedHash fills g.Hash/g.ShortHash for a detached HEAD, reading
+// .git/HEAD directly before falling back to `git rev-parse HEAD` (reftables
+// HEAD, corrupt refs, ...). It reports false only when neither path finds a
+// commit, i.e. a brand-new, commit-less repo.
+func (g *Git) resolveDetachedHash() bool {
+	if g.scmDir != "" && g.options.Bool(NativeStatus, false) {
+		if head, err := gitstatus.LoadHead(g.mainSCMDir, g.scmDir); err == nil && head.Hash != "" {
+			g.Hash = head.Hash
+			g.ShortHash = g.formatSHA(head.Hash)
+			return true
+		}
+	}
+
+	HEADRef := g.getGitCommandOutput("rev-parse", "HEAD")
+	if len(HEADRef) < 7 {
+		return false
+	}
+
+	g.ShortHash = HEADRef[0:7]
+	g.Hash = HEADRef
+	return true
+}
+
+// resolveExactTag looks up a tag pointing exactly at g.Hash, native first
+// and falling back to `git describe --tags --exact-match` whenever the
+// native lookup can't answer confidently (an ambiguous match, or a repo
+// shape gitstatus doesn't support).
+func (g *Git) resolveExactTag() (string, bool) {
+	if g.scmDir != "" && g.options.Bool(NativeStatus, false) {
+		if tag, found, err := gitstatus.ExactTag(g.scmDir, g.Hash); err == nil {
+			return tag, found
+		}
+	}
+
+	tagName := g.getGitCommandOutput("describe", "--tags", "--exact-match")
+	return tagName, len(tagName) > 0
+}
+
+func (g *Git) WorktreeCount() int {
+	if g.worktreeCount > 0 {
+		return g.worktreeCount
+	}
+
+	commonDir := g.commonGitDir()
+	if commonDir == "" {
+		return 0
+	}
+
+	worktreesFolder := filepath.Join(commonDir, "worktrees")
+
+	if !g.env.HasFolder(worktreesFolder) {
+		return 0
+	}
+
+	var count int
+	for _, folder := range g.env.LsDir(worktreesFolder) {
+		if folder.IsDir() {
+			count++
+		}
+	}
+
+	return count
+}
+
+func (g *Git) MainWorktree() string {
+	if !g.IsWorkTree {
+		return ""
+	}
+
+	g.mainWorktreeOnce.Do(func() {
+		if !g.ensureMainWorktreeContext() {
+			return
+		}
+
+		commonDir := g.commonGitDir()
+		key := fmt.Sprintf("%s@%s", mainWorktreeCacheKey, commonDir)
+		if mainWorktree, found := cache.Session.Get[string](key); found {
+			g.mainWorktree = mainWorktree
+			return
+		}
+
+		// NUL-delimited porcelain is stable and survives RunCommand's whitespace trimming.
+		output := g.getGitCommandOutput("worktree", "list", "--porcelain", "-z")
+		mainWorktree, valid := parseMainWorktree(output)
+		if !valid {
+			return
+		}
+
+		g.mainWorktree = g.convertToLinuxPath(mainWorktree)
+		cache.Session.Set(key, g.mainWorktree, cache.INFINITE)
+	})
+
+	return g.mainWorktree
+}
+
+func (g *Git) ensureMainWorktreeContext() bool {
+	if g.command != "" && g.commonGitDir() != "" {
+		return true
+	}
+
+	if g.env.Flags().DataOnly {
+		return false
+	}
+
+	var gitdir *runtime.FileInfo
+	if g.commonGitDir() == "" {
+		var err error
+		gitdir, err = g.env.HasParentFilePath(".git", true)
+		if err != nil {
+			return false
+		}
+	}
+
+	if g.command == "" && !g.hasCommand(GITCOMMAND) {
+		return false
+	}
+
+	if gitdir != nil && (!g.isRepo(gitdir) || !g.IsWorkTree) {
+		return false
+	}
+
+	return g.commonGitDir() != ""
+}
+
+func (g *Git) commonGitDir() string {
+	// scmDir is the common git directory at every discovery exit. The worktrees cut
+	// below is only for partially initialized state, where scmDir is not yet set.
+	if g.scmDir != "" {
+		return filepath.ToSlash(g.scmDir)
+	}
+
+	mainSCMDir := filepath.ToSlash(g.mainSCMDir)
+	if commonDir, _, found := strings.CutLast(mainSCMDir, "/worktrees/"); found {
+		return commonDir
+	}
+
+	return ""
+}
+
+// isModuleAdminDir reports whether target is a submodule administrative directory
+// belonging to the checkout at parent, or a linked worktree inside one.
+//
+// A pointer whose spelling merely contains a modules component is not enough: a
+// --separate-git-dir target such as /srv/modules/project.git spells the same substring
+// without being a submodule. Nor does the shape help the way it does for worktrees. A
+// submodule's name is its path, so it may hold separators (.git/modules/vendor/libfoo),
+// it may nest (.../modules/vendor/libfoo/modules/inner), and the folder in front of
+// modules is only called .git when the superproject has no --separate-git-dir of its own
+// (../../sepgit/modules/sub is a real pointer).
+//
+// What does hold is that git records core.worktree in a submodule's git dir, pointing
+// back at the checkout, and never records it in a --separate-git-dir target. That
+// back-reference is the same kind of proof the worktree branch takes from its gitdir
+// metadata.
+func (g *Git) isModuleAdminDir(target, parent string) bool {
+	// A linked worktree inside a module dir keeps no config of its own, so it cannot
+	// carry core.worktree. Its gitdir metadata identifies it instead, which is what the
+	// worktree case in the caller goes on to validate.
+	if worktreeAdminIndex(target) > -1 && g.env.HasFilesInDir(target, "gitdir") {
+		return true
+	}
+
+	// A missing or unreadable config is simply not a submodule git dir, not an error
+	// worth reporting: every --separate-git-dir target spelled with a modules component
+	// lands here.
+	cfg, err := loadGitConfig(g.env, target)
+	if err != nil {
+		log.Debug("no readable config in", target, "- not a submodule git dir")
+		return false
+	}
+
+	worktree := cfg.Section("core").Key("worktree").String()
+	if worktree == "" {
+		log.Debug("no core.worktree in", target, "- not a submodule git dir")
+		return false
+	}
+
+	// core.worktree is relative to the git dir holding it, and may need the same WSL
+	// conversion as the pointer itself.
+	root := resolveGitPath(target, g.convertToLinuxPath(worktree))
+
+	return filepath.Clean(root) == filepath.Clean(parent)
+}
+
+func worktreeAdminIndex(dir string) int {
+	const segment = "/worktrees/"
+
+	normalised := filepath.ToSlash(filepath.Clean(dir))
+	index := strings.LastIndex(normalised, segment)
+	if index < 0 {
+		return -1
+	}
+
+	name := normalised[index+len(segment):]
+	if name == "" || strings.Contains(name, "/") {
+		return -1
+	}
+
+	return index
+}
+
+func parseMainWorktree(output string) (string, bool) {
+	// Git guarantees the main worktree is the first record.
+	record, _, found := strings.Cut(output, "\x00\x00")
+	if !found {
+		return "", false
+	}
+
+	fields := strings.Split(record, "\x00")
+	mainWorktree, found := strings.CutPrefix(fields[0], "worktree ")
+	if !found || mainWorktree == "" {
+		return "", false
+	}
+
+	if slices.Contains(fields[1:], "bare") {
+		return "", true
+	}
+
+	return mainWorktree, true
+}
+
+// remoteNameOrOrigin derives the remote to attribute URLs to from an upstream reference,
+// reproducing the historical behaviour: "origin/main" -> "origin", "" -> "origin".
+func remoteNameOrOrigin(upstream string) string {
+	if remote := regex.ReplaceAllString("/.*", upstream, ""); remote != "" {
+		return remote
+	}
+
+	return origin
+}
+
+func (g *Git) getRemoteURL(remote string) string {
+	if remote == "" {
+		return ""
+	}
+
+	upstream := remote
+
+	// Ask git first because it applies insteadOf rewriting and reads the merged configuration.
+	if url := g.getGitCommandOutput("remote", "get-url", upstream); url != "" {
+		return url
+	}
+
+	cfg, err := g.commonConfig()
+	if err != nil {
+		return ""
+	}
+
+	return cfg.Section("remote \"" + upstream + "\"").Key("url").String()
+}
+
+func (g *Git) Remotes() map[string]string {
+	var remotes = make(map[string]string)
+
+	cfg, err := g.commonConfig()
+	if err != nil {
+		return remotes
+	}
+
+	for _, section := range cfg.Sections() {
+		if !strings.HasPrefix(section.Name(), "remote ") {
+			continue
+		}
+
+		name := strings.TrimPrefix(section.Name(), "remote ")
+		name = strings.Trim(name, "\"")
+		url := section.Key("url").String()
+		url = g.cleanUpstreamURL(url)
+		remotes[name] = url
+	}
+	return remotes
+}
+
+func (g *Git) getUntrackedFilesMode() string {
+	return g.getSwitchMode(UntrackedModes, "-u", "normal")
+}
+
+func (g *Git) getIgnoreSubmodulesMode() string {
+	return g.getSwitchMode(IgnoreSubmodules, "--ignore-submodules=", "")
+}
+
+func (g *Git) getSwitchMode(property options.Option, gitSwitch, mode string) string {
+	repoModes := g.options.KeyValueMap(property, map[string]string{})
+	// make use of a wildcard for all repo's
+	if val := repoModes["*"]; len(val) != 0 {
+		mode = val
+	}
+	// get the specific repo mode
+	if val := repoModes[g.repoRootDir]; len(val) != 0 {
+		mode = val
+	}
+	if mode == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s%s", gitSwitch, mode)
+}
+
+func (g *Git) repoName() string {
+	if !g.IsWorkTree {
+		return path.Base(g.convertToLinuxPath(g.repoRootDir))
+	}
+
+	commonDir := g.commonGitDir()
+	if commonDir == "" {
+		return ""
+	}
+
+	// If commonDir is a .git directory, the repo name is its parent's basename
+	commonDirSlash := filepath.ToSlash(filepath.Clean(commonDir))
+	if strings.HasSuffix(commonDirSlash, "/.git") {
+		parent := filepath.Dir(commonDir)
+		return path.Base(g.convertToLinuxPath(parent))
+	}
+
+	// Otherwise in a worktree or bare repo; read config to find the actual working directory
+	for _, file := range []string{"config.worktree", "config"} {
+		cfg, err := loadGitConfigFile(g.env, commonDir, file)
+		if err != nil {
+			continue
+		}
+
+		worktree := cfg.Section("core").Key("worktree").String()
+		if worktree == "" {
+			continue
+		}
+
+		return path.Base(g.convertToLinuxPath(resolveGitPath(commonDir, worktree)))
+	}
+
+	return ""
+}

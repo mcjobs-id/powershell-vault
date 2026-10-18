@@ -1,0 +1,368 @@
+package segments
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/segments/options"
+)
+
+type Executiontime struct {
+	Base
+
+	FormattedMs string
+	Ms          int64
+}
+
+type DurationStyle string
+
+const (
+	// Minimum duration in milliseconds required to enable this segment
+	ThresholdProperty options.Option = "threshold"
+	// Milliseconds short
+	Austin DurationStyle = "austin"
+	// Milliseconds long
+	Roundrock DurationStyle = "roundrock"
+	// Milliseconds full
+	Dallas DurationStyle = "dallas"
+	// Hour
+	Galveston DurationStyle = "galveston"
+	// Hour
+	GalvestonMs DurationStyle = "galvestonms"
+	// Hour and milliseconds
+	Houston DurationStyle = "houston"
+	// Seconds
+	Amarillo DurationStyle = "amarillo"
+	Round    DurationStyle = "round"
+	// Always 7 character width
+	Lucky7 = "lucky7"
+	// ISO 8601 duration format (seconds)
+	ISO8601 DurationStyle = "iso8601"
+	// ISO 8601 duration format with milliseconds
+	ISO8601Ms DurationStyle = "iso8601ms"
+
+	second           = 1000
+	minute           = 60000
+	hour             = 3600000
+	day              = 86400000
+	secondsPerMinute = 60
+	minutesPerHour   = 60
+	hoursPerDay      = 24
+)
+
+func (t *Executiontime) Enabled() bool {
+	alwaysEnabled := t.options.Bool(options.AlwaysEnabled, false)
+	executionTimeMs := t.env.ExecutionTime()
+	thresholdMs := t.options.Float64(ThresholdProperty, float64(500))
+	if !alwaysEnabled && executionTimeMs < thresholdMs {
+		return false
+	}
+	style := DurationStyle(t.options.String(options.Style, string(Austin)))
+	t.Ms = int64(executionTimeMs)
+	t.FormattedMs = t.formatDuration(style)
+	return t.FormattedMs != ""
+}
+
+func (t *Executiontime) Template() string {
+	return " {{ .FormattedMs }} "
+}
+
+func (t *Executiontime) formatDuration(style DurationStyle) string {
+	switch style {
+	case Austin:
+		return t.formatDurationAustin()
+	case Roundrock:
+		return t.formatDurationRoundrock()
+	case Dallas:
+		return t.formatDurationDallas()
+	case Galveston:
+		return t.formatDurationGalveston()
+	case GalvestonMs:
+		return t.formatDurationGalvestonMs()
+	case Houston:
+		return t.formatDurationHouston()
+	case Amarillo:
+		return t.formatDurationAmarillo()
+	case Round:
+		return t.formatDurationRound()
+	case Lucky7:
+		return t.formatDurationLucky7()
+	case ISO8601:
+		return t.formatDurationISO8601()
+	case ISO8601Ms:
+		return t.formatDurationISO8601Ms()
+	default:
+		return fmt.Sprintf("Style: %s is not available", style)
+	}
+}
+
+func (t *Executiontime) formatDurationAustin() string {
+	if t.Ms < second {
+		return fmt.Sprintf("%dms", t.Ms%second)
+	}
+
+	seconds := float64(t.Ms%minute) / second
+	result := strconv.FormatFloat(seconds, 'f', -1, 64) + "s"
+
+	if t.Ms >= minute {
+		result = fmt.Sprintf("%dm %s", t.Ms/minute%secondsPerMinute, result)
+	}
+	if t.Ms >= hour {
+		result = fmt.Sprintf("%dh %s", t.Ms/hour%hoursPerDay, result)
+	}
+	if t.Ms >= day {
+		result = fmt.Sprintf("%dd %s", t.Ms/day, result)
+	}
+	return result
+}
+
+func (t *Executiontime) formatDurationRoundrock() string {
+	result := fmt.Sprintf("%dms", t.Ms%second)
+	if t.Ms >= second {
+		result = fmt.Sprintf("%ds %s", t.Ms/second%secondsPerMinute, result)
+	}
+	if t.Ms >= minute {
+		result = fmt.Sprintf("%dm %s", t.Ms/minute%minutesPerHour, result)
+	}
+	if t.Ms >= hour {
+		result = fmt.Sprintf("%dh %s", t.Ms/hour%hoursPerDay, result)
+	}
+	if t.Ms >= day {
+		result = fmt.Sprintf("%dd %s", t.Ms/day, result)
+	}
+	return result
+}
+
+func (t *Executiontime) formatDurationDallas() string {
+	seconds := float64(t.Ms%minute) / second
+	result := strconv.FormatFloat(seconds, 'f', -1, 64)
+
+	if t.Ms >= minute {
+		result = fmt.Sprintf("%d:%s", t.Ms/minute%minutesPerHour, result)
+	}
+	if t.Ms >= hour {
+		result = fmt.Sprintf("%d:%s", t.Ms/hour%hoursPerDay, result)
+	}
+	if t.Ms >= day {
+		result = fmt.Sprintf("%d:%s", t.Ms/day, result)
+	}
+	return result
+}
+
+func (t *Executiontime) formatDurationGalveston() string {
+	result := fmt.Sprintf("%02d:%02d:%02d", t.Ms/hour, t.Ms/minute%minutesPerHour, t.Ms%minute/second)
+	return result
+}
+
+func (t *Executiontime) formatDurationGalvestonMs() string {
+	millies := t.Ms % second
+	result := fmt.Sprintf("%02d:%02d:%02d:%03d", t.Ms/hour, t.Ms/minute%minutesPerHour, t.Ms%minute/second, millies)
+	return result
+}
+
+func (t *Executiontime) formatDurationHouston() string {
+	milliseconds := ".0"
+	if t.Ms%second > 0 {
+		// format milliseconds as a string with truncated trailing zeros
+		milliseconds = strconv.FormatFloat(float64(t.Ms%second)/second, 'f', -1, 64)
+		// at this point milliseconds looks like "0.5". remove the leading "0"
+		if len(milliseconds) >= 1 {
+			milliseconds = milliseconds[1:]
+		}
+	}
+
+	result := fmt.Sprintf("%02d:%02d:%02d%s", t.Ms/hour, t.Ms/minute%minutesPerHour, t.Ms%minute/second, milliseconds)
+	return result
+}
+
+// groupThousands renders n with comma thousand separators, matching what
+// x/text/message's English printer produced for %d.
+func groupThousands(n int64) string {
+	s := strconv.FormatInt(n, 10)
+
+	start := 0
+	if s[0] == '-' {
+		start = 1
+	}
+
+	if len(s)-start <= 3 {
+		return s
+	}
+
+	var sb strings.Builder
+	first := start + (len(s)-start)%3
+	if first == start {
+		first = start + 3
+	}
+
+	sb.WriteString(s[:first])
+	for i := first; i < len(s); i += 3 {
+		sb.WriteByte(',')
+		sb.WriteString(s[i : i+3])
+	}
+
+	return sb.String()
+}
+
+func (t *Executiontime) formatDurationAmarillo() string {
+	// wholeNumber represents the value to the left of the decimal point (seconds)
+	wholeNumber := t.Ms / second
+	// decimalNumber represents the value to the right of the decimal point (milliseconds)
+	decimalNumber := float64(t.Ms%second) / second
+
+	// format wholeNumber as a string with thousands separators
+	result := groupThousands(wholeNumber)
+
+	if decimalNumber > 0 {
+		// format decimalNumber as a string with truncated trailing zeros
+		decimalResult := strconv.FormatFloat(decimalNumber, 'f', -1, 64)
+		// at this point decimalResult looks like "0.5"
+		// remove the leading "0" and append
+		if len(decimalResult) >= 1 {
+			result += decimalResult[1:]
+		}
+	}
+	result += "s"
+
+	return result
+}
+
+func (t *Executiontime) formatDurationRound() string {
+	toRoundString := func(one, two int64, oneText, twoText string) string {
+		if two == 0 {
+			return fmt.Sprintf("%d%s", one, oneText)
+		}
+		return fmt.Sprintf("%d%s %d%s", one, oneText, two, twoText)
+	}
+	hours := t.Ms / hour % hoursPerDay
+	if t.Ms >= day {
+		return toRoundString(t.Ms/day, hours, "d", "h")
+	}
+	minutes := t.Ms / minute % secondsPerMinute
+	if t.Ms >= hour {
+		return toRoundString(hours, minutes, "h", "m")
+	}
+	seconds := (t.Ms % minute) / second
+	if t.Ms >= minute {
+		return toRoundString(minutes, seconds, "m", "s")
+	}
+	if t.Ms >= second {
+		return fmt.Sprintf("%ds", seconds)
+	}
+	return fmt.Sprintf("%dms", t.Ms%second)
+}
+
+func (t *Executiontime) formatDurationLucky7() string {
+	// https://github.com/JanDeDobbeleer/oh-my-posh/issues/3970
+	// execution time will always be 7 characters long
+	// decimal point will be at the same location (3rd space or str[2])
+	// seconds and milliseconds will be aligned
+	// [m, s], [h, m], [d, h] will be aligned
+	if t.Ms < second {
+		//   999ms
+		// 1234567
+		return fmt.Sprintf("%5dms", t.Ms%second)
+	}
+
+	if t.Ms < minute {
+		// 12.34s
+		// 1234567
+
+		//  1.23s
+		// 1230 (= 1230ms)
+		// ^ use Sprintf pad left space
+		//  1230
+		// from here, just take 1, 23 of 230, and append s and ' '
+
+		result := fmt.Sprintf("%5d", t.Ms)
+
+		return result[:2] + "." + result[2:4] + "s "
+	}
+
+	if t.Ms < hour {
+		m := t.Ms / minute
+		s := t.Ms % minute / second
+
+		return fmt.Sprintf("%2dm %2ds", m, s)
+	}
+
+	if t.Ms < day {
+		h := t.Ms / hour
+		m := t.Ms % hour / minute
+
+		return fmt.Sprintf("%2dh %2dm", h, m)
+	}
+
+	if t.Ms < 100*day {
+		d := t.Ms / day
+		h := t.Ms % day / hour
+
+		return fmt.Sprintf("%2dd %2dh", d, h)
+	}
+
+	// I have no Idea how you got here
+	// return "   ∞   "
+	d := t.Ms / day
+	return fmt.Sprintf("%6dd", d)
+}
+
+func (t *Executiontime) formatDurationISO8601() string {
+	// ISO 8601 duration format: PT[n]H[n]M[n]S
+	// Examples: PT13M12S, PT1H30M45S
+	result := "PT"
+
+	hours := t.Ms / hour
+	minutes := (t.Ms % hour) / minute
+	seconds := float64(t.Ms%minute) / second
+
+	roundedSeconds := int64(seconds)
+	if t.Ms%second >= second/2 {
+		roundedSeconds++
+	}
+
+	// Handle potential overflow from rounding
+	if roundedSeconds >= secondsPerMinute {
+		roundedSeconds = 0
+		minutes++
+		if minutes >= minutesPerHour {
+			minutes = 0
+			hours++
+		}
+	}
+
+	if hours > 0 {
+		result += fmt.Sprintf("%dH", hours)
+	}
+	if minutes > 0 {
+		result += fmt.Sprintf("%dM", minutes)
+	}
+	if roundedSeconds > 0 || (hours == 0 && minutes == 0) {
+		result += fmt.Sprintf("%dS", roundedSeconds)
+	}
+
+	return result
+}
+
+func (t *Executiontime) formatDurationISO8601Ms() string {
+	// ISO 8601 duration format with milliseconds: PT[n]H[n]M[n]S
+	// Examples: PT13M12.1S, PT1H30M45.123S
+	result := "PT"
+
+	hours := t.Ms / hour
+	minutes := (t.Ms % hour) / minute
+	seconds := float64(t.Ms%minute) / second
+
+	if hours > 0 {
+		result += fmt.Sprintf("%dH", hours)
+	}
+	if minutes > 0 {
+		result += fmt.Sprintf("%dM", minutes)
+	}
+	if seconds > 0 || (hours == 0 && minutes == 0) {
+		secondsStr := strconv.FormatFloat(seconds, 'f', -1, 64)
+		result += fmt.Sprintf("%sS", secondsStr)
+	}
+
+	return result
+}

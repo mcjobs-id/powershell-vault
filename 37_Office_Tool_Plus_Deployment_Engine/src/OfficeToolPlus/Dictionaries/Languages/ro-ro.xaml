@@ -1,0 +1,999 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.RunTime"
+                    xml:space="preserve">
+
+    <!-- Country settings, it is used to get information from server. -->
+    <sys:String x:Key="Culture">ro-ro</sys:String>
+    <!-- Products name settings, "en-us" is default value if not set. -->
+    <sys:String x:Key="ProductDict">en-us</sys:String>
+    <!-- Markdown document font family. -->
+    <FontFamily x:Key="Markdown.FontFamily">Segoe UI</FontFamily>
+
+    <!-- Eula content -->
+    <sys:String x:Key="Eula.Title">Condiții de utilizare</sys:String>
+    <sys:String x:Key="Eula.Content">Prin utilizarea acestui software, trebuie să acceptați [Termenii licenței software]({0}) și [Acordul de servicii Microsoft]({1}).</sys:String>
+
+    <!-- Custom control -->
+    <sys:String x:Key="Yerong_String_ToggleButton.Unset">Nesetat</sys:String>
+    <sys:String x:Key="Yerong_String_ToggleButton.Off">Dezactivat</sys:String>
+    <sys:String x:Key="Yerong_String_ToggleButton.On">Activat</sys:String>
+    <sys:String x:Key="Yerong_String_MicaMenu.Name">Meniu</sys:String>
+    <sys:String x:Key="Yerong_String_MicaMenu.HelpText">Faceți clic pentru a deschide meniul contextual.</sys:String>
+
+    <!-- Title bar -->
+    <sys:String x:Key="Title_Bar_GoBack_Button">Înapoi</sys:String>
+    <sys:String x:Key="Title_Bar_SysMenu_Button">Meniu sistem</sys:String>
+    <sys:String x:Key="Title_Bar_Command_Box">Comandă</sys:String>
+
+    <!-- Navigation bar -->
+    <sys:String x:Key="Navigation_Menu.Name">Meniu de navigare</sys:String>
+    <sys:String x:Key="Navigation_Menu.ToolTip">Faceți clic pentru a extinde sau a restrânge bara de navigare.</sys:String>
+    <sys:String x:Key="Navigation_Bar.Name">Bară de navigare</sys:String>
+
+    <sys:String x:Key="Navigate_Page.Home">Acasă</sys:String>
+    <sys:String x:Key="Navigate_Page.Deploy">Implementare</sys:String>
+    <sys:String x:Key="Navigate_Page.Activate">Activare</sys:String>
+    <sys:String x:Key="Navigate_Page.Toolbox">Trusă de scule</sys:String>
+    <sys:String x:Key="Navigate_Page.ConvertDocuments">Convertor de documente</sys:String>
+    <sys:String x:Key="Navigate_Page.HashChecker">Verificare hash</sys:String>
+
+    <sys:String x:Key="Navigate_Page.Settings">Setări</sys:String>
+    <sys:String x:Key="Navigate_Page.About">Despre</sys:String>
+
+    <!-- Notification list -->
+    <sys:String x:Key="Notification_Close_Message.Name">Închide mesajul</sys:String>
+    <sys:String x:Key="Notification_Message_Button_List">Butoane pentru mesaje</sys:String>
+    <sys:String x:Key="Notification_Cancel_Task.Name">Anulează sarcina</sys:String>
+
+    <!-- Home page -->
+    <sys:String x:Key="Home_Messages_Center.Name">Centru de mesaje</sys:String>
+    <!-- Greetings, customize it according to your country and habits. -->
+    <sys:String x:Key="Home_Greeting_Hello">Salut</sys:String>
+    <!-- 00:00 -> 05:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.0">E târziu, vise plăcute!</sys:String>
+    <!-- 05:00 -> 06:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.5">Este aproape răsăritul, gata să te trezești?</sys:String>
+    <!-- 06:00 -> 10:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.6">Bună dimineața</sys:String>
+    <!-- 10:00 -> 11:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.10">Bună dimineața</sys:String>
+    <!-- 11:00 -> 12:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.11">Bună ziua</sys:String>
+    <!-- 12:00 -> 13:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.12">Bună ziua</sys:String>
+    <!-- 13:00 -> 15:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.13">Bună ziua</sys:String>
+    <!-- 15:00 -> 17:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.15">Bună ziua</sys:String>
+    <!-- 17:00 -> 18:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.17">Bună ziua</sys:String>
+    <!-- 18:00 -> 21:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.18">Bună seara</sys:String>
+    <!-- 21:00 -> 22:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.21">E timpul de culcare, vise plăcute!</sys:String>
+    <!-- 22:00 -> 00:00 (+1) -->
+    <sys:String x:Key="Home_Greeting_Hour.22">E târziu, vise plăcute!</sys:String>
+    <!-- Greetings end -->
+    <sys:String x:Key="Home_Install_Office">Instalează Office</sys:String>
+    <sys:String x:Key="Home_Install_Office.O365PPRDescription">Include Outlook, OneDrive for Business, Word, Excel, PowerPoint, și altele.</sys:String>
+    <sys:String x:Key="Home_Install_Office.O365HPRDescription">Include Outlook, Word, Excel, PowerPoint, și altele.</sys:String>
+    <sys:String x:Key="Home_Install_Office.PP2019RDescription">Include Outlook, Word, Excel, PowerPoint, și altele.</sys:String>
+    <sys:String x:Key="Home_Install_Office.HS2019Description">Include Word, Excel, PowerPoint.</sys:String>
+    <sys:String x:Key="Home_Loading_Content">Loading content...</sys:String>
+    <sys:String x:Key="Home_Error_While_Loading_Content">Unable to load content. Please check your Internet connection and try again.</sys:String>
+    <sys:String x:Key="Home_Retry">_Reîncercați</sys:String>
+    <sys:String x:Key="Home_Launcher.Name">Listă de aplicații</sys:String>
+    <sys:String x:Key="Home_Launcher_OpenInBrowser">_Deschide în browser</sys:String>
+    <sys:String x:Key="Home_Launcher_CreateShortcut">_Creați o comandă rapidă pentru desktop</sys:String>
+
+    <!-- Deploy page -->
+    <sys:String x:Key="Deploy_Help_Docs">Having trouble installing Office? Please check our help docs for possible solutions.</sys:String>
+    <sys:String x:Key="Deploy_Learn_More">Aflați mai multe</sys:String>
+    <!-- Channels Name, if you do not want to translate them, please keep in English. -->
+    <sys:String x:Key="PerpetualVL2019">Office 2019 Perpetual Enterprise</sys:String>
+    <sys:String x:Key="PerpetualVL2021">Office 2021 Perpetual Enterprise</sys:String>
+    <sys:String x:Key="PerpetualVL2024">Office 2024 Perpetual Enterprise</sys:String>
+    <sys:String x:Key="SemiAnnual">Canal semi-anual Enterprise</sys:String>
+    <sys:String x:Key="MonthlyEnterprise">Canal lunar Enterprise</sys:String>
+    <sys:String x:Key="Current">Canal curent</sys:String>
+    <sys:String x:Key="CurrentPreview">Canal curent (Previzualizare)</sys:String>
+    <sys:String x:Key="BetaChannel">Canal Beta</sys:String>
+
+    <!-- Error messages -->
+    <!-- {0} means product name. -->
+    <sys:String x:Key="Deploy_Error_Coexist">{0} nu poate coexista cu produsele existente.</sys:String>
+    <!-- {0} means product name. -->
+    <sys:String x:Key="Deploy_Error_ODT_Not_Supported">Dacă doriți să instalați {0}, schimbați modulul de instalare la Office Tool Plus.</sys:String>
+    <!-- {0} means product name, {1} means channel name. -->
+    <sys:String x:Key="Deploy_Error_Channel">{0} nu poate fi instalat pe canalul selectat: {1}.</sys:String>
+    <!-- {0} means channel name, such as Current Channel. -->
+    <sys:String x:Key="Deploy_Error_Unsupported_Channel">Dacă doriți să utilizați {0}, schimbați modulul de instalare la Office Tool Plus.</sys:String>
+    <!-- Example: You cannot install 32 bit of Office, because you have the 64 bit of Office installed on your computer. -->
+    <sys:String x:Key="Deploy_Error_Office_Architecture">Nu puteți instala Office pe {0}, deoarece aveți Office pe {1} instalat pe calculator.</sys:String>
+    <sys:String x:Key="Deploy_Error_Installation_Arch">Arhitectura selectată nu corespunde cu arhitectura fișierelor de instalare locale. Vă rugăm să reselectați arhitectura sau să nu utilizați fișierele de instalare locale pentru implementare.</sys:String>
+    <sys:String x:Key="Deploy_Error_Installation_Channel">Canalul de actualizare selectat nu corespunde cu canalul de actualizare al fișierelor de instalare locale. Vă rugăm să reselectați canalul de actualizare sau să nu utilizați fișierele de instalare locale pentru implementare.</sys:String>
+
+    <sys:String x:Key="Deploy_Deployment">Implementare Office</sys:String>
+    <sys:String x:Key="Deploy_Deployment.Description">Înainte de implementarea Office, asigurați-vă că modul de implementare este setat corect și că produsul și limba sunt configurate.</sys:String>
+    <sys:String x:Key="Deploy_Start_Deploy">Începeți _implementarea</sys:String>
+    <sys:String x:Key="Deploy_Reset">_Resetați toate setările</sys:String>
+    <sys:String x:Key="Deploy_View_Code">_Vizualizați codul XML</sys:String>
+    <sys:String x:Key="Deploy_Generate_Command">_Generați comenzi de implementare</sys:String>
+    <sys:String x:Key="Deploy_Apply_Preferences">_Aplicați preferințele pentru aplicațiile Office</sys:String>
+    <sys:String x:Key="Deploy_Export_Config">_Exportați configurația</sys:String>
+    <sys:String x:Key="Deploy_Import_Config">_Importați configurația</sys:String>
+    <sys:String x:Key="Deploy_Import_Config_Web">Importați configurația din _Web</sys:String>
+    <sys:String x:Key="Deploy_Check_Updates">Verificați _actualizările Office</sys:String>
+    <sys:String x:Key="Deploy_Repair_Office">Re_parați Office</sys:String>
+    <sys:String x:Key="Deploy_Mode">Mod de implementare</sys:String>
+    <sys:String x:Key="Deploy_Mode.Edit">Editați configurația</sys:String>
+    <sys:String x:Key="Deploy_Mode.Download">Descărcare</sys:String>
+    <sys:String x:Key="Deploy_Mode.Install">Instalare</sys:String>
+    <sys:String x:Key="Deploy_Mode.Create_ISO">Creați fișier ISO</sys:String>
+    <sys:String x:Key="Deploy_Architecture">Arhitectură</sys:String>
+    <!-- {0} represents the Office version number, and {1} represents the architecture. -->
+    <sys:String x:Key="Deploy_Architecture_Current_Installed">Currently installed Office version: {0} ({1}).</sys:String>
+    <sys:String x:Key="Deploy_Architecture_Installed.X86">32-bit</sys:String>
+    <sys:String x:Key="Deploy_Architecture_Installed.X64">64-bit</sys:String>
+    <sys:String x:Key="Deploy_Architecture_Installed.ARM32">Arm32</sys:String>
+    <sys:String x:Key="Deploy_Architecture_Installed.ARM64">Arm64</sys:String>
+    <sys:String x:Key="Deploy_Architecture.X86">32-bit</sys:String>
+    <sys:String x:Key="Deploy_Architecture.X64">64-bit</sys:String>
+    <sys:String x:Key="Deploy_Architecture.ARM32">Arm32 (compatibil 32-bit)</sys:String>
+    <sys:String x:Key="Deploy_Architecture.ARM64">Arm64 (compatibil 64-bit)</sys:String>
+    <sys:String x:Key="Deploy_Channel">Canal de actualizare</sys:String>
+    <sys:String x:Key="Deploy_Channel_Available_Version">Versiunea Office disponibilă în prezent: {0}</sys:String>
+    <sys:String x:Key="Deploy_Module">Modul de instalare</sys:String>
+    <sys:String x:Key="Deploy_Module.Description">Alegeți Office Deployment Tool pentru o compatibilitate mai bună sau Office Tool Plus pentru experiențe mai bune.</sys:String>
+    <sys:String x:Key="Deploy_Module.ODT">Instrument de implementare Office</sys:String>
+    <sys:String x:Key="Deploy_Module.OTP">Office Tool Plus</sys:String>
+    <sys:String x:Key="Deploy_Download_First">Descărcați mai întâi, apoi implementați</sys:String>
+    <sys:String x:Key="Deploy_Download_First.Description">Fișierele de instalare vor fi salvate în directorul programului sau în directorul specificat de calea sursă.</sys:String>
+    <sys:String x:Key="Deploy_Create_Shortcut">Creați comenzi rapide pe desktop</sys:String>
+    <sys:String x:Key="Deploy_Create_Shortcut.Description">Creați comenzi rapide pe desktop pentru aplicațiile Office după instalarea Office.</sys:String>
+    <!-- Do not edit them or translate them. iSlide and AiPPT only provided in mainland China. -->
+    <sys:String x:Key="Deploy_iSlide">PlaceHolder</sys:String>
+    <sys:String x:Key="Deploy_iSlide.Description">PlaceHolder</sys:String>
+    <sys:String x:Key="Deploy_iSlide_Install">PlaceHolder</sys:String>
+    <sys:String x:Key="Deploy_iSlide_Install.Name">PlaceHolder</sys:String>
+
+    <sys:String x:Key="Deploy_Product">Produse</sys:String>
+    <sys:String x:Key="Deploy_Product.Description">{0} produs(e) instalat(e), {1} gata de implementare și {2} gata de dezinstalare.</sys:String>
+    <sys:String x:Key="Deploy_Product_Button">Adăugați _produse</sys:String>
+    <sys:String x:Key="Deploy_Product_Nothing_Here">Nu există nimic aici.</sys:String>
+    <sys:String x:Key="Deploy_Product_Installed">Produs(e) instalat(e)</sys:String>
+    <sys:String x:Key="Deploy_Product_To_Be_Deployed">De implementat</sys:String>
+    <sys:String x:Key="Deploy_Product_To_Be_Uninstalled">De dezinstalat</sys:String>
+    <sys:String x:Key="Deploy_Uninstall_Product">Dezinstalare</sys:String>
+    <sys:String x:Key="Deploy_Cancel_Uninstall_Product">Anulați dezinstalarea</sys:String>
+    <sys:String x:Key="Deploy_Cancel_Deploy_Product">Anulați implementarea</sys:String>
+    <sys:String x:Key="Deploy_Applications">Aplicații</sys:String>
+    <sys:String x:Key="Deploy_Addons">Module suplimentare</sys:String>
+    <sys:String x:Key="Deploy_Addons.Tip">Nu debifați modulele suplimentare dacă nu știți ce sunt.</sys:String>
+    <sys:String x:Key="Deploy_Language">Limbi</sys:String>
+    <sys:String x:Key="Deploy_Language.Description">{0} limbă(i) instalată(e), {1} gata de implementare și {2} gata de dezinstalare.</sys:String>
+    <sys:String x:Key="Deploy_Language_Button">Adăugați _limbi</sys:String>
+    <sys:String x:Key="Deploy_Language_Nothing_Here">Nu există nimic aici.</sys:String>
+    <sys:String x:Key="Deploy_Language_Installed">Limbă(i) instalată(e)</sys:String>
+    <sys:String x:Key="Deploy_Language_To_Be_Deployed">De implementat</sys:String>
+    <sys:String x:Key="Deploy_Language_To_Be_Uninstalled">De dezinstalat</sys:String>
+    <sys:String x:Key="Deploy_Uninstall_Language">Dezinstalare</sys:String>
+    <sys:String x:Key="Deploy_Cancel_Uninstall_Language">Anulați dezinstalarea</sys:String>
+    <sys:String x:Key="Deploy_Edit_Language_Settings">Setări limbă</sys:String>
+    <sys:String x:Key="Deploy_Cancel_Deploy_Language">Anulați implementarea</sys:String>
+
+    <sys:String x:Key="Deploy_Products_List">Listă produse</sys:String>
+    <sys:String x:Key="Deploy_Products_List_Type_To_Search">Tastați pentru a filtra lista de produse</sys:String>
+    <sys:String x:Key="Deploy_Products_List_ID">ID Produs:</sys:String>
+    <sys:String x:Key="Deploy_Languages_List">Listă limbi</sys:String>
+    <sys:String x:Key="Deploy_Languages_List_Type_To_Search">Tastați pentru a filtra lista de limbi</sys:String>
+    <sys:String x:Key="Deploy_Languages_List_Proofing_Tool_Only">Implementați numai instrumente de verificare.</sys:String>
+    <sys:String x:Key="Deploy_Languages_List_ID">ID Limbă:</sys:String>
+    <sys:String x:Key="Deploy_Languages_List_Type">Tip limbă:</sys:String>
+    <sys:String x:Key="Deploy_Language_Type.Full">Complet</sys:String>
+    <sys:String x:Key="Deploy_Language_Type.PartialAndProofing">Parțial</sys:String>
+    <sys:String x:Key="Deploy_Language_Type.Partial">Parțial fără instrumente de verificare</sys:String>
+    <sys:String x:Key="Deploy_Language_Type.Proofing">Instrumente de verificare</sys:String>
+    <sys:String x:Key="Deploy_Language_Settings_Exclude">Instalați pentru următoarele produse</sys:String>
+
+    <sys:String x:Key="Deploy_Installation_Files">Fișiere de instalare</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files.Description">Selectați, verificați sau ștergeți fișierele de instalare Office.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Select">Selectați</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Select.Description">La selectarea fișierelor de instalare, selectați oricare dintre fișierele CAB.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Verify">Verificați</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Verify.Description">Verificați fișierele de instalare pentru erori.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_DeleteAll">Ștergeți tot</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Reset">Resetați</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Reset.Description">Nu utilizați fișierele de instalare curente pentru implementarea Office.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_UseAsSource">_Utilizați ca sursă</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_UseAsSource.Description">Arhitectura și canalul de actualizare se vor potrivi automat cu această instalare.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Open_Location">_Deschideți locația fișierului</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Delete">Ștergeți</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Package.x-none">Pachet de bază (Necesar)</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Package.x-none.arm64x">Pachet Arm64</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Package.x-none.chpe">Pachet Arm32</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Settings">Mergeți la setări avansate</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Settings.Description">Mergeți la setări avansate pentru a seta mai multe opțiuni.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Settings_Button">_Setări avansate</sys:String>
+
+    <!-- Deploy advanced page -->
+    <sys:String x:Key="Deploy_Advanced">Setări avansate</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Go_Back">Înapoi</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Go_Back.Description">Înapoi la setările de bază.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_General_Settings">Setări generale</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Company_Name">Furnizați numele organizației dvs. pentru a seta compania proprietate pe documentele Office.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Description">Furnizați o descriere a configurației pentru documentație.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Install_Settings">Setări de instalare</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Fallback_Language">Limbă alternativă</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Fallback_Language.Description">Când limba este setată pentru a se potrivi cu limba sistemului, puteți specifica o limbă alternativă de instalat atunci când o limbă potrivită nu este acceptată de Office sau nu poate fi găsită în sursa locală.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Version">Versiune Office</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Version.Description">Implicit la ultima versiune disponibilă dacă nu este specificată.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Download_Path">Cale de descărcare</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Download_Path.Description">Definește de unde sunt descărcate fișierele de instalare, trebuie să specificați versiunea Office când utilizați calea de descărcare.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Source_Path">Cale sursă</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Source_Path.Description">Dacă calea sursă este goală, CDN Office este utilizat implicit ca sursă. În modul de descărcare, definește unde să salvați fișierele.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_No_Display">Instalare silențioasă</sys:String>
+    <sys:String x:Key="Deploy_Advanced_No_Display.Description">Nu se afișează bare de progres, mesaje de eroare sau alte interfețe în timpul instalării Office.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Allow_CDN_Fallback">Permiteți revenirea la CDN</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Allow_CDN_Fallback.Description">Permiteți programului de instalare Office să revină la CDN Office pentru a descărca limbile lipsă.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Force_Close_Apps">Închideți forțat toate aplicațiile Office în execuție</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Force_Close_Apps.Description">Datele nesalvate pot fi pierdute.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Update_Settings">Setări de actualizare</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Enable_Mgnt_COM">Gestionați actualizările folosind MECM</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Enable_Mgnt_COM.Description">Când gestionați actualizările folosind Microsoft Endpoint Configuration Manager, actualizările sunt gestionate de administrator.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Enable_Update">Activați actualizarea automată Office</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Update_Path">Sursă de actualizare</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Update_Path.Description">Dacă calea este goală, CDN Office este utilizat implicit ca sursă.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Upgrade_Settings">Opțiuni de upgrade</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Migrate_Arch">Migrare arhitectură</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Migrate_Arch.Description">Schimbați instalarea existentă Office la arhitectura specificată în prezent. De exemplu, de la 32 de biți la 64 de biți.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_MSI_Notice">Următoarele setări au efect doar când utilizați Office Deployment Tool ca modul de instalare.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Remove_MSI">Eliminați versiunile MSI existente ale Office</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Match_Previous_MSI">Instalați aceeași limbă ca și versiunea MSI anterioară</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Ignore_Product">Ignorați aceste produse</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Activate_Settings">Setări de activare</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Accept_EULA">Acceptați automat EULA</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Accept_EULA.Description">Când este activat, caseta de dialog "Termenii licenței software Microsoft" nu va fi afișată.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_MAK">Setare MAK</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Auto_Activate">După setarea MAK, vom încerca să activăm produsul automat.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Product_Activation">Activare produs</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode">Licensing mode</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode.Description">Set the licensing mode for Microsoft 365 Apps.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode_LearnMode">Learn more about licensing mode.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode.UserBased">Bazat pe utilizator</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode.DeviceBased">Bazat pe dispozitiv</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode.SCL">Calculator partajat</sys:String>
+    <sys:String x:Key="Deploy_Advanced_SCL_Cache_Override">Suprascrie locația token-ului de licențiere</sys:String>
+    <sys:String x:Key="Deploy_Advanced_SCL_Cache_Override.Title">Folder path</sys:String>
+    <sys:String x:Key="Deploy_Advanced_SCL_Cache_Override.Description">Specificați o locație de folder pentru token-ul de licențiere.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Organization">Organization settings</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Organization_TenantID">Tenant ID</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Organization_TAK">Tenant Association Key</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Organization_TAK.Description">Associates the device with your organization. This setting applies only to Microsoft 365 Apps.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Preferences">Preferințele aplicației</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Apply_Preferences.Description">Aplicați imediat preferințele la aplicațiile Office.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Reset_Preferences">Resetați toate preferințele</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Reset_Preferences_Button">Resetați</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Filter">Filtru</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Filter.HelpText">Faceți clic pentru a filtra după categorie.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Filtered">Categorii filtrate</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Filtered.HelpText">Faceți clic pentru a elimina filtrul acestei categorii.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Type_To_Search.Name">Căutați preferințele aplicației</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Type_To_Search.HelpText">Tastați pentru a căuta preferințele aplicației</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_DataGrid.HelpText">Apăsați Enter sau faceți dublu clic pentru a edita preferința.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Application">Aplicație</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Settings">Setări</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Status">Stare</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Enable">Permiteți</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Set_Preferences_Button">Aplicați</sys:String>
+
+    <!-- Activate page -->
+    <sys:String x:Key="Activate_NonAdmin_Privileges">Rulați Office Tool Plus fără privilegii de administrator, unele funcții nu sunt disponibile acum.</sys:String>
+    <sys:String x:Key="Activate_Notif_LicensingMode_DeviceBased">Microsoft 365 Apps have been configured for device-based licensing. Administrators must assign a valid license to this device before Microsoft 365 Apps can be used.</sys:String>
+    <sys:String x:Key="Activate_Notif_LicensingMode_SharedComputer">Microsoft 365 Apps have been configured for shared computer mode. Each user must sign in and verify their license to use Microsoft 365 Apps.</sys:String>
+    <sys:String x:Key="Activate_Notif_LicensingMode_ViewerMode">Microsoft 365 Apps have been configured for viewer mode. For unlicensed apps, users can view or print files but cannot create or edit any files.</sys:String>
+    <sys:String x:Key="Activate_LearnMore">Learn more</sys:String>
+
+    <sys:String x:Key="Activate_Licensing_Mode_Management">Licensing mode management</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_Management.Description">Manage how to activate Microsoft 365 Apps.</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode">Licensing mode</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.Description">Change the licensing mode for Microsoft 365 Apps.</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_LearnMore">Learn more about licensing mode.</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_Apply">Apply</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_Reset">Reset</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.UserBased">Bazat pe utilizator</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.DeviceBased">Bazat pe dispozitiv</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.SCL">Calculator partajat</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.ViewerMode">Viewer mode</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_SCL_Cache_Override">Suprascrie locația token-ului de licențiere</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_SCL_Cache_Override.Title">Folder path</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_SCL_Cache_Override.Description">Specificați o locație de folder pentru token-ul de licențiere.</sys:String>
+
+    <sys:String x:Key="Activate_Licenses_Management">Gestionare licențe</sys:String>
+    <sys:String x:Key="Activate_Licenses_Management.Description">Instalați, dezinstalați sau activați licențele Office.</sys:String>
+    <sys:String x:Key="Activate_Button">_Activare</sys:String>
+    <sys:String x:Key="Activate_Display_Internet_Act_Events">Afișați evenimentele de eșec ale activării prin Internet</sys:String>
+    <sys:String x:Key="Activate_Display_KMS_Events">Afișați evenimentele de activare KMS</sys:String>
+    <sys:String x:Key="Activate_Clear_Activation">Îndepărtați activarea</sys:String>
+    <sys:String x:Key="Activate_Install_Licenses">Instalați licențele</sys:String>
+    <sys:String x:Key="Activate_Install_Licenses.Description">Obțineți licențe din Office instalat și instalați-le.</sys:String>
+    <sys:String x:Key="Activate_Install_Licenses_Button">Instalare</sys:String>
+    <sys:String x:Key="Activate_Install_Other_Licenses">Instalați alte licențe</sys:String>
+    <sys:String x:Key="Activate_Install_Other_Licenses.Description">Instalați alte licențe de pe discul local.</sys:String>
+    <sys:String x:Key="Activate_Install_Other_Licenses_Button">Instalare</sys:String>
+    <sys:String x:Key="Activate_Uninstall_All_Licenses">Dezinstalați toate licențele</sys:String>
+    <sys:String x:Key="Activate_Uninstall_All_Licenses.Description">Dezinstalați toate licențele instalate. Va trebui să instalați licența după această operațiune.</sys:String>
+    <sys:String x:Key="Activate_Uninstall_All_Licenses_Button">Dezinstalare</sys:String>
+
+    <sys:String x:Key="Activate_Keys_Management">Gestionare chei</sys:String>
+    <sys:String x:Key="Activate_Keys_Management.Description">Instalați, dezinstalați chei sau activați Office offline.</sys:String>
+    <sys:String x:Key="Activate_Product_Key">Cheie produs</sys:String>
+    <sys:String x:Key="Activate_Product_Key.Description">Instalați cheia de produs Office, format cheie produs: XXXXX-XXXXX-XXXXX-XXXXX-XXXXX.</sys:String>
+    <sys:String x:Key="Activate_Install_Product_Key">_Instalare cheie</sys:String>
+    <sys:String x:Key="Activate_Uninstall_Unactivated_Key">_Dezinstalați toate cheile neactivate</sys:String>
+    <sys:String x:Key="Activate_Uninstall_All_Product_Keys">Dezinstalați _toate cheile</sys:String>
+    <sys:String x:Key="Activate_Install_CID">Instalați ID-ul de confirmare</sys:String>
+    <sys:String x:Key="Activate_Install_CID.Description">Instalați ID-ul de confirmare pentru a activa Office offline.</sys:String>
+    <sys:String x:Key="Activate_Input_CID">Vă rugăm să introduceți ID-ul de confirmare</sys:String>
+
+    <sys:String x:Key="Activate_KMS_Management">Gestionare KMS</sys:String>
+    <sys:String x:Key="Activate_KMS_Management.Description">Setați sau resetați gazda sau portul KMS.</sys:String>
+    <sys:String x:Key="Activate_KMS_Apply">_Setare gazdă</sys:String>
+    <sys:String x:Key="Activate_KMS_Host">Gazdă KMS</sys:String>
+    <sys:String x:Key="Activate_KMS_Host.Description">Numele gazdei KMS. De exemplu, kms.example.com, kms.example.com:1688 sau adresa IP.</sys:String>
+    <sys:String x:Key="Activate_KMS_Host_Cache.Enable">Activați stocarea în cache-ul gazdei</sys:String>
+    <sys:String x:Key="Activate_KMS_Host_Cache.Disable">Dezactivați stocarea în cache-ul gazdei</sys:String>
+    <sys:String x:Key="Activate_KMS_Reset">Resetare KMS</sys:String>
+    <sys:String x:Key="Activate_KMS_Reset.Description">Eliminați numele gazdei KMS și setați portul KMS la valoarea implicită.</sys:String>
+
+    <!-- Licenses list -->
+    <sys:String x:Key="Activate_Licenses">Licențe Office</sys:String>
+    <sys:String x:Key="Activate_License">Listă licențe</sys:String>
+    <sys:String x:Key="Activate_License.Description">Gestionați licențele instalate.</sys:String>
+    <sys:String x:Key="Activate_License_Refresh">_Reîmprospătare</sys:String>
+    <sys:String x:Key="Activate_License_Expand">_Expandare toate</sys:String>
+    <sys:String x:Key="Activate_License_Collapse">_Restrângere toate</sys:String>
+    <sys:String x:Key="Activate_License_Clear">_Golire listă</sys:String>
+    <sys:String x:Key="Activate_License_Nothing_Here">Nu există nimic aici.</sys:String>
+    <sys:String x:Key="Activate_License_Status.Unactivated">Neactivat</sys:String>
+    <sys:String x:Key="Activate_License_Status.Activated">Activat</sys:String>
+    <!-- vNext License -->
+    <sys:String x:Key="Activate_License_vNext_Type">Tip licență:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Type.User">Utilizator</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Type.Device">Dispozitiv</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Type.Subscription">Abonament</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Type.Perpetual">Perpetuu</sys:String>
+    <sys:String x:Key="Activate_License_vNext.ExpireDate">Data expirării licenței:</sys:String>
+    <sys:String x:Key="Activate_License_vNext.MaxDevice">Numărul maxim de dispozitive permise:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Status">Stare:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Status.Provisioned">furnizat</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Status.Deprovisioned">nefurnizat</sys:String>
+    <sys:String x:Key="Activate_License_vNext_ReasonCode">Cod motiv:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_ReasonCode.DeviceDeprovisionedByUser">dispozitiv nefurnizat de utilizator</sys:String>
+    <sys:String x:Key="Activate_License_vNext_ReasonCode.SubscriptionCancelled">abonament anulat</sys:String>
+    <sys:String x:Key="Activate_License_vNext.Beneficiary.User">Licența este atribuită utilizatorului:</sys:String>
+    <sys:String x:Key="Activate_License_vNext.Beneficiary.Device">Licența este atribuită dispozitivului:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.TenantID">ID Chiriaș:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.DeviceID">ID Dispozitiv:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.UserID">ID Utilizator:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.ValidFrom">Autorizare validă de la:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.ValidTo">Autorizare validă până la:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.RenewalTime">Următoarea dată de reînnoire:</sys:String>
+    <!-- Legacy License -->
+    <sys:String x:Key="Activate_License_Lic.Description">Descriere:</sys:String>
+    <sys:String x:Key="Activate_License_Lic.Key">Ultimele 5 caractere ale cheii:</sys:String>
+    <sys:String x:Key="Activate_License_Lic.Period">Perioada rămasă:</sys:String>
+    <sys:String x:Key="Activate_License_Lic.Error_Code">Cod eroare:</sys:String>
+    <sys:String x:Key="Activate_License_Lic.Error_Description">Descriere eroare:</sys:String>
+    <sys:String x:Key="Activate_License_VL.Type">Tip activare:</sys:String>
+    <!-- AO equal to Activation Object -->
+    <sys:String x:Key="Activate_License_AD.ObjectName">Nume Obiect de Activare: </sys:String>
+    <sys:String x:Key="Activate_License_AD.ObjectDN">DN OA: </sys:String>
+    <sys:String x:Key="Activate_License_AD.ExtendedPid">PID extins OA: </sys:String>
+    <sys:String x:Key="Activate_License_AD.AID">ID activare OA: </sys:String>
+    <sys:String x:Key="Activate_License_KMS.Host">Gazdă KMS:</sys:String>
+    <sys:String x:Key="Activate_License_KMS_Host_Caching">Caching gazdă:</sys:String>
+    <sys:String x:Key="Activate_License_KMS_Host_Caching.Enabled">Activat</sys:String>
+    <sys:String x:Key="Activate_License_KMS_Host_Caching.Disabled">Dezactivat</sys:String>
+    <sys:String x:Key="Activate_License_KMS.Act_Interval">Interval activare:</sys:String>
+    <sys:String x:Key="Activate_License_KMS.Renew_Interval">Interval reînnoire:</sys:String>
+
+    <sys:String x:Key="Activate_License_Period.Infinite">infinit</sys:String>
+    <sys:String x:Key="Activate_License_Period.Day">{0} zi(le)</sys:String>
+    <sys:String x:Key="Activate_License_Period.Hour">{0} oră(e)</sys:String>
+    <sys:String x:Key="Activate_License_Period.Minute">{0} minut(e)</sys:String>
+
+    <sys:String x:Key="Activate_License_Button.Copy_LicenseID">Copiază ID licență</sys:String>
+    <sys:String x:Key="Activate_License_Button.Copy_TenantID">Copiază ID chiriaș</sys:String>
+    <sys:String x:Key="Activate_License_Button.Copy_UserID">Copiază ID utilizator</sys:String>
+    <sys:String x:Key="Activate_License_Button.Set_Name">Set name</sys:String>
+    <sys:String x:Key="Activate_License_Button.Delete_License">Șterge licența</sys:String>
+    <sys:String x:Key="Activate_License_Button.Copy_SKU">Copiază ID SKU</sys:String>
+    <sys:String x:Key="Activate_License_Button.Copy_IID">Copiază ID instalare</sys:String>
+    <sys:String x:Key="Activate_License_Button.Activate">Activare</sys:String>
+    <sys:String x:Key="Activate_License_Button.Uninstall_Key">Dezinstalare cheie</sys:String>
+
+    <sys:String x:Key="Activate_Licenses_List">Listă licențe</sys:String>
+    <sys:String x:Key="Activate_Licenses_List_Type_To_Search">Tastați pentru a filtra lista de licențe</sys:String>
+    <sys:String x:Key="Activate_Licenses_List_ID">ID Produs:</sys:String>
+
+    <!-- Toolbox page -->
+    <sys:String x:Key="Toolbox_NonAdmin_Privileges">Rulați Office Tool Plus fără privilegii de administrator, unele funcții nu sunt disponibile acum.</sys:String>
+    <sys:String x:Key="Toolbox_Repair">Reparație</sys:String>
+    <sys:String x:Key="Toolbox_Learn_More">Aflați mai multe</sys:String>
+
+    <sys:String x:Key="Toolbox_General_Tools">Instrumente generale</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version">Solicitați versiunea Office</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version.Description">Interogați informațiile despre canalele de actualizare Office de la Microsoft.</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_GoBack">Înapoi la pagina de instrumente.</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_Button">Interogare</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List">Informații canale de actualizare Office</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List_Channel">Canal</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List_Branch">Ramură</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List_Version">Versiune</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List_CreatedTime">Data creării</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_Copy">Copiază numărul versiunii</sys:String>
+    <sys:String x:Key="Toolbox_Query_ErrorCode">Interogare descriere cod eroare</sys:String>
+    <sys:String x:Key="Toolbox_Query_ErrorCode.Description">Codul de eroare începe de obicei cu '0x'. De exemplu, 0x2 sau 0x80070002.</sys:String>
+    <sys:String x:Key="Toolbox_Query_ErrorCode_Button">Interogare</sys:String>
+    <sys:String x:Key="Toolbox_Input_ErrorCode">Vă rugăm să introduceți codul de eroare</sys:String>
+    <sys:String x:Key="Toolbox_Check_KMS">Testați accesibilitatea gazdei KMS</sys:String>
+    <sys:String x:Key="Toolbox_Check_KMS.Description">Folosiți TCPing pentru a testa dacă gazda KMS poate fi conectată.</sys:String>
+    <sys:String x:Key="Toolbox_Check_KMS_Button">Test</sys:String>
+
+    <sys:String x:Key="Toolbox_Office_Tools">Instrumente Office</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Office">Eliminați Office</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Office.Description">Forțați eliminarea componentelor și registrelor legate de Office.</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Office.Description_Bold">Notă: ar trebui să eliminați Office doar dacă nu poate fi dezinstalat corespunzător.</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Office_Button">Eliminare</sys:String>
+    <sys:String x:Key="Toolbox_Remove_APPX">De asemenea, eliminați ediția Microsoft Store de Office</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Clear_Activation">De asemenea, ștergeți activarea</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Result">Rezultat eliminare</sys:String>
+    <!-- Office Installer Events Viewer -->
+    <sys:String x:Key="Toolbox_OfficeEventsVwr">Office events viewer</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr.Description">View or collect Office events logs.</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create">Creați o copie</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create.Description">Creează un fișier ZIP care conține instrumentul de implementare Office, Click-to-Run Office, Windows Installer și fișierele jurnal ale aplicației.</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create_Button">_Creare</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create_Include_OA">Include Office application logs</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create_Include_AOA">Include additional Office application logs</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create_Include_AOA.Description">This may contain your personal information, you should only share it with people you trust.</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer">Log viewer</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Refresh">_Reîmprospătare</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_ViewMSI">Vizualizați evenimentele Windows Installer</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_ViewApplication">Vizualizați evenimentele aplicației</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Import">Importați jurnale din fișier ZIP</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Source">Sursă jurnal</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Source.ODT">Instrument de implementare Office</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Source.C2R">Click-to-Run</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_FileName">Fișier jurnal</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_FileName.Description">Selectați un fișier jurnal pentru a vizualiza evenimentele.</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_EventsLabel">Evenimente</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.Time">Timp</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.Category">Categorie</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.ID">ID Eveniment</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.Level">Nivel</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.Message">Mesaj</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event_Open_Panel">_Open event panel</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event_Close_Panel.Name">Close event panel</sys:String>
+    <sys:String x:Key="Toolbox_Change_UpdateChannel">Schimbați canalul de actualizare Office</sys:String>
+    <sys:String x:Key="Toolbox_Change_UpdateChannel.Description">Schimbarea canalului de actualizare vă permite să faceți upgrade sau downgrade Office fără a reinstala.</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner">Schimbați proprietarul produsului Office</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner.Description">Numele este afișat pe pagina de cont a aplicației Office.</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Set">Setați numele</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Reset">Resetați numele proprietarului la valorile implicite</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Name">Nume</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Name.Description">Setați proprietarul unui produs. De exemplu, James sau ProPlus2019Volume:James.</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Name.LearnMore">Aflați mai multe despre formatul numelui proprietarului.</sys:String>
+    <sys:String x:Key="Toolbox_Repair_DocumentIcon">Reparați pictograma documentelor Office</sys:String>
+    <sys:String x:Key="Toolbox_Repair_DocumentIcon.Description">Aceasta va reseta asocierile documentelor Office.</sys:String>
+    <sys:String x:Key="Toolbox_Backup_Restore_Settings">Copie de rezervă sau restaurare setări Office</sys:String>
+    <sys:String x:Key="Toolbox_Backup_Restore_Settings.Description">Faceți copii de rezervă sau restaurați setările aplicațiilor Office, excluzând fișiere și conținut.&#x000A;Notă: Nu partajați copiile de rezervă, acestea pot dezvălui informațiile dvs. personale.</sys:String>
+    <sys:String x:Key="Toolbox_Backup_Exclude_PersonalInf">Excludeți informațiile personale la efectuarea copiei de rezervă.</sys:String>
+    <sys:String x:Key="Toolbox_Backup">Copie de rezervă</sys:String>
+    <sys:String x:Key="Toolbox_Restore">Restaurați</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings">Restabiliți setările Office la valorile implicite</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings.Description">Reset Office to default settings. Please close all Office applications before proceeding.</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_Button">Resetați</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_UserSettings">Ștergeți setările utilizatorului curent</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_UserSettings.Description">Include setările aplicațiilor Office, fișierele deschise recent și locația de salvare recentă.</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_UserAppData">Ștergeți datele aplicațiilor</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_UserAppData.Description">Include memoria cache a aplicațiilor.</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_NormalTemplate">Ștergeți șablonul Normal</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_NormalTemplate.Description">Normal.dotm</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_GlobalSettings">Ștergeți preferințele aplicațiilor</sys:String>
+
+    <sys:String x:Key="Toolbox_Windows_Tools">Instrumente Windows</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr">Environment variable manager</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr.Description">View or reset user or system environment variables.</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_UserEnv">User variables</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_SystemEnv">System variables</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_Refresh">Refresh</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_Variable_Incorrect">One or more environment variables are incorrect, please try to reset them.</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_Reset">Reset</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_Reset.Description">Reset variables to default values.</sys:String>
+    <sys:String x:Key="Toolbox_Reset_SPPSvc">Resetarea serviciului de protecție software</sys:String>
+    <sys:String x:Key="Toolbox_Reset_SPPSvc.Description">Aceasta va reseta configurația serviciului de protecție software, inclusiv configurația KMS.</sys:String>
+    <sys:String x:Key="Toolbox_Reset_SPPSvc.LearnMore">Aflați mai multe despre resetarea serviciului de protecție software.</sys:String>
+    <sys:String x:Key="Toolbox_Rebuild_ActivationToken">Reconstruiți token-ul de activare Windows</sys:String>
+    <sys:String x:Key="Toolbox_Rebuild_ActivationToken.Description">Aceasta va reconstrui token-ul de activare Windows. Starea de activare Windows poate fi pierdută.</sys:String>
+    <sys:String x:Key="Toolbox_Rebuild_ActivationToken.LearnMore">Aflați mai multe despre reconstruirea token-ului de activare Windows.</sys:String>
+    <sys:String x:Key="Toolbox_Repair_WMI">Reparați componentele WMI</sys:String>
+    <sys:String x:Key="Toolbox_Repair_WMI.Description">Aceasta va reînregistra componentele WMI. Nu utilizați dacă nu sunteți sigur.</sys:String>
+    <sys:String x:Key="Toolbox_Repair_WMI.LearnMore">Aflați mai multe despre repararea componentelor WMI.</sys:String>
+
+    <!-- Convert page -->
+    <sys:String x:Key="Convert_Excel">Excel</sys:String>
+    <sys:String x:Key="Convert_Excel.Description">Convertiți documente Excel.</sys:String>
+    <sys:String x:Key="Convert_PowerPoint">PowerPoint</sys:String>
+    <sys:String x:Key="Convert_PowerPoint.Description">Convertiți documente PowerPoint.</sys:String>
+    <sys:String x:Key="Convert_Word">Word</sys:String>
+    <sys:String x:Key="Convert_Word.Description">Convertiți documente Word.</sys:String>
+    <sys:String x:Key="Convert_Actions">_Importați documente</sys:String>
+    <sys:String x:Key="Convert_Actions.SelectFiles">Selectați fișiere</sys:String>
+    <sys:String x:Key="Convert_Actions.SelectFolder">Selectați folderul</sys:String>
+    <sys:String x:Key="Convert_Input">Format de intrare</sys:String>
+    <sys:String x:Key="Convert_Input.Description">La selectarea unui folder, vor fi importate doar fișierele care corespund formatului de intrare.</sys:String>
+    <sys:String x:Key="Convert_Output">Format de ieșire</sys:String>
+
+    <sys:String x:Key="Convert_File_List">Lista de fișiere</sys:String>
+    <sys:String x:Key="Convert_StartConvert">Convertire</sys:String>
+    <sys:String x:Key="Convert_StartConvert.ToolTip">Începeți conversia documentelor.</sys:String>
+    <sys:String x:Key="Convert_ClearList">Golire listă</sys:String>
+    <sys:String x:Key="Convert_File">Fișier</sys:String>
+    <sys:String x:Key="Convert_NewFormat">Format nou</sys:String>
+    <sys:String x:Key="Convert_Open_File_Location">_Deschideți locația fișierului</sys:String>
+    <sys:String x:Key="Convert_Page_Count">Pagina {0} din {1}</sys:String>
+    <sys:String x:Key="Convert_Previous_Page">Pagina anterioară</sys:String>
+    <sys:String x:Key="Convert_Next_Page">Pagina următoare</sys:String>
+
+    <sys:String x:Key="Convert_Settings">Setări conversie</sys:String>
+    <sys:String x:Key="Convert_Settings.Description">Ajustați setările.</sys:String>
+    <sys:String x:Key="Convert_SearchOnSubfolders">Căutare în subfoldere</sys:String>
+    <sys:String x:Key="Convert_SearchOnSubfolders.Description">Căutați fișiere în subfoldere la selectarea unui folder.</sys:String>
+    <sys:String x:Key="Convert_Delete">Ștergeți fișierul</sys:String>
+    <sys:String x:Key="Convert_Delete.Description">Mutați fișierul original în Coșul de reciclare după conversia reușită. Dacă Coșul de reciclare nu este disponibil, fișierul va fi șters definitiv.</sys:String>
+    <sys:String x:Key="Convert_HideUI">Ascundeți interfața utilizator</sys:String>
+    <sys:String x:Key="Convert_HideUI.Description">Ascundeți fereastra de alertă când Office lucrează.</sys:String>
+    <sys:String x:Key="Convert_Rows_Per_Page">Rânduri pe pagină</sys:String>
+    <sys:String x:Key="Convert_Rows_Per_Page.Description">Setați numărul de fișiere afișate pe pagină în lista de fișiere.</sys:String>
+
+    <!-- File types -->
+    <!-- Common -->
+    <sys:String x:Key="File_Type.All">Toate fișierele</sys:String>
+    <sys:String x:Key="File_Type.Supported">Toate fișierele acceptate</sys:String>
+    <sys:String x:Key="File_Type.PDF">PDF</sys:String>
+    <sys:String x:Key="File_Type.XPS">Document XPS</sys:String>
+    <sys:String x:Key="File_Type.TXT">Text simplu</sys:String>
+    <sys:String x:Key="File_Type.XML">Fișier XML</sys:String>
+    <sys:String x:Key="File_Type.MHTML">Pagina Web într-un singur fișier</sys:String>
+    <sys:String x:Key="File_Type.HTML">Pagina Web</sys:String>
+    <sys:String x:Key="File_Type.AllWebPages">Toate paginile Web</sys:String>
+    <sys:String x:Key="File_Type.RTF">Format text îmbogățit</sys:String>
+    <sys:String x:Key="File_Type.WMF">Metafișier Windows</sys:String>
+    <sys:String x:Key="File_Type.EMF">Metafișier Windows îmbunătățit</sys:String>
+    <!-- Image -->
+    <sys:String x:Key="File_Type.GIF">GIF animat</sys:String>
+    <sys:String x:Key="File_Type.JPG">Format JPEG fișiere de schimb</sys:String>
+    <sys:String x:Key="File_Type.PNG">Format PNG Portable Network Graphics</sys:String>
+    <sys:String x:Key="File_Type.TIF">TIFF Tag Image File</sys:String>
+    <sys:String x:Key="File_Type.BMP">Bitmap independent de dispozitiv</sys:String>
+    <!-- Video -->
+    <sys:String x:Key="File_Type.MP4">MPEG-4 Video</sys:String>
+    <sys:String x:Key="File_Type.WMV">Windows Media Video</sys:String>
+    <!-- Word -->
+    <sys:String x:Key="File_Type.Word_Documents">Documente</sys:String>
+    <sys:String x:Key="File_Type.Word_DOCX">Document Word</sys:String>
+    <sys:String x:Key="File_Type.Word_DOCM">Document Word activat pentru macrocomenzi</sys:String>
+    <sys:String x:Key="File_Type.Word_DOC">Document Word 97-2003</sys:String>
+    <sys:String x:Key="File_Type.Word_DOTX">Șablon Word</sys:String>
+    <sys:String x:Key="File_Type.Word_DOTM">Șablon Word activat pentru macrocomenzi</sys:String>
+    <sys:String x:Key="File_Type.Word_DOT">Șablon Word 97-2003</sys:String>
+    <sys:String x:Key="File_Type.Word_XMLDocument">Document XML Word</sys:String>
+    <sys:String x:Key="File_Type.Word_OpenXMLStrictDocument">Document Open XML strict</sys:String>
+    <sys:String x:Key="File_Type.Word_ODT">Text OpenDocument</sys:String>
+    <!-- PowerPoint -->
+    <sys:String x:Key="File_Type.PowerPoint_Presentations">Prezentări</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPTX">Prezentare PowerPoint</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPTM">Prezentare PowerPoint activată pentru macrocomenzi</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPT">Prezentare PowerPoint 97-2003</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_POTX">Șablon PowerPoint</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_POTM">Șablon PowerPoint activat pentru macrocomenzi</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_POT">Șablon PowerPoint 97-2003</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPSX">Expunere PowerPoint</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPSM">Expunere PowerPoint activată pentru macrocomenzi</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPS">Expunere PowerPoint 97-2003</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPAM">Componentă PowerPoint</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPA">Componentă PowerPoint 97-2003</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_XMLPresentation">Prezentare XML PowerPoint</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_OpenXMLPicturePresentation">Prezentare imagine PowerPoint</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_OpenXMLStrictPresentation">Prezentare Open XML strictă</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_ODP">Prezentare OpenDocument</sys:String>
+    <!-- Excel -->
+    <sys:String x:Key="File_Type.Excel_Workbooks">Registre de lucru</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLSX">Registru Excel</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLSM">Registru Excel activat pentru macrocomenzi</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLSB">Registru binar Excel</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLS">Registru Excel Excel 97-2003</sys:String>
+    <sys:String x:Key="File_Type.Excel_CSV_UTF8">CSV UTF-8 (delimitat prin virgulă)</sys:String>
+    <sys:String x:Key="File_Type.Excel_CSV">CSV (delimitat prin virgulă)</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLTX">Șablon Excel</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLTM">Șablon Excel activat pentru macrocomenzi</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLT">Șablon Excel 97-2003</sys:String>
+    <sys:String x:Key="File_Type.Excel_UnicodeText">Text Unicode (delimitat prin tab)</sys:String>
+    <sys:String x:Key="File_Type.Excel_Text">Text (delimitat prin tab)</sys:String>
+    <sys:String x:Key="File_Type.Excel_XMLSpreadsheet">Foaie de calcul XML 2003</sys:String>
+    <sys:String x:Key="File_Type.Excel_PRN">Text formatat (delimitat prin spații)</sys:String>
+    <sys:String x:Key="File_Type.Excel_DIF">DIF (Format schimb de date)</sys:String>
+    <sys:String x:Key="File_Type.Excel_SYLK">SYLK (Legătură simbolică)</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLAM">Componentă Excel</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLA">Componentă Excel 97-2003</sys:String>
+    <sys:String x:Key="File_Type.Excel_OpenXMLStrictWorkbook">Foaie de calcul Open XML strictă</sys:String>
+    <sys:String x:Key="File_Type.Excel_ODS">Foaie de calcul OpenDocument</sys:String>
+    <sys:String x:Key="File_Type.Excel_BackupFiles">Fișiere de backup</sys:String>
+
+    <!-- Hash checker page -->
+    <sys:String x:Key="Hash_Checker_Hash">Hash</sys:String>
+    <sys:String x:Key="Hash_Checker_Hash.Description">Generați hash-ul fișierelor, suportă multiple algoritmi hash.</sys:String>
+    <sys:String x:Key="Hash_Checker_Actions">_Importați fișiere</sys:String>
+    <sys:String x:Key="Hash_Checker_Actions.SelectFiles">Selectați fișiere</sys:String>
+    <sys:String x:Key="Hash_Checker_Actions.SelectFolder">Selectați folderul</sys:String>
+    <sys:String x:Key="Hash_Checker_SearchOnSubfolders">Căutare în subfoldere</sys:String>
+    <sys:String x:Key="Hash_Checker_SearchOnSubfolders.Description">Căutați fișiere în subfoldere la selectarea unui folder.</sys:String>
+    <sys:String x:Key="Hash_Checker_SearchString">Șir de căutare</sys:String>
+    <sys:String x:Key="Hash_Checker_SearchString.Description">La selectarea unui folder, găsiți fișierele ale căror nume se potrivesc cu șirul de căutare.</sys:String>
+    <sys:String x:Key="Hash_Checker_ExcludeHashFiles">Excludeți fișierele hash</sys:String>
+    <sys:String x:Key="Hash_Checker_ExcludeHashFiles.Description">Excludeți fișierele hash la importarea fișierelor, cum ar fi fișierele cu extensiile md5, sha1 sau crc32.</sys:String>
+    <sys:String x:Key="Hash_Checker_DisplayPath">Afișați calea fișierului</sys:String>
+    <sys:String x:Key="Hash_Checker_ParallelComputing">Parallel computing</sys:String>
+    <sys:String x:Key="Hash_Checker_ParallelComputing.Description">Set the number of files for parallel computing. Note that processing too many files simultaneously may reduce computing speed.</sys:String>
+    <sys:String x:Key="Hash_Checker_AutoCompute">Calcul automat</sys:String>
+    <sys:String x:Key="Hash_Checker_AutoCompute.Description">Începeți automat calculul valorii hash după ce importul fișierului este finalizat.</sys:String>
+    <sys:String x:Key="Hash_Checker_CRC32.Description">Activați sau dezactivați calculul CRC-32.</sys:String>
+    <sys:String x:Key="Hash_Checker_XXH32.Description">Activați sau dezactivați calculul XXH32.</sys:String>
+    <sys:String x:Key="Hash_Checker_XXH64.Description">Activați sau dezactivați calculul XXH64.</sys:String>
+    <sys:String x:Key="Hash_Checker_XXH3.Description">Activați sau dezactivați calculul XXH3.</sys:String>
+    <sys:String x:Key="Hash_Checker_XXH128.Description">Activați sau dezactivați calculul XXH128.</sys:String>
+    <sys:String x:Key="Hash_Checker_MD5.Description">Activați sau dezactivați calculul MD5.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA1.Description">Activați sau dezactivați calculul SHA-1.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA256.Description">Activați sau dezactivați calculul SHA-256.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA384.Description">Activați sau dezactivați calculul SHA-384.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA512.Description">Activați sau dezactivați calculul SHA-512.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA3_256.Description">Activați sau dezactivați calculul SHA3-256, acceptat doar pe Windows 11 build 25324 sau mai nou.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA3_384.Description">Activați sau dezactivați calculul SHA3-384, acceptat doar pe Windows 11 build 25324 sau mai nou.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA3_512.Description">Activați sau dezactivați calculul SHA3-512, acceptat doar pe Windows 11 build 25324 sau mai nou.</sys:String>
+    <sys:String x:Key="Hash_Checker_Rows_Per_Page">Rânduri pe pagină</sys:String>
+    <sys:String x:Key="Hash_Checker_Rows_Per_Page.Description">Setați numărul de fișiere afișate pe pagină în lista de fișiere.</sys:String>
+
+    <sys:String x:Key="Hash_Checker_File_List">Lista de fișiere</sys:String>
+    <sys:String x:Key="Hash_Checker_TypeToSearch">Tastați pentru a compara valoarea hash.</sys:String>
+    <sys:String x:Key="Hash_Checker_StartCompute">Calculează</sys:String>
+    <sys:String x:Key="Hash_Checker_StartCompute.ToolTip">Începeți calcularea valorilor hash.</sys:String>
+    <sys:String x:Key="Hash_Checker_ClearList">Golire listă</sys:String>
+    <sys:String x:Key="Hash_Checker_Export">Exportă</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.ToolTip">Exportă rezultatele în fișiere.</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.AsTXT">Exportă ca _text simplu</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.AsCSV">Exportă ca _CSV</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.AsMD">Exportă ca _Markdown</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.AsJSON">Exportă ca _JSON</sys:String>
+    <sys:String x:Key="Hash_Checker_Compare">Compară</sys:String>
+    <sys:String x:Key="Hash_Checker_Compare.ToolTip">Compară valoarea hash a fișierului cu o valoare cunoscută.</sys:String>
+    <sys:String x:Key="Hash_Checker_Compare.JSON">Compară cu fișier _JSON</sys:String>
+    <sys:String x:Key="Hash_Checker_Compare.HashFile">Compară cu fișier _hash</sys:String>
+    <sys:String x:Key="Hash_Checker_FilePath">Cale fișier</sys:String>
+    <sys:String x:Key="Hash_Checker_FileName">Nume de fișier</sys:String>
+    <sys:String x:Key="Hash_Checker_Compute_Selected">_Calculează valoarea hash pentru fișierele selectate</sys:String>
+    <sys:String x:Key="Hash_Checker_Open_File_Location">_Deschide locația fișierului</sys:String>
+    <sys:String x:Key="Hash_Checker_Copy_Hash_Value">Copiază valoarea _hash</sys:String>
+    <sys:String x:Key="Hash_Checker_Create_Hash_File">Creează fișier(e) h_ash</sys:String>
+    <sys:String x:Key="Hash_Checker_Page_Count">Pagina {0} din {1}</sys:String>
+    <sys:String x:Key="Hash_Checker_Previous_Page">Pagina anterioară</sys:String>
+    <sys:String x:Key="Hash_Checker_Next_Page">Pagina următoare</sys:String>
+    <sys:String x:Key="Hash_Checker_CompareMessage">S-au verificat valorile hash pentru {0} fișier(e), {1} cu succes, {2} eșuate, {3} ignorate.</sys:String>
+    <sys:String x:Key="Hash_Checker_CompareMessage.Failed">Valorile hash pentru următorul(ele) fișier(e) nu se potrivesc:</sys:String>
+    <sys:String x:Key="Hash_Checker_CompareMessage.Error">Au apărut erori la procesarea următorului(elor) fișier(e):</sys:String>
+    <sys:String x:Key="Hash_Checker_CompareMessage.Skipped">Următorul(ele) fișier(e) au fost ignorate deoarece valoarea hash nu a putut fi găsită:</sys:String>
+
+    <!-- Settings page -->
+    <sys:String x:Key="Settings_General">General</sys:String>
+    <sys:String x:Key="Settings_Language">Limbă</sys:String>
+    <sys:String x:Key="Settings_Language.Description">Schimbați limba de afișare a aplicației.</sys:String>
+    <sys:String x:Key="Settings_MatchOS">Potriviți cu sistemul de operare</sys:String>
+    <sys:String x:Key="Settings_Save">Salvați setările</sys:String>
+    <sys:String x:Key="Settings_Save.Description">Enable this option to save all settings. Otherwise, all changes will be lost after restarting application.</sys:String>
+
+    <sys:String x:Key="Settings_Appearance">Aspect și comportament</sys:String>
+    <sys:String x:Key="Settings_Theme">Temă</sys:String>
+    <sys:String x:Key="Settings_Theme.Description">Schimbați tema aplicației.</sys:String>
+    <sys:String x:Key="Settings_Auto_Dark_Theme">Temă întunecată automată</sys:String>
+    <sys:String x:Key="Settings_Auto_Dark_Theme.Description">Urmați setările sistemului și comutați automat la tema întunecată.</sys:String>
+    <sys:String x:Key="Settings_Theme_OpenColorSetting">Setare culoare Windows</sys:String>
+    <sys:String x:Key="Settings_Background">Fundal</sys:String>
+    <sys:String x:Key="Settings_Background.Description">Schimbați fundalul aplicației.</sys:String>
+    <sys:String x:Key="Settings_Background.Automatic">Automat</sys:String>
+    <sys:String x:Key="Settings_Background.Off">Dezactivat</sys:String>
+    <sys:String x:Key="Settings_Background.Acrylic">Acril</sys:String>
+    <sys:String x:Key="Settings_Background.Blur">Estompare</sys:String>
+    <sys:String x:Key="Settings_Background.Mica">Mica</sys:String>
+    <sys:String x:Key="Settings_Background.Bing">Tapet Bing</sys:String>
+    <sys:String x:Key="Settings_Background.Local">Imagine locală</sys:String>
+    <sys:String x:Key="Settings_SelectLocalImage.Description">Selectați o imagine locală și setați-o ca fundal al aplicației.</sys:String>
+    <sys:String x:Key="Settings_SelectLocalImage.Button">Selectați fișierul</sys:String>
+    <sys:String x:Key="Settings_Opacity">Opacitate</sys:String>
+    <sys:String x:Key="Settings_Blur">Estompare</sys:String>
+    <sys:String x:Key="Settings_Topmost">Întotdeauna deasupra</sys:String>
+
+    <sys:String x:Key="Settings_Advanced">Avansat</sys:String>
+    <sys:String x:Key="Settings_HardwareAcceleration">Accelerare hardware</sys:String>
+    <sys:String x:Key="Settings_HardwareAcceleration.Description">Nu o dezactivați dacă aplicația funcționează bine. Dezactivarea ei va reduce performanța aplicației.</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy">Proxy</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_NeedRestart">You may need to restart Office Tool Plus for the changes to take effect.</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy.Type">Tip proxy</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy.None">Niciuna</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Host">Gazdă</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Host.Hint">127.0.0.1:1080</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Authentication">Autentificare</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Username">Nume utilizator</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Password">Parolă</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_PasswordSaved">Parola nu a fost modificată de la ultima salvare.</sys:String>
+
+    <sys:String x:Key="Settings_Deploy">Implementare</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation">După implementare</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Description">Action to perform after Office download or installation is complete. Some actions require system support and administrator privileges.</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.None">Niciuna</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Quit">Închideți Office Tool Plus</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.SignOut">Deconectare</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Shutdown">Oprire</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Restart">Repornire</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Sleep">Sleep</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Hibernate">Hibernate</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat">Format afișare limbi Office</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat.Default">Nume implicit</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat.Native">Numele nativ</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat.English">Numele englezesc</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat.Localized">Numele localizat</sys:String>
+    <sys:String x:Key="Settings_Deploy_Internal">Afișați produsele și canalele interne</sys:String>
+    <sys:String x:Key="Settings_Deploy_Internal.Description">Produsele și canalele interne pot fi instabile sau nesuportate.</sys:String>
+
+    <sys:String x:Key="Settings_Download">Descărcare</sys:String>
+    <sys:String x:Key="Settings_Download_Ask_Where_To_Save">Întrebați unde să salvați fișierele</sys:String>
+    <sys:String x:Key="Settings_Download_Ask_Where_To_Save.Description">Selectați unde să salvați fișierele de instalare Office înainte de descărcare.</sys:String>
+    <sys:String x:Key="Settings_Download_MsFileList_API">Obțineți lista de fișiere folosind API-ul Microsoft</sys:String>
+    <sys:String x:Key="Settings_Download_MsFileList_API.Description">Dacă este activat, lista de fișiere va fi obținută de la API-ul Microsoft, altfel lista de fișiere va fi generată folosind reguli încorporate.</sys:String>
+    <sys:String x:Key="Settings_Download_Engine">Motor</sys:String>
+    <sys:String x:Key="Settings_Download_Engine.Description">Selectați ce motor să utilizați la descărcarea Office.</sys:String>
+    <!-- Do not translate 'bezzad.Downloader' -->
+    <sys:String x:Key="Settings_Download_Engine.Downloader">bezzad.Downloader</sys:String>
+    <sys:String x:Key="Settings_Download_Engine.OfficeToolPlus">Office Tool Plus</sys:String>
+    <sys:String x:Key="Settings_Download_Engine.OfficeDeploymentTool">Instrument de implementare Office</sys:String>
+    <sys:String x:Key="Settings_Download_HTTPS">Conectare folosind HTTPS</sys:String>
+    <sys:String x:Key="Settings_Download_HTTPS.Description">Încercați să o activați când aveți probleme la descărcarea Office.</sys:String>
+    <sys:String x:Key="Settings_Download_Verify">Verificați fișierele</sys:String>
+    <sys:String x:Key="Settings_Download_Verify.Description">Verificați instalarea(ile) Office după descărcare.</sys:String>
+    <sys:String x:Key="Settings_Download_UA">Versiune Windows</sys:String>
+    <sys:String x:Key="Settings_Download_UA.Description">Versiunea implicită de Office pentru versiunea curentă de Windows este descărcată. Modificați aceasta dacă doriți să descărcați Office pentru o versiune diferită de Windows.</sys:String>
+    <sys:String x:Key="Settings_Download_UA.AutoDetection">Detectare automată</sys:String>
+    <!-- Do not translate 'bezzad.Downloader' -->
+    <sys:String x:Key="Settings_Download_Downloader">Setări bezzad.Downloader</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Chunks">Bucăți</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Chunks.Description">Împarte fișierul în bucăți specificate pentru descărcare. Setarea prea mare poate încetini viteza.</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Parallel">Descărcare paralelă în bucăți</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Parallel.Description">La descărcarea pe un hard disk (HDD), activarea acestei opțiuni poate reduce vitezele de scriere, mai ales dacă sunt setate prea multe bucăți.</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Limit">Limită viteză</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Limit.Description">Limitați viteza la descărcarea fișierelor, unitatea este KBps. Valoarea implicită este 0 (fără limită).</sys:String>
+
+    <!-- About page -->
+    <sys:String x:Key="About_Link.Homepage">Pagina principală</sys:String>
+    <sys:String x:Key="About_Link.Docs">Documente</sys:String>
+    <sys:String x:Key="About_Link.Sponsor">Sponsor</sys:String>
+    <sys:String x:Key="About_Link.Report_Issue">Raportează o problemă</sys:String>
+    <sys:String x:Key="About_Link.Email">Email</sys:String>
+    <sys:String x:Key="About_Version">Versiune</sys:String>
+    <sys:String x:Key="About_ReleaseDate">Release date:</sys:String>
+    <sys:String x:Key="About_CheckUpdate">_Check update</sys:String>
+    <sys:String x:Key="About_EnvInfo">Runtime version: {0}, OS version: {1}.</sys:String>
+    <sys:String x:Key="About_CreatorInfo">Dezvoltat de Yerong, bazat pe Instrumentul de implementare Office.</sys:String>
+    <sys:String x:Key="About_Copyright">Drepturi de autor © 2016-{0} Yerong Toate drepturile rezervate.</sys:String>
+    <sys:String x:Key="About_TrademarkInfo">Microsoft Office este o marcă comercială înregistrată sau marcă comercială a Microsoft Corporation în Statele Unite și / sau în alte țări.</sys:String>
+
+    <sys:String x:Key="About_Server_Provider">Furnizori de server</sys:String>
+    <sys:String x:Key="About_Translator">Traducători</sys:String>
+
+    <sys:String x:Key="About_MoreInfo">Mai multe informații</sys:String>
+    <sys:String x:Key="About_Image_Source">Sursa imaginii de fundal</sys:String>
+    <sys:String x:Key="About_Link.OpenSourceNotice">Aviz privind sursele deschise</sys:String>
+
+    <!-- Downloader -->
+    <sys:String x:Key="Downloader_ProgressBar.Name">Progres descărcare Office</sys:String>
+    <sys:String x:Key="Downloader_Resume">Reluați</sys:String>
+    <sys:String x:Key="Downloader_Pause">Pauză</sys:String>
+    <sys:String x:Key="Downloader_Cancel">Anulați</sys:String>
+    <sys:String x:Key="Downloader_Percentage">Se descarcă, {0} finalizat.</sys:String>
+    <sys:String x:Key="Downloader_Remaining">Se descarcă, timp rămas: {0}</sys:String>
+    <sys:String x:Key="Downloader_Writing">Writing data...</sys:String>
+    <sys:String x:Key="Downloader_Pending">În așteptare</sys:String>
+    <sys:String x:Key="Downloader_Pausing">Pauză</sys:String>
+    <sys:String x:Key="Downloader_Paused">Întrerupt</sys:String>
+
+    <!-- Notification strings -->
+    <sys:String x:Key="Message">Mesaj</sys:String>
+    <sys:String x:Key="Notice">Înștiințare</sys:String>
+    <sys:String x:Key="Warning">Avertizare</sys:String>
+    <sys:String x:Key="Error">Eroare</sys:String>
+    <sys:String x:Key="Yes">_Da</sys:String>
+    <sys:String x:Key="No">_Nu</sys:String>
+    <sys:String x:Key="OK">_Bine</sys:String>
+    <sys:String x:Key="Cancel">_Anulare</sys:String>
+
+    <!-- Input box strings-->
+    <sys:String x:Key="Input_Command">Vă rugăm să introduceți comenzile aplicației</sys:String>
+    <sys:String x:Key="Input_URL">Vă rugăm să introduceți URL-ul</sys:String>
+    <sys:String x:Key="Input_vNext_License_Name">Please enter the name</sys:String>
+
+    <!-- Office ISO Context Menu -->
+    <!-- What is &amp; means? '&amp;' stands for '&', so it is &Install now, users can press the hotkey (I) to execute the command when menu is opened. -->
+    <!-- Learn more about hotkey and autorun.inf: https://en.wikipedia.org/wiki/Autorun.inf#:~:text=shell%5Cverb%3Dmenu%20text -->
+    <!-- If you cannot understand what is hotkey, remove '&amp;' when you are translating. -->
+    <sys:String x:Key="CD-ROM_InstallNow">&amp;Instalează acum</sys:String>
+
+    <!-- Task Message -->
+    <sys:String x:Key="Task_Checking_Updates">Se verifică actualizările.</sys:String>
+    <sys:String x:Key="Task_Downloading_Updates">Descărcarea actualizărilor, {0} finalizată ({1} din {2}).</sys:String>
+    <sys:String x:Key="Task_Downloading_Updates_NoPercentage">Descărcarea actualizărilor, {0} din {1}.</sys:String>
+    <sys:String x:Key="Task_Verifying_Installation_Files">Se verifică fișierele, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Downloading_Web_Config">Se descarcă fișierul de configurare de pe web, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Preparing_Download">Se pregătește descărcarea Office.</sys:String>
+    <!-- Example: Creating Office ISO file, file size: 3.1GB, 45% completed. -->
+    <sys:String x:Key="Task_Creating_ISO">Se creează fișierul ISO Office, dimensiune fișier: {0}, {1} finalizat.</sys:String>
+    <sys:String x:Key="Task_ODT">Se implementează acum, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_SPP">SPP lucrează acum, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Searching_KMS_Events">Se caută evenimente de activare KMS, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Searching_IAF_Events">Se caută evenimente de eșec la activarea prin Internet, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Checking_Office_Update_Channel">Se interogează informațiile despre canalele de actualizare Office.</sys:String>
+    <sys:String x:Key="Task_Testing_KMS_Host">Se testează accesibilitatea gazdei KMS.</sys:String>
+    <sys:String x:Key="Task_Collecting_Office_Logs">Collecting Office logs.</sys:String>
+    <sys:String x:Key="Task_Searching_MSI_Events">Se caută evenimente Windows Installer, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Searching_Application_Events">Se caută evenimente ale aplicației, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Removing_Office">Eliminare Office.</sys:String>
+    <sys:String x:Key="Task_Repairing_WMI">Se repară componentele WMI, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Converting_Documents">Se convertesc documentele Office, {0} rămase.</sys:String>
+    <sys:String x:Key="Task_Importing_Files">Se importă fișierele, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Computing_Hash">Se calculează hash-ul, {0} fișier(e) rămase.</sys:String>
+    <sys:String x:Key="Task_Exporting_Hash">Se exportă rezultatele, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Task_Installing_App">Se instalează {0}, vă rugăm să așteptați.</sys:String>
+
+    <!-- Question Message -->
+    <sys:String x:Key="Ques_Update.Title">Actualizare Office Tool Plus</sys:String>
+    <sys:String x:Key="Ques_Update.Content">Actualizarea este disponibilă, descărcați acum?</sys:String>
+    <sys:String x:Key="Ques_Exit">Office Tool Plus lucrează acum. Vrei oricum să renunți?</sys:String>
+    <sys:String x:Key="Ques_Can_Not_Verify_Signature">Nu putem verifica semnătura fișierului, doriți să îl deschideți oricum?&#x000A;&#x000A;Fișier: {0}</sys:String>
+    <sys:String x:Key="Ques_Quick_Installation">Ați ales să instalați {0}.&#x000A;&#x000A;Apăsați "Da" pentru a instala după descărcare, "Nu" pentru a instala în timpul descărcării sau închideți fereastra pentru a anula.</sys:String>
+    <sys:String x:Key="Ques_Select_Office_To_Download">Ați specificat versiunea Office la {0}, dar am obținut o versiune diferită.&#x000A;&#x000A;Apăsând "Da" se va descărca versiunea {1} de Office.&#x000A;Apăsând "Nu" se va descărca versiunea {2} de Office.</sys:String>
+    <sys:String x:Key="Ques_Deploy_Office">Gata pentru implementarea Office?</sys:String>
+    <sys:String x:Key="Ques_Deploy_Office.ToInstall">Produse de instalat:</sys:String>
+    <sys:String x:Key="Ques_Deploy_Office.ToUninstall">Produse de dezinstalat:</sys:String>
+    <sys:String x:Key="Ques_Install_Office.Applications">Aplicație(ii): {0}</sys:String>
+    <sys:String x:Key="Ques_Install_Office.Architecture">Arhitectură: {0}</sys:String>
+    <sys:String x:Key="Ques_Install_Office.UpdateChannel">Canal de actualizare: {0}</sys:String>
+    <sys:String x:Key="Ques_Install_Office.OfficeVersion">Versiune Office: {0}</sys:String>
+    <sys:String x:Key="Ques_Install_Office.SourcePath">Sursa fișierelor de instalare: {0}</sys:String>
+    <sys:String x:Key="Ques_Deploy_Configuration">Vedeți codul pentru configurarea detaliilor, este configurația de bază de mai sus corectă?</sys:String>
+    <sys:String x:Key="Ques_Delete_All_Installations">Sigur doriți să ștergeți toate fișierele de instalare?</sys:String>
+    <sys:String x:Key="Ques_Delete_Installation">Sigur doriți să ștergeți {0}?</sys:String>
+    <sys:String x:Key="Ques_Delete_Installation_Package">Sigur doriți să ștergeți {0}?</sys:String>
+    <sys:String x:Key="Ques_Install_Custom_Software">PlaceHolder</sys:String>
+    <sys:String x:Key="Ques_Clear_Activation">Sigur doriți să dezinstalați toate licențele și cheile? După această operațiune va trebui să reinstalați licențele și să reactivați Office.</sys:String>
+    <sys:String x:Key="Ques_Install_Licenses">Este posibil să nu vedeți informații de activare în Office după ce instalați o licență Office, dar puteți vizualiza informații sau activa Office prin Office Tool Plus. Doriți să continuați?</sys:String>
+    <sys:String x:Key="Ques_Uninstall_Licenses">Sigur doriți să dezinstalați toate licențele Office?</sys:String>
+    <sys:String x:Key="Ques_Uninstall_All_Keys">Sigur doriți să dezinstalați toate cheile de produs Office? Vă rugăm să faceți o copie de rezervă a cheilor mai întâi, dacă este necesar.</sys:String>
+    <sys:String x:Key="Ques_Uninstall_Product_Key">Sigur doriți să dezinstalați cheia de produs?</sys:String>
+    <sys:String x:Key="Ques_Delete_vNextLicense">Sigur doriți să ștergeți licența?</sys:String>
+    <sys:String x:Key="Ques_Remove_Office">Sigur curățați Office? Odată pornită, această operațiune nu poate fi întreruptă.</sys:String>
+    <sys:String x:Key="Ques_Invoke_Office_Update">Canalul de actualizare a fost schimbat, verificați acum actualizările Office?</sys:String>
+    <sys:String x:Key="Ques_Restart_System_Now">Do you want to restart system now?</sys:String>
+
+    <!-- Info Message -->
+    <sys:String x:Key="Info_OS_Outdated">Sistemul dvs. de operare nu mai este acceptat, vă rugăm să faceți upgrade la sistemul de operare sau să descărcați o versiune mai veche de Office Tool Plus pentru a o utiliza.</sys:String>
+    <sys:String x:Key="Info_Restart_Required">Trebuie să reporniți aplicația pentru a intra în vigoare.</sys:String>
+    <sys:String x:Key="Info_No_Updates">Folosiți cea mai recentă versiune de Office Tool Plus.</sys:String>
+    <sys:String x:Key="Info_Update_In_Progress">Actualizarea este în curs, vă rugăm să așteptați.</sys:String>
+    <sys:String x:Key="Info_Updates_Incomplete">Nu s-au putut aplica actualizările, vă rugăm să încercați din nou mai târziu.</sys:String>
+    <sys:String x:Key="Info_SystemDrive_Permissions">Your system drive permissions are incorrect. Please contact technical support for assistance.</sys:String>
+    <sys:String x:Key="Info_SystemDrive_NoSpace">Your system drive is running out of space, which may cause some operations to fail.</sys:String>
+    <sys:String x:Key="Info_No_Language_Added_For_Download">Am detectat că nu ați adăugat nicio limbă. În majoritatea cazurilor, vă recomandăm să adăugați limbi pentru a evita problemele.</sys:String>
+    <sys:String x:Key="Info_Select_Where_To_Save_Office_Installation">Vă rugăm să selectați folderul pentru salvarea fișierelor de instalare Office.&#x000A;Pentru a utiliza locația implicită, dezactivați "Întreabă unde să salvezi fișierele" în pagina de setări.</sys:String>
+    <sys:String x:Key="Info_All_Files_Exist">Nu este nevoie să descărcați, toate fișierele există.</sys:String>
+    <sys:String x:Key="Info_Office_Downloading">Office este în descărcare.</sys:String>
+    <sys:String x:Key="Info_Software_Installation_Complete">Instalarea este completă.</sys:String>
+    <sys:String x:Key="Info_Software_Installation_Failed">Instalarea nu a reușit.</sys:String>
+    <sys:String x:Key="Info_No_Events">Nu s-au găsit evenimente.</sys:String>
+    <sys:String x:Key="Info_No_Office_Licenses">Nu s-au găsit licențe Office.</sys:String>
+    <sys:String x:Key="Info_No_Office_Product_Key">Nu s-au detectat chei de produs Office.</sys:String>
+    <sys:String x:Key="Info_Number_Of_Keys_Uninstalled">Numărul de {0} cheie(i) de produs dezinstalate.</sys:String>
+    <sys:String x:Key="Info_Number_Of_Lics_Uninstalled">Numărul de {0} licență(e) Office dezinstalate.</sys:String>
+    <sys:String x:Key="Info_Office_License_Activation.Title">Rezultatele activării produsului</sys:String>
+    <sys:String x:Key="Info_Office_License_Activation_Successful">Activarea produsului a reușit.</sys:String>
+    <sys:String x:Key="Info_KMS_Test_Result.Success">Metodă de testare KMS: {0}. Rezultatul testului: succes, timp scurs: {1}ms.</sys:String>
+    <sys:String x:Key="Info_KMS_Test_Result.Failed">Eșec la testul KMS.</sys:String>
+    <sys:String x:Key="Info_Enable_Mica">Efectul Mica necesită Windows 11 pentru a fi afișat.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.SignOut">We will sign you out in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.Shutdown">The system will shut down in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.Restart">The system will restart in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.Sleep">The system will enter sleep mode in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.Hibernate">The system will enter hibernation in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation_Skip">Skip wait</sys:String>
+    <sys:String x:Key="Info_Auto_Operation_Cancel">Cancel</sys:String>
+
+    <!-- Success Message -->
+    <sys:String x:Key="Success_Download_Updates">Actualizările au fost aplicate cu succes.</sys:String>
+    <sys:String x:Key="Success_Add_Download_Task">Sarcinile de descărcare au fost adăugate cu succes.</sys:String>
+    <sys:String x:Key="Success_Create_ISO">Fișierul ISO Office a fost creat.</sys:String>
+    <sys:String x:Key="Success_Installation_Verify">Fișierul de instalare a fost verificat și nu au fost găsite erori.</sys:String>
+    <sys:String x:Key="Success_Installer_Exited">Instrumentul de implementare Office a ieșit normal.</sys:String>
+    <sys:String x:Key="Success_Apply_Preferences">Preferințele aplicației Office au fost aplicate cu succes.</sys:String>
+    <sys:String x:Key="Success_Install_Licenses">Licențele Office au fost instalate cu succes.</sys:String>
+    <sys:String x:Key="Success_Install_Product_Key">Cheia de produs a fost instalată cu succes.</sys:String>
+    <sys:String x:Key="Success_Set_KMS">Setările KMS au fost aplicate cu succes.</sys:String>
+    <sys:String x:Key="Success_Save">Salvat cu succes.</sys:String>
+    <sys:String x:Key="Success_Collect_Logs">Fișierele jurnal au fost colectate și salvate în: {0}</sys:String>
+    <sys:String x:Key="Success_Repair">Reparația a avut succes.</sys:String>
+    <sys:String x:Key="Success_Repair_System_Variables">Resetarea variabilelor de sistem a fost finalizată, vă rugăm să reporniți sistemul pentru ca modificările să intre în vigoare.</sys:String>
+    <sys:String x:Key="Success_Repair_WMI_Components">Repararea componentelor WMI a fost finalizată, vă rugăm să reporniți sistemul pentru ca modificările să intre în vigoare.</sys:String>
+
+    <!-- Error Message -->
+    <sys:String x:Key="Err_Create_Temp_Path">Imposibil de creat calea temporară. Verificați variabilele de sistem și încercați din nou.</sys:String>
+    <sys:String x:Key="Err_Already_Running">Office Tool Plus funcționează deja.</sys:String>
+    <sys:String x:Key="Err_Perform_Update">A apărut o eroare în timpul actualizării, vă rugăm să descărcați manual cea mai recentă versiune de Office Tool Plus.</sys:String>
+    <sys:String x:Key="Err_Unknown_Command">Comandă necunoscută: {0}</sys:String>
+    <sys:String x:Key="Err_Command_Parameter">Lipsesc parametrii necesari.</sys:String>
+    <sys:String x:Key="Err_Checking_Installation">A apărut o eroare la verificarea fișierelor de instalare. Vă rugăm să încercați din nou mai târziu sau să redescărcați fișierele de instalare Office.</sys:String>
+    <sys:String x:Key="Err_Installation_Corrupted">These installation files are corrupted, please delete them and download again.</sys:String>
+    <sys:String x:Key="Err_Installation">One or more errors occurred in the installation files {0}:&#x000A;{1}</sys:String>
+    <sys:String x:Key="Err_Installation_File_Missing">Lipsește fișierul: {0}</sys:String>
+    <sys:String x:Key="Err_Installation_File_Corrupted">Fișierul este corupt: {0}</sys:String>
+    <sys:String x:Key="Err_Installation_Hash">Verificarea hash-ului a eșuat, fișier: {0}</sys:String>
+    <sys:String x:Key="Err_Installation_SignatureInvalid">The signature is invalid, file: {0}</sys:String>
+    <sys:String x:Key="Err_Installation_Version">Verificarea versiunii a eșuat, fișier: {0}&#x000A;Versiune: {1}&#x000A;Versiune client: {2}</sys:String>
+    <sys:String x:Key="Err_Installation_Mismatch">Nepotrivire versiune, fișier: {0}&#x000A;Versiune actuală: {1}&#x000A;Arhitectură: {2}</sys:String>
+    <sys:String x:Key="Err_Installation_No_BasePack">Fișierele de instalare nu conțin pachetul de bază, vă rugăm să încercați să îl descărcați din nou.</sys:String>
+    <sys:String x:Key="Err_Reading_Info">A apărut o eroare la citirea informațiilor Office.</sys:String>
+    <sys:String x:Key="Err_Saving_Info">A apărut o eroare la salvarea informațiilor Office.</sys:String>
+    <sys:String x:Key="Err_Start_Deploy.Download">Nu se poate descărca Office, asigurați-vă că ați adăugat un produs sau o limbă, apoi încercați din nou.</sys:String>
+    <sys:String x:Key="Err_Start_Deploy.Deploy">Nu se poate implementa Office, asigurați-vă că ați setat corect setările de bază, apoi încercați din nou.</sys:String>
+    <sys:String x:Key="Err_Start_Deploy.Preferences">Nu se pot seta preferințele aplicației, asigurați-vă că ați setat corect preferințele aplicației, apoi încercați din nou.</sys:String>
+    <!-- {0} means product name, for example: Microsoft 365 Apps for Enterprise. -->
+    <sys:String x:Key="Err_Start_Deploy_ProductNotSupported">{0} nu este acceptat în această versiune de Office.</sys:String>
+    <!-- {0} means product name, for example: Visio Professional 2016. {1} means language code, for example: en-gb. -->
+    <sys:String x:Key="Err_Start_Deploy_CultureNotSupported">{0} nu acceptă limba {1}.</sys:String>
+    <sys:String x:Key="Err_System_Variables_Incorrect">Una sau mai multe variabile de sistem sunt incorecte, vă rugăm să le reparați în pagina Trusă de scule.</sys:String>
+    <sys:String x:Key="Err_Folder_Permissions_Incorrect">One or more folder permissions are incorrect, and we were unable to fix them. Please restart your system and try again, or contact technical support for assistance.</sys:String>
+    <sys:String x:Key="Err_Installation_Is_In_Progress">Another Office installation is in progress, check the Windows taskbar for status.</sys:String>
+    <sys:String x:Key="Err_Installer_Exited">Instrumentul de implementare Office a ieșit anormal.</sys:String>
+    <sys:String x:Key="Err_Prepare_To_Download_Office">Nu se poate obține versiunea Office, încercați din nou sau utilizați Instrumentul de implementare Office ca motor de descărcare.</sys:String>
+    <sys:String x:Key="Err_Create_ISO">Nu s-au găsit fișiere de instalare Office. Vă rugăm să descărcați mai întâi fișierele de instalare sau să selectați fișiere de instalare existente, apoi încercați din nou.</sys:String>
+    <sys:String x:Key="Err_WPA_Registry">An error was found in the WPA registry. Please follow [the instructions]({0}) to fix the error.</sys:String>
+    <sys:String x:Key="Err_Query_Office_Licenses">Nu se pot interoga licențele Office, vă rugăm să încercați din nou.</sys:String>
+    <sys:String x:Key="Err_Loading_Office_Licenses">Versiunea Click-to-Run de Office nu a fost detectată pe acest computer, licențele Office nu au putut fi încărcate. Vă rugăm să vă asigurați că aveți instalată cea mai recentă versiune de Office.</sys:String>
+    <sys:String x:Key="Err_Product_Key_Invalid">Cheia de produs introdusă este nevalidă, vă rugăm să verificați și să încercați din nou.</sys:String>
+    <sys:String x:Key="Err_Confirmation_ID_Invalid">ID-ul de confirmare introdus este nevalid, vă rugăm să verificați și să încercați din nou.</sys:String>
+    <sys:String x:Key="Err_KMS_Host_Invalid">Nu se pot salva setările KMS, vă rugăm să verificați numele gazdei KMS și să încercați din nou.</sys:String>
+    <sys:String x:Key="Err_No_KMS_Lic">Nu se pot salva setările KMS, nu s-au găsit licențe KMS Office valide în sistem.</sys:String>
+    <sys:String x:Key="Err_Set_KMS">Nu se pot salva setările KMS, vă rugăm să încercați din nou.</sys:String>
+    <sys:String x:Key="Err_Act_Run_Commands">A apărut o eroare la executarea comenzilor.&#x000A;&#x000A;Cod de eroare: {0}</sys:String>
+    <sys:String x:Key="Err_Act_Office_License">A apărut o eroare la activarea produsului.&#x000A;&#x000A;Cod de eroare: {0}</sys:String>
+    <sys:String x:Key="Err_Install_Office_Lic">A apărut o eroare la instalarea licenței.&#x000A;&#x000A;Cod de eroare: {0}</sys:String>
+    <sys:String x:Key="Err_Install_Product_Key">A apărut o eroare la instalarea cheii de produs.&#x000A;&#x000A;Cod de eroare: {0}</sys:String>
+    <sys:String x:Key="Err_Uninstall_Product_Key">A apărut o eroare la dezinstalarea cheii de produs.&#x000A;&#x000A;Cod de eroare: {0}</sys:String>
+    <sys:String x:Key="Err_Check_KMS_Status">Nu se poate verifica starea KMS, vă rugăm să verificați numele gazdei KMS și să încercați din nou.</sys:String>
+    <sys:String x:Key="Err_Office_App_NotFound">{0} nu a fost găsit pe computer, vă rugăm să confirmați dacă a fost instalată cea mai recentă versiune de Office.</sys:String>
+    <sys:String x:Key="Err_Open_Clipboard">Nu se poate accesa clipboard-ul, vă rugăm să încercați din nou.</sys:String>
+</ResourceDictionary>

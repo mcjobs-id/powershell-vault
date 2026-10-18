@@ -1,0 +1,75 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: lint
+        if: matrix.os == 'macOS-latest'
+        run: |
+          brew install shfmt shellcheck
+          shfmt -d .
+          shellcheck -s sh *.sh
+
+      - name: verify checksum
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          if ! shasum -a 256 -c SHA256SUM; then
+            echo 'Checksum verification failed.'
+            echo 'If the installer has been updated intentionally, update the checksum with:'
+            echo 'shasum -a 256 install.{sh,ps1} > SHA256SUM'
+            exit 1
+          fi
+      - name: tests shell
+        shell: bash
+        run: ./install_test.sh
+
+      - name: tests powershell
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: ./install_test.ps1
+
+      - name: tests powershell core
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: ./install_test.ps1
+
+  check-js:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: denoland/setup-deno@v2
+
+      - name: deno lint
+        run: deno lint
+
+      - name: check fmt
+        run: deno fmt --check
+
+      - name: check bundled file up to date
+        run: |
+          cd shell-setup
+          deno task bundle
+          if ! git --no-pager diff --exit-code ./bundled.esm.js; then
+            echo 'Bundled script is out of date, update it with `cd shell-setup; deno task bundle`'.
+            exit 1
+          fi
+      - name: integration tests
+        if: matrix.os != 'windows-latest'
+        run: deno test -A --permit-no-files
+      
+      - name: dry run publishing
+        run: deno publish --dry-run

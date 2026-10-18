@@ -1,0 +1,105 @@
+name: Badge Downloads
+
+on:
+  workflow_dispatch:
+  schedule:
+    # https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+    # At 7 am UTC every day
+    - cron: "0 7 * * *"
+
+jobs:
+  badges-downloads:
+    name: Update Badges
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@main
+
+      - name: Get download counts
+        run: |
+          $Token = "${{ secrets.GITHUB_TOKEN }}"
+          $Headers = @{
+            Accept        = "application/vnd.github+json"
+            Authorization = "Bearer $Token"
+          }
+
+          # Count downloads for the first page of the repo
+          # By default, GitHub parses only first page
+          $Releases = @()
+          $Page = 1
+
+          do
+          {
+            $Parameters = @{
+              Uri             = "https://api.github.com/repos/farag2/Sophia-Script-for-Windows/releases?per_page=100&page=$page"
+              Headers         = $Headers
+              UseBasicParsing = $true
+              Verbose         = $true
+            }
+            $Pages = Invoke-RestMethod @Parameters
+
+            $Releases += $Pages
+            $Page++
+          }
+          while ($Pages.Count -gt 0)
+
+          $Allpages = ($Releases.assets.download_count | Measure-Object -Sum).Sum
+
+          # https://community.chocolatey.org/packages/sophia
+          $Parameters = @{
+              Uri             = "https://community.chocolatey.org/api/v2/Packages()?`$filter=Id eq 'sophia' and IsLatestVersion"
+              UseBasicParsing = $true
+              Verbose         = $true
+          }
+          $choco = (Invoke-RestMethod @Parameters).properties.DownloadCount."#text"
+
+          # https://sourceforge.net/projects/sophia-script-windows.mirror/
+          $Parameters = @{
+              Uri             = "https://sourceforge.net/projects/sophia-script-windows.mirror/files/stats/json?start_date=2025-09-11&end_date=$(Get-Date -Format 'yyyy-MM-dd')"
+              UseBasicParsing = $true
+              Verbose         = $true
+          }
+          $SourceForge = (Invoke-RestMethod @Parameters).total
+
+          Write-Verbose -Message ($Allpages + $SourceForge) -Verbose
+
+          $Summary = "{0:N3} Million" -f (($Allpages + $SourceForge)/1000000)
+          Write-Verbose -Message $Summary -Verbose
+
+          echo "DOWNLOADS_COUNT=$Summary" >> $env:GITHUB_ENV
+
+      - name: Writing to Gist
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_SOPHIASCRIPT_DOWNLOADS_COUNT }}
+        shell: pwsh
+        run: |
+          # https://gist.github.com/farag2/25ddc72387f298503b752ad5b8d16eed
+
+          $GistContent = @{
+            schemaVersion = 1
+            label         = "downloads"
+            message       = $env:DOWNLOADS_COUNT
+            color         = "brightgreen"
+            namedLogo     = "GitHub"
+          } | ConvertTo-Json
+
+          $Body = @{
+            files = @{
+              "SophiaScriptDownloadsCount.json" = @{
+                content = $GistContent
+              }
+            }
+          } | ConvertTo-Json
+          $Headers = @{
+            Authorization = "Bearer $env:GIST_TOKEN"
+            Accept        = "application/vnd.github+json"
+          }
+          $Parameters = @{
+              Uri             = "https://api.github.com/gists/25ddc72387f298503b752ad5b8d16eed"
+              Method          = "Patch"
+              Body            = $Body
+              Headers         = $Headers
+              UseBasicParsing = $true
+              Verbose         = $true
+          }
+          Invoke-RestMethod @Parameters

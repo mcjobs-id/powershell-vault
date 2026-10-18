@@ -1,0 +1,69 @@
+---
+id: terraform
+title: Terraform Context
+sidebar_label: Terraform
+---
+
+## What
+
+Display the currently active [Terraform][terraform] Workspace name.
+
+## Sample Configuration
+
+import Config from "@site/src/components/Config.js";
+
+<Config
+  data={{
+    type: "terraform",
+    style: "powerline",
+    powerline_symbol: "\uE0B0",
+    foreground: "#000000",
+    background: "#ebcc34",
+    template: " \ue69a {{.WorkspaceName}}",
+  }}
+/>
+
+## Options
+
+| Name            |   Type    |   Default   | Description                                                                                                          |
+| --------------- | :-------: | :---------: | ------------------------------------------------------------------------------------------------------------------ |
+| `command`       | `string`  | `terraform` | the command(s) to run, allows support for `tofu`                                                                    |
+
+### Version detection
+
+When a template references `.Version`, the version is fetched and resolved from the first source
+that yields a value, in this order:
+
+1. the [tenv][tenv] environment variable — `TFENV_TERRAFORM_VERSION` (or
+   `TOFUENV_TOFU_VERSION` when `command` is `tofu`)
+2. the [tenv][tenv] version file — `.terraform-version` (or `.opentofu-version`
+   when `command` is `tofu`)
+3. the `required_version` declared in `versions.tf` or `main.tf`
+4. the `terraform_version` stored in `terraform.tfstate`
+
+The tenv sources let the segment show the pinned version even when you don't use
+`main.tf` / `versions.tf`. The environment variable and version file are only
+used to read the version; a project file (a `.terraform` folder or one of the
+files above) is still required for the segment to activate.
+
+## Template ([info][templates])
+
+:::note default template
+
+```template
+ {{ .WorkspaceName }}{{ if .Version }} {{ .Version }}{{ end }}
+```
+
+:::
+
+### Properties
+
+| Name             | Type     | Description                                       |
+| ---------------- | -------- | ------------------------------------------------- |
+| `.WorkspaceName` | `string` | is the current workspace name                     |
+| `.Version`       | `string` | terraform version, fetched when referenced in a template |
+
+[templates]: /docs/configuration/templates
+[terraform]: https://developer.hashicorp.com/terraform
+[tenv]: https://github.com/tofuutils/tenv
+[version-detection]: #version-detection

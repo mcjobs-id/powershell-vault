@@ -1,0 +1,999 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.RunTime"
+                    xml:space="preserve">
+
+    <!-- Country settings, it is used to get information from server. -->
+    <sys:String x:Key="Culture">tr-tr</sys:String>
+    <!-- Products name settings, "en-us" is default value if not set. -->
+    <sys:String x:Key="ProductDict">tr-tr</sys:String>
+    <!-- Markdown document font family. -->
+    <FontFamily x:Key="Markdown.FontFamily">Segoe UI</FontFamily>
+
+    <!-- Eula content -->
+    <sys:String x:Key="Eula.Title">Lisans şartları</sys:String>
+    <sys:String x:Key="Eula.Content">Bu yazılımı kullanarak, [Yazılım Lisansı Koşullarını]({0}) ve [Microsoft Hizmet Sözleşmesini]({1}) kabul etmelisiniz.</sys:String>
+
+    <!-- Custom control -->
+    <sys:String x:Key="Yerong_String_ToggleButton.Unset">Ayarı kaldır</sys:String>
+    <sys:String x:Key="Yerong_String_ToggleButton.Off">Kapalı</sys:String>
+    <sys:String x:Key="Yerong_String_ToggleButton.On">Açık</sys:String>
+    <sys:String x:Key="Yerong_String_MicaMenu.Name">Menü</sys:String>
+    <sys:String x:Key="Yerong_String_MicaMenu.HelpText">Bağlam menüsünü açmak için tıklayın.</sys:String>
+
+    <!-- Title bar -->
+    <sys:String x:Key="Title_Bar_GoBack_Button">Back</sys:String>
+    <sys:String x:Key="Title_Bar_SysMenu_Button">System menu</sys:String>
+    <sys:String x:Key="Title_Bar_Command_Box">Komut satırı</sys:String>
+
+    <!-- Navigation bar -->
+    <sys:String x:Key="Navigation_Menu.Name">Gezinti Menüsü</sys:String>
+    <sys:String x:Key="Navigation_Menu.ToolTip">Gezinme çubuğunu genişletmek veya daraltmak için tıklayın.</sys:String>
+    <sys:String x:Key="Navigation_Bar.Name">Gezinti çubuğu</sys:String>
+
+    <sys:String x:Key="Navigate_Page.Home">Ana Sayfa</sys:String>
+    <sys:String x:Key="Navigate_Page.Deploy">Office İndir</sys:String>
+    <sys:String x:Key="Navigate_Page.Activate">Etkinleştir</sys:String>
+    <sys:String x:Key="Navigate_Page.Toolbox">Araç Kutusu</sys:String>
+    <sys:String x:Key="Navigate_Page.ConvertDocuments">Belgeleri Dönüştür</sys:String>
+    <sys:String x:Key="Navigate_Page.HashChecker">HASH Değerini Kontrol Et</sys:String>
+
+    <sys:String x:Key="Navigate_Page.Settings">Ayarlar</sys:String>
+    <sys:String x:Key="Navigate_Page.About">Hakkında</sys:String>
+
+    <!-- Notification list -->
+    <sys:String x:Key="Notification_Close_Message.Name">Mesajı kapat</sys:String>
+    <sys:String x:Key="Notification_Message_Button_List">Mesaj düğmeleri</sys:String>
+    <sys:String x:Key="Notification_Cancel_Task.Name">İşlemi iptal et</sys:String>
+
+    <!-- Home page -->
+    <sys:String x:Key="Home_Messages_Center.Name">Mesaj merkezi</sys:String>
+    <!-- Greetings, customize it according to your country and habits. -->
+    <sys:String x:Key="Home_Greeting_Hello">Merhaba</sys:String>
+    <!-- 00:00 -> 05:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.0">Geç oldu, iyi rüyalar!</sys:String>
+    <!-- 05:00 -> 06:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.5">Şafak sökmek üzere, kalkmaya hazır mısın?</sys:String>
+    <!-- 06:00 -> 10:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.6">Günaydın</sys:String>
+    <!-- 10:00 -> 11:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.10">Günaydın</sys:String>
+    <!-- 11:00 -> 12:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.11">Tünaydın</sys:String>
+    <!-- 12:00 -> 13:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.12">Tünaydın</sys:String>
+    <!-- 13:00 -> 15:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.13">Tünaydın</sys:String>
+    <!-- 15:00 -> 17:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.15">Tünaydın</sys:String>
+    <!-- 17:00 -> 18:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.17">Tünaydın</sys:String>
+    <!-- 18:00 -> 21:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.18">İyi geceler</sys:String>
+    <!-- 21:00 -> 22:00 -->
+    <sys:String x:Key="Home_Greeting_Hour.21">Uyku vakti, iyi rüyalar!</sys:String>
+    <!-- 22:00 -> 00:00 (+1) -->
+    <sys:String x:Key="Home_Greeting_Hour.22">Geç oldu, iyi rüyalar!</sys:String>
+    <!-- Greetings end -->
+    <sys:String x:Key="Home_Install_Office">Office'i İndir</sys:String>
+    <sys:String x:Key="Home_Install_Office.O365PPRDescription">Outlook, OneDrive İş, Word, Excel, PowerPoint ve daha fazlasını içerir.</sys:String>
+    <sys:String x:Key="Home_Install_Office.O365HPRDescription">Outlook, Word, Excel, PowerPoint ve daha fazlasını içerir.</sys:String>
+    <sys:String x:Key="Home_Install_Office.PP2019RDescription">Outlook, Word, Excel, PowerPoint ve daha fazlasını içerir.</sys:String>
+    <sys:String x:Key="Home_Install_Office.HS2019Description">Word, Excel, PowerPoint içerir.</sys:String>
+    <sys:String x:Key="Home_Loading_Content">Loading content...</sys:String>
+    <sys:String x:Key="Home_Error_While_Loading_Content">Unable to load content. Please check your Internet connection and try again.</sys:String>
+    <sys:String x:Key="Home_Retry">_Yeniden dene</sys:String>
+    <sys:String x:Key="Home_Launcher.Name">Uygulama listesi</sys:String>
+    <sys:String x:Key="Home_Launcher_OpenInBrowser">_Tarayıcıda aç</sys:String>
+    <sys:String x:Key="Home_Launcher_CreateShortcut">_Masaüstü kısayolu oluştur</sys:String>
+
+    <!-- Deploy page -->
+    <sys:String x:Key="Deploy_Help_Docs">Having trouble installing Office? Please check our help docs for possible solutions.</sys:String>
+    <sys:String x:Key="Deploy_Learn_More">Daha fazla bilgi edin</sys:String>
+    <!-- Channels Name, if you do not want to translate them, please keep in English. -->
+    <sys:String x:Key="PerpetualVL2019">Office 2019 Sürekli Kuruluş</sys:String>
+    <sys:String x:Key="PerpetualVL2021">Office 2021 Sürekli Kuruluş</sys:String>
+    <sys:String x:Key="PerpetualVL2024">Office 2024 Sürekli Kuruluş</sys:String>
+    <sys:String x:Key="SemiAnnual">Altı Aylık Kurumsal Kanal</sys:String>
+    <sys:String x:Key="MonthlyEnterprise">Aylık Kurumsal Kanal</sys:String>
+    <sys:String x:Key="Current">Mevcut Kanal</sys:String>
+    <sys:String x:Key="CurrentPreview">Geçerli Kanal (Önizleme)</sys:String>
+    <sys:String x:Key="BetaChannel">Beta Kanalı</sys:String>
+
+    <!-- Error messages -->
+    <!-- {0} means product name. -->
+    <sys:String x:Key="Deploy_Error_Coexist">{0} mevcut ürünlerle bir arada bulunamaz.</sys:String>
+    <!-- {0} means product name. -->
+    <sys:String x:Key="Deploy_Error_ODT_Not_Supported">{0} yüklemek istiyorsanız, yükleme modülünü Office Tool Plus olarak değiştirin.</sys:String>
+    <!-- {0} means product name, {1} means channel name. -->
+    <sys:String x:Key="Deploy_Error_Channel">{0}, seçilen kanaldan yükleme yapılamaz: {1}.</sys:String>
+    <!-- {0} means channel name, such as Current Channel. -->
+    <sys:String x:Key="Deploy_Error_Unsupported_Channel">{0} kullanmak istiyorsanız, kurulum modülünü Office Tool Plus olarak değiştirin.</sys:String>
+    <!-- Example: You cannot install 32 bit of Office, because you have the 64 bit of Office installed on your computer. -->
+    <sys:String x:Key="Deploy_Error_Office_Architecture">Bilgisayarınızda {1} Office yüklü olduğu için {0} Office'i yükleyemezsiniz.</sys:String>
+    <sys:String x:Key="Deploy_Error_Installation_Arch">Seçtiğiniz mimari, yerel kurulum dosyalarının mimarisiyle eşleşmiyor, lütfen mimariyi yeniden seçin veya kurulum için yerel kurulum dosyalarını kullanmayın.</sys:String>
+    <sys:String x:Key="Deploy_Error_Installation_Channel">Seçtiğiniz güncelleme kanalı, yerel kurulum dosyalarının güncelleme kanalıyla eşleşmiyor, lütfen güncelleme kanalını yeniden seçin veya kurulum için yerel kurulum dosyalarını kullanmayın.</sys:String>
+
+    <sys:String x:Key="Deploy_Deployment">Office'i Dağıtın</sys:String>
+    <sys:String x:Key="Deploy_Deployment.Description">Office'i indirmeden önce İndirme Modu'nun doğru ayarlandığından;ürün ile dilin doğru yapılandırıldığından emin olun.</sys:String>
+    <sys:String x:Key="Deploy_Start_Deploy">_İndirmeyi Başlat</sys:String>
+    <sys:String x:Key="Deploy_Reset">_Bütün ayarları sıfırla</sys:String>
+    <sys:String x:Key="Deploy_View_Code">_XML kodunu görüntüle</sys:String>
+    <sys:String x:Key="Deploy_Generate_Command">_Generate deploy commands</sys:String>
+    <sys:String x:Key="Deploy_Apply_Preferences">_Office Uygulamaları için Tercihleri ​​Uygula</sys:String>
+    <sys:String x:Key="Deploy_Export_Config">_Yapılandırmayı dışa aktar</sys:String>
+    <sys:String x:Key="Deploy_Import_Config">_Yapılandırmayı içe aktar</sys:String>
+    <sys:String x:Key="Deploy_Import_Config_Web">Yapılandırmayı _Web'den içe aktar</sys:String>
+    <sys:String x:Key="Deploy_Check_Updates">Office Güncellemelerini _kontrol Et</sys:String>
+    <sys:String x:Key="Deploy_Repair_Office">Office _onar</sys:String>
+    <sys:String x:Key="Deploy_Mode">İndirme Modu</sys:String>
+    <sys:String x:Key="Deploy_Mode.Edit">Yapılandırmayı düzenle</sys:String>
+    <sys:String x:Key="Deploy_Mode.Download">İndir</sys:String>
+    <sys:String x:Key="Deploy_Mode.Install">Kur</sys:String>
+    <sys:String x:Key="Deploy_Mode.Create_ISO">ISO dosyası oluştur</sys:String>
+    <sys:String x:Key="Deploy_Architecture">Mimari</sys:String>
+    <!-- {0} represents the Office version number, and {1} represents the architecture. -->
+    <sys:String x:Key="Deploy_Architecture_Current_Installed">Currently installed Office version: {0} ({1}).</sys:String>
+    <sys:String x:Key="Deploy_Architecture_Installed.X86">32-bit</sys:String>
+    <sys:String x:Key="Deploy_Architecture_Installed.X64">64-bit</sys:String>
+    <sys:String x:Key="Deploy_Architecture_Installed.ARM32">Arm32</sys:String>
+    <sys:String x:Key="Deploy_Architecture_Installed.ARM64">Arm64</sys:String>
+    <sys:String x:Key="Deploy_Architecture.X86">32-bit</sys:String>
+    <sys:String x:Key="Deploy_Architecture.X64">64-bit</sys:String>
+    <sys:String x:Key="Deploy_Architecture.ARM32">Arm32 (32-bit compatible)</sys:String>
+    <sys:String x:Key="Deploy_Architecture.ARM64">Arm64 (64-bit compatible)</sys:String>
+    <sys:String x:Key="Deploy_Channel">Güncelleme Kanalı</sys:String>
+    <sys:String x:Key="Deploy_Channel_Available_Version">Şu anda mevcut Office sürümü: {0}</sys:String>
+    <sys:String x:Key="Deploy_Module">Kurulum modülü</sys:String>
+    <sys:String x:Key="Deploy_Module.Description">Daha iyi uyumluluk için Office Dağıtım Aracı'nı veya daha iyi deneyimler için Office Tool Plus'ı seçin.</sys:String>
+    <sys:String x:Key="Deploy_Module.ODT">Ofis İndirme Aracı</sys:String>
+    <sys:String x:Key="Deploy_Module.OTP">Office Tool Plus</sys:String>
+    <sys:String x:Key="Deploy_Download_First">Önce indir, sonra kur</sys:String>
+    <sys:String x:Key="Deploy_Download_First.Description">Kurulum dosyaları, program dizinine veya kaynak yolu ile belirtilen dizine kaydedilecektir.</sys:String>
+    <sys:String x:Key="Deploy_Create_Shortcut">Masaüstü kısayolları oluştur</sys:String>
+    <sys:String x:Key="Deploy_Create_Shortcut.Description">Office yüklemesinden sonra Office uygulamalarına masaüstü kısayolları oluştur.</sys:String>
+    <!-- Do not edit them or translate them. iSlide and AiPPT only provided in mainland China. -->
+    <sys:String x:Key="Deploy_iSlide">PlaceHolder</sys:String>
+    <sys:String x:Key="Deploy_iSlide.Description">PlaceHolder</sys:String>
+    <sys:String x:Key="Deploy_iSlide_Install">PlaceHolder</sys:String>
+    <sys:String x:Key="Deploy_iSlide_Install.Name">PlaceHolder</sys:String>
+
+    <sys:String x:Key="Deploy_Product">Ürünler</sys:String>
+    <sys:String x:Key="Deploy_Product.Description">{0} yüklü ürün(ler), {1} indirmeye hazır ve {2} kaldırmaya hazır.</sys:String>
+    <sys:String x:Key="Deploy_Product_Button">_ürünleri ekle</sys:String>
+    <sys:String x:Key="Deploy_Product_Nothing_Here">Burada hiçbir şey yok.</sys:String>
+    <sys:String x:Key="Deploy_Product_Installed">Kurulu ürün(ler)</sys:String>
+    <sys:String x:Key="Deploy_Product_To_Be_Deployed">İndirilecek Ürünler </sys:String>
+    <sys:String x:Key="Deploy_Product_To_Be_Uninstalled">Kaldırılacak</sys:String>
+    <sys:String x:Key="Deploy_Uninstall_Product">Kaldır</sys:String>
+    <sys:String x:Key="Deploy_Cancel_Uninstall_Product">Kaldırmayı iptal et</sys:String>
+    <sys:String x:Key="Deploy_Cancel_Deploy_Product">İndirmeyi iptal et</sys:String>
+    <sys:String x:Key="Deploy_Applications">Uygulamalar</sys:String>
+    <sys:String x:Key="Deploy_Addons">Eklentiler</sys:String>
+    <sys:String x:Key="Deploy_Addons.Tip">Ne olduklarını bilmiyorsanız eklentilerin işaretini kaldırmayın.</sys:String>
+    <sys:String x:Key="Deploy_Language">Diller</sys:String>
+    <sys:String x:Key="Deploy_Language.Description">{0} yüklü dil, {1} indirmeye hazır ve {2} kaldırmaya hazır.</sys:String>
+    <sys:String x:Key="Deploy_Language_Button">_Dil ekle</sys:String>
+    <sys:String x:Key="Deploy_Language_Nothing_Here">Burada hiçbir şey yok.</sys:String>
+    <sys:String x:Key="Deploy_Language_Installed">Yüklü dil(ler)</sys:String>
+    <sys:String x:Key="Deploy_Language_To_Be_Deployed">İndirilecek Dil</sys:String>
+    <sys:String x:Key="Deploy_Language_To_Be_Uninstalled">Kaldırılacak</sys:String>
+    <sys:String x:Key="Deploy_Uninstall_Language">Kaldır</sys:String>
+    <sys:String x:Key="Deploy_Cancel_Uninstall_Language">Kaldırmayı İptal Et</sys:String>
+    <sys:String x:Key="Deploy_Edit_Language_Settings">Dil Ayarları</sys:String>
+    <sys:String x:Key="Deploy_Cancel_Deploy_Language">İndirmeyi iptal et</sys:String>
+
+    <sys:String x:Key="Deploy_Products_List">Ürün listesi</sys:String>
+    <sys:String x:Key="Deploy_Products_List_Type_To_Search">Ürün listesini filtrelemek için yazın</sys:String>
+    <sys:String x:Key="Deploy_Products_List_ID">Ürün kimliği:</sys:String>
+    <sys:String x:Key="Deploy_Languages_List">Dil listesi</sys:String>
+    <sys:String x:Key="Deploy_Languages_List_Type_To_Search">Dil listesini filtrelemek için yazın</sys:String>
+    <sys:String x:Key="Deploy_Languages_List_Proofing_Tool_Only">Yalnızca yazım denetleme araçlarını indirin.</sys:String>
+    <sys:String x:Key="Deploy_Languages_List_ID">Dil Kimliği:</sys:String>
+    <sys:String x:Key="Deploy_Languages_List_Type">Dil türü:</sys:String>
+    <sys:String x:Key="Deploy_Language_Type.Full">Tam</sys:String>
+    <sys:String x:Key="Deploy_Language_Type.PartialAndProofing">Kısmi</sys:String>
+    <sys:String x:Key="Deploy_Language_Type.Partial">Yazım denetleme araçları olmaksızın kısmi</sys:String>
+    <sys:String x:Key="Deploy_Language_Type.Proofing">Yazım denetleme araçları</sys:String>
+    <sys:String x:Key="Deploy_Language_Settings_Exclude">Aşağıdaki ürünler için kurulum yap</sys:String>
+
+    <sys:String x:Key="Deploy_Installation_Files">Kurulum dosyaları</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files.Description">Office yükleme dosyalarını seçin, doğrulayın veya silin.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Select">Seç</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Select.Description">Yükleme dosyalarını seçerken, CAB dosyalarından herhangi birini seçin.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Verify">Doğrula</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Verify.Description">Kurulum dosyalarında hatalar olup olmadığını kontrol edin.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_DeleteAll">Hepsini sil</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Reset">Sıfırla</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Reset.Description">Office'i kurmak için geçerli yükleme dosyalarını kullanmayın.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_UseAsSource">_Kaynak olarak kullan</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_UseAsSource.Description">Mimari ve güncelleme kanalı otomatik olarak bu kurulumla eşleşecektir.</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Open_Location">_Dosya konumunu aç</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Delete">Sil</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Package.x-none">Temel paket (Gerekli)</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Package.x-none.arm64x">Arm64 paketi</sys:String>
+    <sys:String x:Key="Deploy_Installation_Files_Package.x-none.chpe">Arm32 paketi</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Settings">Gelişmiş ayarlara git</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Settings.Description">Daha fazla seçenek belirlemek için gelişmiş ayarlara gidin.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Settings_Button">_Gelişmiş Ayarlar</sys:String>
+
+    <!-- Deploy advanced page -->
+    <sys:String x:Key="Deploy_Advanced">Gelişmiş Ayarlar</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Go_Back">Geri dön</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Go_Back.Description">Temel ayarlara geri dön.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_General_Settings">Genel Ayarlar</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Company_Name">Office belgelerinde şirket özelliğini ayarlamak için kuruluşunuzun adını girin.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Description">Dokümantasyon için bir yapılandırma açıklaması sağlayın.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Install_Settings">Kurulum ayarları</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Fallback_Language">Yedek dil</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Fallback_Language.Description">Dil, sistem diliyle eşleşecek şekilde ayarlandığında, eşleşen bir dil Office tarafından desteklenmediğinde veya yerel kaynakta bulunamadığında yüklenecek bir yedek dil belirtebilirsiniz.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Version">Ofis versiyonu</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Version.Description">Belirtilmemişse varsayılan olarak mevcut olan en son sürümdür.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Download_Path">İndirme yolu</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Download_Path.Description">Kurulum dosyalarının nereden indirileceğini tanımlar, indirme yolunu kullanırken Office sürümünü belirtmeniz gerekir.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Source_Path">Kaynak yol</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Source_Path.Description">Kaynak yol boş ise, kaynak olarak varsayılan olarak Office CDN kullanılır. İndirme modunda, dosyaların nereye kaydedileceğini tanımlar.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_No_Display">Sessiz kurulum</sys:String>
+    <sys:String x:Key="Deploy_Advanced_No_Display.Description">Office yüklemesi sırasında hiçbir ilerleme çubuğu, hata mesajı veya diğer kullanıcı arabirimi görüntülenmez.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Allow_CDN_Fallback">CDN'ye geri dönüşe izin ver</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Allow_CDN_Fallback.Description">Eksik dilleri indirmek için Office yükleyicisinin Office CDN'ye geri dönmesine izin verin.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Force_Close_Apps">Çalışan tüm Office uygulamalarını kapatmaya zorla</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Force_Close_Apps.Description">Kaydedilmemiş veriler kaybolabilir.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Update_Settings">Ayarları güncelle</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Enable_Mgnt_COM">MECM kullanarak güncellemeleri yönetin</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Enable_Mgnt_COM.Description">Güncellemeleri Microsoft Endpoint Configuration Manager kullanarak yönetirken, güncellemeler yönetici tarafından yönetilir.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Enable_Update">Office otomatik güncelleştirmesini etkinleştir</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Update_Path">Kaynağı güncelle</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Update_Path.Description">Kaynak boş ise varsayılan olarak kaynak, Office CDN kullanılır.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Upgrade_Settings">Yükseltme seçenekleri</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Migrate_Arch">Mimariyi değiştir</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Migrate_Arch.Description">Varolan Office yüklemesinin mimarisini değiştirin. Örneğin, 32 bit'ten 64 bit'e.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_MSI_Notice">Aşağıdaki ayarlar yalnızca Office Dağıtım Aracı'nı yükleme modülü olarak kullanırken etkili olur.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Remove_MSI">Office'in mevcut MSI sürümlerini kaldırın</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Match_Previous_MSI">Önceki MSI sürümüyle aynı dili yükleyin</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Ignore_Product">Bu ürünleri yoksay</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Activate_Settings">Aktivasyon ayarları</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Accept_EULA">EULA'yı otomatik olarak kabul et</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Accept_EULA.Description">Etkinleştirildiğinde, "Microsoft Yazılımı Lisans Koşulları" iletişim kutusu görüntülenmez.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_MAK">MAK Ayarı</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Auto_Activate">MAK'ı ayarladıktan sonra ürünü otomatik olarak etkinleştirmeye çalışacağız.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Product_Activation">Ürün etkinleştirme</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode">Licensing mode</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode.Description">Set the licensing mode for Microsoft 365 Apps.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode_LearnMode">Learn more about licensing mode.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode.UserBased">Kullanıcı tabanlı</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode.DeviceBased">Cihaz tabanlı</sys:String>
+    <sys:String x:Key="Deploy_Advanced_LicensingMode.SCL">Paylaşılan bilgisayar</sys:String>
+    <sys:String x:Key="Deploy_Advanced_SCL_Cache_Override">Lisans belirteci konumunun üzerine yaz</sys:String>
+    <sys:String x:Key="Deploy_Advanced_SCL_Cache_Override.Title">Folder path</sys:String>
+    <sys:String x:Key="Deploy_Advanced_SCL_Cache_Override.Description">Lisans belirteci için bir klasör konumu belirtin.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Organization">Organization settings</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Organization_TenantID">Tenant ID</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Organization_TAK">Tenant Association Key</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Organization_TAK.Description">Associates the device with your organization. This setting applies only to Microsoft 365 Apps.</sys:String>
+
+    <sys:String x:Key="Deploy_Advanced_Preferences">Uygulama tercihleri</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Apply_Preferences.Description">Uygulama tercihlerini hemen Office uygulamalarına uygulayın.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Reset_Preferences">Tüm uygulama tercihlerini sıfırla</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Reset_Preferences_Button">Sıfırla</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Filter">Filter</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Filter.HelpText">Click to filter by category.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Filtered">Filtered categories</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Filtered.HelpText">Click to unfilter this category.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Type_To_Search.Name">Uygulama tercihlerini ara</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Type_To_Search.HelpText">Uygulama tercihlerini ara...</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_DataGrid.HelpText">Press Enter or double click to edit preference.</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Application">Application</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Settings">Ayarlar</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Status">Status</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Preferences_Enable">Etkinleştir</sys:String>
+    <sys:String x:Key="Deploy_Advanced_Set_Preferences_Button">Uygula</sys:String>
+
+    <!-- Activate page -->
+    <sys:String x:Key="Activate_NonAdmin_Privileges">Office Tool Plus'ı yönetici olmayan ayrıcalıklarla çalıştırıyorsunuz, bazı özellikler şu anda kullanılamıyor.</sys:String>
+    <sys:String x:Key="Activate_Notif_LicensingMode_DeviceBased">Microsoft 365 Apps have been configured for device-based licensing. Administrators must assign a valid license to this device before Microsoft 365 Apps can be used.</sys:String>
+    <sys:String x:Key="Activate_Notif_LicensingMode_SharedComputer">Microsoft 365 Apps have been configured for shared computer mode. Each user must sign in and verify their license to use Microsoft 365 Apps.</sys:String>
+    <sys:String x:Key="Activate_Notif_LicensingMode_ViewerMode">Microsoft 365 Apps have been configured for viewer mode. For unlicensed apps, users can view or print files but cannot create or edit any files.</sys:String>
+    <sys:String x:Key="Activate_LearnMore">Learn more</sys:String>
+
+    <sys:String x:Key="Activate_Licensing_Mode_Management">Licensing mode management</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_Management.Description">Manage how to activate Microsoft 365 Apps.</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode">Licensing mode</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.Description">Change the licensing mode for Microsoft 365 Apps.</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_LearnMore">Learn more about licensing mode.</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_Apply">Apply</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_Reset">Reset</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.UserBased">Kullanıcı tabanlı</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.DeviceBased">Cihaz tabanlı</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.SCL">Paylaşılan bilgisayar</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode.ViewerMode">Viewer mode</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_SCL_Cache_Override">Lisans belirteci konumunun üzerine yaz</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_SCL_Cache_Override.Title">Folder path</sys:String>
+    <sys:String x:Key="Activate_Licensing_Mode_SCL_Cache_Override.Description">Lisans belirteci için bir klasör konumu belirtin.</sys:String>
+
+    <sys:String x:Key="Activate_Licenses_Management">Lisans yönetimi</sys:String>
+    <sys:String x:Key="Activate_Licenses_Management.Description">Office lisanslarını yükler, kaldırır veya etkinleştirir.</sys:String>
+    <sys:String x:Key="Activate_Button">_Etkinleştir</sys:String>
+    <sys:String x:Key="Activate_Display_Internet_Act_Events">İnternet etkinleştirme hatası olaylarını görüntüle</sys:String>
+    <sys:String x:Key="Activate_Display_KMS_Events">KMS etkinleştirme olaylarını görüntüle</sys:String>
+    <sys:String x:Key="Activate_Clear_Activation">Etkinleştirmeyi temizle</sys:String>
+    <sys:String x:Key="Activate_Install_Licenses">Lisansları yükle</sys:String>
+    <sys:String x:Key="Activate_Install_Licenses.Description">Yüklü Office'ten lisansları alın ve yükleyin.</sys:String>
+    <sys:String x:Key="Activate_Install_Licenses_Button">Yükle</sys:String>
+    <sys:String x:Key="Activate_Install_Other_Licenses">Diğer lisansları yükle</sys:String>
+    <sys:String x:Key="Activate_Install_Other_Licenses.Description">Diğer lisansları yerel diskten yükleyin</sys:String>
+    <sys:String x:Key="Activate_Install_Other_Licenses_Button">Yükle</sys:String>
+    <sys:String x:Key="Activate_Uninstall_All_Licenses">Tüm lisansları kaldır</sys:String>
+    <sys:String x:Key="Activate_Uninstall_All_Licenses.Description">Yüklü tüm lisansları kaldırır. Bu işlemden sonra lisans yüklemeniz gerekecektir.</sys:String>
+    <sys:String x:Key="Activate_Uninstall_All_Licenses_Button">Kaldır</sys:String>
+
+    <sys:String x:Key="Activate_Keys_Management">Lisans Anahtar yönetimi</sys:String>
+    <sys:String x:Key="Activate_Keys_Management.Description">Lisans anahtarları yükleyin, kaldırın veya Office'i çevrimdışı etkinleştirin.</sys:String>
+    <sys:String x:Key="Activate_Product_Key">Ürün anahtarı</sys:String>
+    <sys:String x:Key="Activate_Product_Key.Description">Office ürün anahtarını yükleyin, ürün anahtarı biçimi: XXXXX-XXXXX-XXXXX-XXXXX-XXXXX.</sys:String>
+    <sys:String x:Key="Activate_Install_Product_Key">_Yükleme anahtarı</sys:String>
+    <sys:String x:Key="Activate_Uninstall_Unactivated_Key">_Etkinleştirilmemiş tüm anahtarları kaldır</sys:String>
+    <sys:String x:Key="Activate_Uninstall_All_Product_Keys">_Tüm anahtarları kaldır</sys:String>
+    <sys:String x:Key="Activate_Install_CID">Onay kimliğini yükle</sys:String>
+    <sys:String x:Key="Activate_Install_CID.Description">Office'i çevrimdışı etkinleştirmek için onay kimliğini yükleyin.</sys:String>
+    <sys:String x:Key="Activate_Input_CID">Lütfen onay kimliğini girin</sys:String>
+
+    <sys:String x:Key="Activate_KMS_Management">KMS yönetimi</sys:String>
+    <sys:String x:Key="Activate_KMS_Management.Description">KMS ana bilgisayarını veya bağlantı noktasını ayarlayın veya sıfırlayın.</sys:String>
+    <sys:String x:Key="Activate_KMS_Apply">_Sunucuyu ayarla</sys:String>
+    <sys:String x:Key="Activate_KMS_Host">KMS Sunucusu</sys:String>
+    <sys:String x:Key="Activate_KMS_Host.Description">KMS sunucu adı. Örneğin, kms.example.com, kms.example.com:1688 veya IP adresi.</sys:String>
+    <sys:String x:Key="Activate_KMS_Host_Cache.Enable">Sunucu önbelleğini etkinleştir</sys:String>
+    <sys:String x:Key="Activate_KMS_Host_Cache.Disable">Sunucu önbelleğini devre dışı bırak</sys:String>
+    <sys:String x:Key="Activate_KMS_Reset">KMS'yi Sıfırla</sys:String>
+    <sys:String x:Key="Activate_KMS_Reset.Description">KMS sunucu adını kaldırın ve KMS bağlantı noktasını varsayılan olarak ayarlayın.</sys:String>
+
+    <!-- Licenses list -->
+    <sys:String x:Key="Activate_Licenses">Ofis lisansları</sys:String>
+    <sys:String x:Key="Activate_License">Lisans listesi</sys:String>
+    <sys:String x:Key="Activate_License.Description">Kurulu lisansları yönetin.</sys:String>
+    <sys:String x:Key="Activate_License_Refresh">_Yenile</sys:String>
+    <sys:String x:Key="Activate_License_Expand">Hepsini _genişlet</sys:String>
+    <sys:String x:Key="Activate_License_Collapse">Hepsini _daralt</sys:String>
+    <sys:String x:Key="Activate_License_Clear">Listeyi temizle</sys:String>
+    <sys:String x:Key="Activate_License_Nothing_Here">Burada hiçbir şey yok.</sys:String>
+    <sys:String x:Key="Activate_License_Status.Unactivated">Etkinleştirilmemiş</sys:String>
+    <sys:String x:Key="Activate_License_Status.Activated">Etkinleştirildi</sys:String>
+    <!-- vNext License -->
+    <sys:String x:Key="Activate_License_vNext_Type">Lisans türü:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Type.User">Kullanıcı</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Type.Device">Aygıt</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Type.Subscription">Abonelik</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Type.Perpetual">Sürekli</sys:String>
+    <sys:String x:Key="Activate_License_vNext.ExpireDate">Lisansın son kullanma tarihi:</sys:String>
+    <sys:String x:Key="Activate_License_vNext.MaxDevice">İzin verilen maksimum cihaz sayısı:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Status">Durum:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Status.Provisioned">sağlanan</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Status.Deprovisioned">üyeliği/bilgileri silinmiş</sys:String>
+    <sys:String x:Key="Activate_License_vNext_ReasonCode">Sebep kodu:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_ReasonCode.DeviceDeprovisionedByUser">cihaz kullanıcı tarafından iptal edildi</sys:String>
+    <sys:String x:Key="Activate_License_vNext_ReasonCode.SubscriptionCancelled">subscription cancelled</sys:String>
+    <sys:String x:Key="Activate_License_vNext.Beneficiary.User">Kullanıcıya atanan lisans:</sys:String>
+    <sys:String x:Key="Activate_License_vNext.Beneficiary.Device">Aygıta atanan lisans:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.TenantID">Kiralanan ID:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.DeviceID">Aygıt ID:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.UserID">Kullanıcı ID:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.ValidFrom">Yetkilendirme geçerlilik tarihi:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.ValidTo">Yetkilendirme şu kişiler için geçerlidir:</sys:String>
+    <sys:String x:Key="Activate_License_vNext_Metadata.RenewalTime">Bir sonraki yenileme zamanı:</sys:String>
+    <!-- Legacy License -->
+    <sys:String x:Key="Activate_License_Lic.Description">Açıklama:</sys:String>
+    <sys:String x:Key="Activate_License_Lic.Key">Anahtarın son 5 karakteri:</sys:String>
+    <sys:String x:Key="Activate_License_Lic.Period">Kalan süre:</sys:String>
+    <sys:String x:Key="Activate_License_Lic.Error_Code">Hata kodu:</sys:String>
+    <sys:String x:Key="Activate_License_Lic.Error_Description">Hata açıklaması:</sys:String>
+    <sys:String x:Key="Activate_License_VL.Type">Aktivasyon türü:</sys:String>
+    <!-- AO equal to Activation Object -->
+    <sys:String x:Key="Activate_License_AD.ObjectName">Aktivasyon Nesnesi adı: </sys:String>
+    <sys:String x:Key="Activate_License_AD.ObjectDN">AO DN'si:</sys:String>
+    <sys:String x:Key="Activate_License_AD.ExtendedPid">AO genişletilmiş PID: </sys:String>
+    <sys:String x:Key="Activate_License_AD.AID">AO etkinleştirme kimliği: </sys:String>
+    <sys:String x:Key="Activate_License_KMS.Host">KMS sunucusu:</sys:String>
+    <sys:String x:Key="Activate_License_KMS_Host_Caching">Ana bilgisayar önbelleğe alma:</sys:String>
+    <sys:String x:Key="Activate_License_KMS_Host_Caching.Enabled">Etkin</sys:String>
+    <sys:String x:Key="Activate_License_KMS_Host_Caching.Disabled">Pasif</sys:String>
+    <sys:String x:Key="Activate_License_KMS.Act_Interval">Etkinleştirme aralığı:</sys:String>
+    <sys:String x:Key="Activate_License_KMS.Renew_Interval">Yenileme aralığı:</sys:String>
+
+    <sys:String x:Key="Activate_License_Period.Infinite">Sınırsız</sys:String>
+    <sys:String x:Key="Activate_License_Period.Day">{0} gün(s)</sys:String>
+    <sys:String x:Key="Activate_License_Period.Hour">{0} saat(s)</sys:String>
+    <sys:String x:Key="Activate_License_Period.Minute">{0} dakika(s)</sys:String>
+
+    <sys:String x:Key="Activate_License_Button.Copy_LicenseID">Lisans kimliğini kopyala</sys:String>
+    <sys:String x:Key="Activate_License_Button.Copy_TenantID">Kiracı kimliğini kopyala</sys:String>
+    <sys:String x:Key="Activate_License_Button.Copy_UserID">Kullanıcı kimliğini kopyala</sys:String>
+    <sys:String x:Key="Activate_License_Button.Set_Name">Set name</sys:String>
+    <sys:String x:Key="Activate_License_Button.Delete_License">Lisansı sil</sys:String>
+    <sys:String x:Key="Activate_License_Button.Copy_SKU">SKU kimliğini kopyala</sys:String>
+    <sys:String x:Key="Activate_License_Button.Copy_IID">Kurulum Kimliğini Kopyala</sys:String>
+    <sys:String x:Key="Activate_License_Button.Activate">Etkinleştir</sys:String>
+    <sys:String x:Key="Activate_License_Button.Uninstall_Key">Anahtarı kaldır</sys:String>
+
+    <sys:String x:Key="Activate_Licenses_List">Lisans listesi</sys:String>
+    <sys:String x:Key="Activate_Licenses_List_Type_To_Search">Lisans listesini filtrelemek için buraya yazın</sys:String>
+    <sys:String x:Key="Activate_Licenses_List_ID">Ürün kimliği:</sys:String>
+
+    <!-- Toolbox page -->
+    <sys:String x:Key="Toolbox_NonAdmin_Privileges">Office Tool Plus'ı yönetici olmayan ayrıcalıklarla çalıştırıyorsunuz, bazı özellikler şu anda kullanılamıyor.</sys:String>
+    <sys:String x:Key="Toolbox_Repair">Onar</sys:String>
+    <sys:String x:Key="Toolbox_Learn_More">Daha fazla bilgi edin</sys:String>
+
+    <sys:String x:Key="Toolbox_General_Tools">Genel araçlar</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version">Office sürümünü sorgula</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version.Description">Microsoft'tan Office güncelleştirme kanalları bilgilerini sorgular.</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_GoBack">Araçlar sayfasına geri dön.</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_Button">Sorgula</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List">Office güncelleme kanalları bilgileri</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List_Channel">Kanal</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List_Branch">Dal</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List_Version">Sürüm</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_List_CreatedTime">Oluşturulma zamanı</sys:String>
+    <sys:String x:Key="Toolbox_Query_Office_Version_Copy">Sürüm numarasını kopyala</sys:String>
+    <sys:String x:Key="Toolbox_Query_ErrorCode">Sorgu hata kodu açıklaması</sys:String>
+    <sys:String x:Key="Toolbox_Query_ErrorCode.Description">Hata kodu genellikle '0x' ile başlar. Örneğin, 0x2 veya 0x80070002.</sys:String>
+    <sys:String x:Key="Toolbox_Query_ErrorCode_Button">Sorgula</sys:String>
+    <sys:String x:Key="Toolbox_Input_ErrorCode">Lütfen hata kodunu girin</sys:String>
+    <sys:String x:Key="Toolbox_Check_KMS">KMS sunucu bilgisayar erişilebilirliğini test edin</sys:String>
+    <sys:String x:Key="Toolbox_Check_KMS.Description">KMS ana bilgisayarının bağlanıp bağlanamayacağını test etmek için tcping'i kullanır.</sys:String>
+    <sys:String x:Key="Toolbox_Check_KMS_Button">Test et</sys:String>
+
+    <sys:String x:Key="Toolbox_Office_Tools">Ofis araçları</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Office">Office'i Kaldır</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Office.Description">Office ile ilgili bileşenleri ve kayıtları kaldırır</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Office.Description_Bold">Not: Office'i yalnızca düzgün şekilde kaldırılamıyorsa kaldırmalısınız.</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Office_Button">Kaldır</sys:String>
+    <sys:String x:Key="Toolbox_Remove_APPX">Office'in Microsoft Store sürümünü kaldır</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Clear_Activation">Ayrıca etkinleştirmeyi de kaldır</sys:String>
+    <sys:String x:Key="Toolbox_Remove_Result">Kaldırma Sonucu</sys:String>
+    <!-- Office Installer Events Viewer -->
+    <sys:String x:Key="Toolbox_OfficeEventsVwr">Office events viewer</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr.Description">View or collect Office events logs.</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create">Create a copy</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create.Description">Creates a ZIP file that contains the Office Deployment Tool, Office Click-to-Run, Windows Installer, and Application log files.</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create_Button">_Create</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create_Include_OA">Include Office application logs</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create_Include_AOA">Include additional Office application logs</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Create_Include_AOA.Description">This may contain your personal information, you should only share it with people you trust.</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer">Log viewer</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Refresh">_Refresh</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_ViewMSI">View Windows Installer events</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_ViewApplication">View application events</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Import">Import logs from ZIP file</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Source">Log source</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Source.ODT">Office Deployment Tool</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Source.C2R">Click-to-Run</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_FileName">Log file</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_FileName.Description">Select a log file to view the events.</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_EventsLabel">Events</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.Time">Time</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.Category">Category</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.ID">Event ID</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.Level">Level</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event.Message">Message</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event_Open_Panel">_Open event panel</sys:String>
+    <sys:String x:Key="Toolbox_OfficeEventsVwr_Viewer_Event_Close_Panel.Name">Close event panel</sys:String>
+    <sys:String x:Key="Toolbox_Change_UpdateChannel">Office güncelleme kanalını değiştir</sys:String>
+    <sys:String x:Key="Toolbox_Change_UpdateChannel.Description">Güncelleştirme kanalını değiştirmek, Office'i yeniden yüklemeden yükseltmenize veya bir alt sürüme düşürmenize olanak tanır.</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner">Office ürün sahibini değiştir</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner.Description">Ad, Office uygulamasının hesap sayfasında görüntülenir.</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Set">Adı ayarla</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Reset">Sahip adını varsayılanlara sıfırla</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Name">Adı</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Name.Description">Ürünün sahibini ayarlayın. Örneğin, James veya ProPlus2019 Volume:James.</sys:String>
+    <sys:String x:Key="Toolbox_Change_Owner_Name.LearnMore">Daha fazla bilgi edin</sys:String>
+    <sys:String x:Key="Toolbox_Repair_DocumentIcon">Office belgesi iconlarını Onar</sys:String>
+    <sys:String x:Key="Toolbox_Repair_DocumentIcon.Description">Bu seçenek, Office belgesi ilişkilendirmelerini sıfırlayacaktır.</sys:String>
+    <sys:String x:Key="Toolbox_Backup_Restore_Settings">Office ayarlarını yedekle veya geri yükle</sys:String>
+    <sys:String x:Key="Toolbox_Backup_Restore_Settings.Description">Office uygulama dosyaları ve içerikleri hariç, ayarlarınızı yedekler veya geri yükler.&#x000A;Not: Yedeklerinizi paylaşmayın, kişisel bilgileriniz sızdırabilir.</sys:String>
+    <sys:String x:Key="Toolbox_Backup_Exclude_PersonalInf">Yedekleme yaparken kişisel bilgileri hariç tutar.</sys:String>
+    <sys:String x:Key="Toolbox_Backup">Yedekle</sys:String>
+    <sys:String x:Key="Toolbox_Restore">Geri Yükle</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings">Office ayarlarını varsayılanlara sıfırla</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings.Description">Reset Office to default settings. Please close all Office applications before proceeding.</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_Button">Sıfırla</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_UserSettings">Geçerli kullanıcı ayarlarını sil</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_UserSettings.Description">Office uygulaması ayarlarını, son açılan dosyaları ve yakın zamanda kaydedilen dosya konum bilgilerini siler</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_UserAppData">Uygulama verilerini sil</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_UserAppData.Description">Uygulama önbelleği bilgilerini temizler</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_NormalTemplate">Normal şablonu sil</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_NormalTemplate.Description">Normal.dotm</sys:String>
+    <sys:String x:Key="Toolbox_Reset_OfficeSettings_GlobalSettings">Uygulamaların genel tercih ayarlarını Sil</sys:String>
+
+    <sys:String x:Key="Toolbox_Windows_Tools">Windows Araçları</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr">Environment variable manager</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr.Description">View or reset user or system environment variables.</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_UserEnv">User variables</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_SystemEnv">System variables</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_Refresh">Refresh</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_Variable_Incorrect">One or more environment variables are incorrect, please try to reset them.</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_Reset">Reset</sys:String>
+    <sys:String x:Key="Toolbox_Env_Variable_Mgr_Reset.Description">Reset variables to default values.</sys:String>
+    <sys:String x:Key="Toolbox_Reset_SPPSvc">Yazılım Koruma hizmetini sıfırla</sys:String>
+    <sys:String x:Key="Toolbox_Reset_SPPSvc.Description">Bu, KMS yapılandırması da dahil olmak üzere Yazılım Koruma hizmetinin yapılandırmasını sıfırlayacaktır.</sys:String>
+    <sys:String x:Key="Toolbox_Reset_SPPSvc.LearnMore">Yazılım Korumasını sıfırlama hizmeti hakkında daha fazla bilgi edinin.</sys:String>
+    <sys:String x:Key="Toolbox_Rebuild_ActivationToken">Windows etkinleştirme özelliğini yeniden oluştur</sys:String>
+    <sys:String x:Key="Toolbox_Rebuild_ActivationToken.Description">Bu, Windows etkinleştirme sürecini yeniden oluşturur. Windows aktivasyon durumunuz kaybolabilir.</sys:String>
+    <sys:String x:Key="Toolbox_Rebuild_ActivationToken.LearnMore">Windows etkinleştirme özelliğini yeniden oluşturma hakkında daha fazla bilgi edinin.</sys:String>
+    <sys:String x:Key="Toolbox_Repair_WMI">WMI bileşenlerini onar</sys:String>
+    <sys:String x:Key="Toolbox_Repair_WMI.Description">Bu, WMI bileşenlerini yeniden kaydedecektir. Emin değilseniz kullanmayın.</sys:String>
+    <sys:String x:Key="Toolbox_Repair_WMI.LearnMore">Onarım WMI bileşenleri hakkında daha fazla bilgi edinin.</sys:String>
+
+    <!-- Convert page -->
+    <sys:String x:Key="Convert_Excel">Excel</sys:String>
+    <sys:String x:Key="Convert_Excel.Description">Excel belgesine dönüştürür.</sys:String>
+    <sys:String x:Key="Convert_PowerPoint">PowerPoint</sys:String>
+    <sys:String x:Key="Convert_PowerPoint.Description">PowerPoint belgesine dönüştürür.</sys:String>
+    <sys:String x:Key="Convert_Word">Word</sys:String>
+    <sys:String x:Key="Convert_Word.Description">Word belgesine dönüştürür</sys:String>
+    <sys:String x:Key="Convert_Actions">_Belgeleri içe aktar</sys:String>
+    <sys:String x:Key="Convert_Actions.SelectFiles">Dosyaları Seç</sys:String>
+    <sys:String x:Key="Convert_Actions.SelectFolder">Klasör Seç</sys:String>
+    <sys:String x:Key="Convert_Input">Giriş Biçimi</sys:String>
+    <sys:String x:Key="Convert_Input.Description">Bir klasör seçerken, yalnızca giriş biçimiyle eşleşen dosyalar içe aktarılacaktır.</sys:String>
+    <sys:String x:Key="Convert_Output">Çıkış Biçimi</sys:String>
+
+    <sys:String x:Key="Convert_File_List">Dosya Listesi</sys:String>
+    <sys:String x:Key="Convert_StartConvert">Çevir</sys:String>
+    <sys:String x:Key="Convert_StartConvert.ToolTip">Belgeleri dönüştürmeye başla.</sys:String>
+    <sys:String x:Key="Convert_ClearList">Clear list</sys:String>
+    <sys:String x:Key="Convert_File">Dosya</sys:String>
+    <sys:String x:Key="Convert_NewFormat">Yeni Biçim</sys:String>
+    <sys:String x:Key="Convert_Open_File_Location">_Dosya konumunu aç</sys:String>
+    <sys:String x:Key="Convert_Page_Count">Sayfa {0} of {1}</sys:String>
+    <sys:String x:Key="Convert_Previous_Page">Önceki Sayfa</sys:String>
+    <sys:String x:Key="Convert_Next_Page">Sonraki Sayfa</sys:String>
+
+    <sys:String x:Key="Convert_Settings">Dönüştürme Ayarları</sys:String>
+    <sys:String x:Key="Convert_Settings.Description">Dönüştürme ayarlarının yapılmasını sağlar</sys:String>
+    <sys:String x:Key="Convert_SearchOnSubfolders">Alt klasörlerde ara</sys:String>
+    <sys:String x:Key="Convert_SearchOnSubfolders.Description">Bir klasör seçildiği zaman,alt klasörlerde de dosyaları arar.</sys:String>
+    <sys:String x:Key="Convert_Delete">Dosyayı Sil</sys:String>
+    <sys:String x:Key="Convert_Delete.Description">Başarılı dönüştürme işleminden sonra orjinal dosyayı Geri Dönüşüm Kutusu'na taşır. Geri Dönüşüm Kutusu kullanılamıyorsa,dosya kalıcı olarak silinir.</sys:String>
+    <sys:String x:Key="Convert_HideUI">Kullanıcı arayüzünü gizle</sys:String>
+    <sys:String x:Key="Convert_HideUI.Description">Office çalışırken uyarı penceresini gizler.</sys:String>
+    <sys:String x:Key="Convert_Rows_Per_Page">Sayfa başına satırlar</sys:String>
+    <sys:String x:Key="Convert_Rows_Per_Page.Description">Dosya listesinde sayfa başına görüntülenen dosya sayısını ayarlayın.</sys:String>
+
+    <!-- File types -->
+    <!-- Common -->
+    <sys:String x:Key="File_Type.All">Tüm Dosyalar</sys:String>
+    <sys:String x:Key="File_Type.Supported">Tüm desteklenen dosyalar</sys:String>
+    <sys:String x:Key="File_Type.PDF">PDF</sys:String>
+    <sys:String x:Key="File_Type.XPS">XPS Belgesi</sys:String>
+    <sys:String x:Key="File_Type.TXT">Düz Metin</sys:String>
+    <sys:String x:Key="File_Type.XML">XML File</sys:String>
+    <sys:String x:Key="File_Type.MHTML">Tek Dosya Web Sayfası</sys:String>
+    <sys:String x:Key="File_Type.HTML">Web sayfası</sys:String>
+    <sys:String x:Key="File_Type.AllWebPages">All Web Pages</sys:String>
+    <sys:String x:Key="File_Type.RTF">Zengin metin formatı</sys:String>
+    <sys:String x:Key="File_Type.WMF">Windows Metafile</sys:String>
+    <sys:String x:Key="File_Type.EMF">Enhanced Windows Metafile</sys:String>
+    <!-- Image -->
+    <sys:String x:Key="File_Type.GIF">Hareketli GIF Formatı</sys:String>
+    <sys:String x:Key="File_Type.JPG">JPEG Dosya Değişim Formatı</sys:String>
+    <sys:String x:Key="File_Type.PNG">PNG Taşınabilir Ağ Grafik Formatı</sys:String>
+    <sys:String x:Key="File_Type.TIF">TIFF Etiketi Görüntü Dosyası Formatı</sys:String>
+    <sys:String x:Key="File_Type.BMP">Aygıttan Bağımsız Bitmap</sys:String>
+    <!-- Video -->
+    <sys:String x:Key="File_Type.MP4">MPEG-4 Video</sys:String>
+    <sys:String x:Key="File_Type.WMV">Windows Media Video</sys:String>
+    <!-- Word -->
+    <sys:String x:Key="File_Type.Word_Documents">Documents</sys:String>
+    <sys:String x:Key="File_Type.Word_DOCX">Word Belgesi</sys:String>
+    <sys:String x:Key="File_Type.Word_DOCM">Word Makro Etkinleştirilmiş Belge</sys:String>
+    <sys:String x:Key="File_Type.Word_DOC">Word 97-2003 Belgesi</sys:String>
+    <sys:String x:Key="File_Type.Word_DOTX">Word Şablonu</sys:String>
+    <sys:String x:Key="File_Type.Word_DOTM">Word Makro Etkinleştirilmiş Şablon</sys:String>
+    <sys:String x:Key="File_Type.Word_DOT">Word 97-2003 Şablonu</sys:String>
+    <sys:String x:Key="File_Type.Word_XMLDocument">Word XML Document</sys:String>
+    <sys:String x:Key="File_Type.Word_OpenXMLStrictDocument">Strict Open XML Document</sys:String>
+    <sys:String x:Key="File_Type.Word_ODT">OpenDocument Text</sys:String>
+    <!-- PowerPoint -->
+    <sys:String x:Key="File_Type.PowerPoint_Presentations">Presentations</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPTX">Powerpoint Sunusu</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPTM">Makro İçerebilen Powerpoint Sunusu</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPT">PowerPoint 97-2003 Sunusu</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_POTX">PowerPoint Şablonu</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_POTM">Makro İçerebilen PowerPoint Şablonu</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_POT">PowerPoint 97-2003 Şablonu</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPSX">PowerPoint Gösterisi</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPSM">Makro İçerebilen PowerPoint Gösterisi</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPS">PowerPoint 97-2003 Gösterisi</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPAM">PowerPoint Add-in</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_PPA">PowerPoint 97-2003 Add-in</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_XMLPresentation">PowerPoint XML Presentation</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_OpenXMLPicturePresentation">PowerPoint Picture Presentation</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_OpenXMLStrictPresentation">Strict Open XML Presentation</sys:String>
+    <sys:String x:Key="File_Type.PowerPoint_ODP">OpenDocument Presentation</sys:String>
+    <!-- Excel -->
+    <sys:String x:Key="File_Type.Excel_Workbooks">Workbooks</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLSX">Excel Çalışma Kitabı</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLSM">Makro İçerebilen Çalışma Kitabı</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLSB">Excel Binary Workbook</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLS">Excel 97-2003 Çalışma Kitabı</sys:String>
+    <sys:String x:Key="File_Type.Excel_CSV_UTF8">CSV UTF-8 (Virgülle Ayrılmış)</sys:String>
+    <sys:String x:Key="File_Type.Excel_CSV">CSV (Comma delimited)</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLTX">Excel Şablonu</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLTM">Makro İçerebilen Excel Şablonu</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLT">Excel 97-2003 Şablonu</sys:String>
+    <sys:String x:Key="File_Type.Excel_UnicodeText">Unicode Text (Tab delimited)</sys:String>
+    <sys:String x:Key="File_Type.Excel_Text">Text (Tab delimited)</sys:String>
+    <sys:String x:Key="File_Type.Excel_XMLSpreadsheet">XML Spreadsheet 2003</sys:String>
+    <sys:String x:Key="File_Type.Excel_PRN">Formatted Text (Space delimited)</sys:String>
+    <sys:String x:Key="File_Type.Excel_DIF">DIF (Data Interchange Format)</sys:String>
+    <sys:String x:Key="File_Type.Excel_SYLK">SYLK (Symbolic Link)</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLAM">Excel Add-in</sys:String>
+    <sys:String x:Key="File_Type.Excel_XLA">Excel 97-2003 Add-in</sys:String>
+    <sys:String x:Key="File_Type.Excel_OpenXMLStrictWorkbook">Strict Open XML Spreadsheet</sys:String>
+    <sys:String x:Key="File_Type.Excel_ODS">OpenDocument Spreadsheet</sys:String>
+    <sys:String x:Key="File_Type.Excel_BackupFiles">Backup Files</sys:String>
+
+    <!-- Hash checker page -->
+    <sys:String x:Key="Hash_Checker_Hash">Veri Doğrulama(Hash)</sys:String>
+    <sys:String x:Key="Hash_Checker_Hash.Description">Dosyaların hash'ini üretin, birden fazla hash algoritmasını destekler.</sys:String>
+    <sys:String x:Key="Hash_Checker_Actions">_Dosyaları içe aktar</sys:String>
+    <sys:String x:Key="Hash_Checker_Actions.SelectFiles">Dosyaları seç</sys:String>
+    <sys:String x:Key="Hash_Checker_Actions.SelectFolder">Klasör seç</sys:String>
+    <sys:String x:Key="Hash_Checker_SearchOnSubfolders">Alt klasörlerde ara</sys:String>
+    <sys:String x:Key="Hash_Checker_SearchOnSubfolders.Description">Bir klasör seçildiğinde,alt klasörlerde de dosyaları arar.</sys:String>
+    <sys:String x:Key="Hash_Checker_SearchString">Metni ara</sys:String>
+    <sys:String x:Key="Hash_Checker_SearchString.Description">Bir klasör seçildiği zaman, arama dizesiyle eşleşen dosyaları bulur.</sys:String>
+    <sys:String x:Key="Hash_Checker_ExcludeHashFiles">Karma dosyaları hariç tut</sys:String>
+    <sys:String x:Key="Hash_Checker_ExcludeHashFiles.Description">md5, sha1 veya crc32 uzantılı dosyalar gibi dosyaları içe aktarırken karma dosyaları hariç tut</sys:String>
+    <sys:String x:Key="Hash_Checker_DisplayPath">Dosya yolunu göster</sys:String>
+    <sys:String x:Key="Hash_Checker_ParallelComputing">Parallel computing</sys:String>
+    <sys:String x:Key="Hash_Checker_ParallelComputing.Description">Set the number of files for parallel computing. Note that processing too many files simultaneously may reduce computing speed.</sys:String>
+    <sys:String x:Key="Hash_Checker_AutoCompute">Otomatik Hash değerini hesapla</sys:String>
+    <sys:String x:Key="Hash_Checker_AutoCompute.Description">Dosya içe aktarma işlemi tamamlandıktan sonra Hash değerini hesaplamayı otomatik olarak başlatır.</sys:String>
+    <sys:String x:Key="Hash_Checker_CRC32.Description">CRC-32 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_XXH32.Description">XXH32 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_XXH64.Description">XXH64 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_XXH3.Description">XXH3 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_XXH128.Description">XXH128 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_MD5.Description">MD5 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA1.Description">SHA-1 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA256.Description">SHA-256 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA384.Description">SHA-384 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA512.Description">SHA-512 hesaplamayı Aktif veya Pasif yap.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA3_256.Description">SHA3-256 hesaplamayı etkinleştirin veya devre dışı bırakın, yalnızca Windows 11 build 25324 veya sonraki sürümlerde desteklenir.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA3_384.Description">SHA3-384 hesaplamayı etkinleştirin veya devre dışı bırakın, yalnızca Windows 11 build 25324 veya sonraki sürümlerde desteklenir.</sys:String>
+    <sys:String x:Key="Hash_Checker_SHA3_512.Description">SHA3-512 hesaplamayı etkinleştirin veya devre dışı bırakın, yalnızca Windows 11 build 25324 veya sonraki sürümlerde desteklenir.</sys:String>
+    <sys:String x:Key="Hash_Checker_Rows_Per_Page">Sayfa başına satırlar</sys:String>
+    <sys:String x:Key="Hash_Checker_Rows_Per_Page.Description">Dosya listesinde sayfa başına görüntülenen dosya sayısını ayarlayın.</sys:String>
+
+    <sys:String x:Key="Hash_Checker_File_List">Dosya listesi</sys:String>
+    <sys:String x:Key="Hash_Checker_TypeToSearch">Karşılaştırılacak Hash değerini yazın</sys:String>
+    <sys:String x:Key="Hash_Checker_StartCompute">Hesapla</sys:String>
+    <sys:String x:Key="Hash_Checker_StartCompute.ToolTip">Hash değerini hesaplamayı başlat</sys:String>
+    <sys:String x:Key="Hash_Checker_ClearList">Listeyi temizle</sys:String>
+    <sys:String x:Key="Hash_Checker_Export">Dışa Aktar</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.ToolTip">Sonuçları dosyaya aktar.</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.AsTXT">_Düz metin olarak dışa aktar</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.AsCSV">_CSV olarak dışa aktar</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.AsMD">_Markdown olarak dışa aktar</sys:String>
+    <sys:String x:Key="Hash_Checker_Export.AsJSON">_JSON olarak dışa aktar</sys:String>
+    <sys:String x:Key="Hash_Checker_Compare">Karşılaştır</sys:String>
+    <sys:String x:Key="Hash_Checker_Compare.ToolTip">Dosyanın karma değerini bilinen bir değerle karşılaştırır.</sys:String>
+    <sys:String x:Key="Hash_Checker_Compare.JSON">_JSON dosyasıyla karşılaştır</sys:String>
+    <sys:String x:Key="Hash_Checker_Compare.HashFile">_hash dosyasıyla karşılaştır</sys:String>
+    <sys:String x:Key="Hash_Checker_FilePath">Dosya Yolu</sys:String>
+    <sys:String x:Key="Hash_Checker_FileName">Dosya Adı</sys:String>
+    <sys:String x:Key="Hash_Checker_Compute_Selected">_Seçilen dosyaların Hash değerini hesapla</sys:String>
+    <sys:String x:Key="Hash_Checker_Open_File_Location">_Dosya(lar)ın konumunu aç</sys:String>
+    <sys:String x:Key="Hash_Checker_Copy_Hash_Value">_Hash değerini kopyala</sys:String>
+    <sys:String x:Key="Hash_Checker_Create_Hash_File">h_ash dosya(ları) oluştur</sys:String>
+    <sys:String x:Key="Hash_Checker_Page_Count">Sayfa {0} of {1}</sys:String>
+    <sys:String x:Key="Hash_Checker_Previous_Page">Önceki Sayfa</sys:String>
+    <sys:String x:Key="Hash_Checker_Next_Page">Sonraki Sayfa</sys:String>
+    <sys:String x:Key="Hash_Checker_CompareMessage">{0} dosya için karma değerleri kontrol edildi, {1} başarılı, {2} başarısız, {3} atlandı.</sys:String>
+    <sys:String x:Key="Hash_Checker_CompareMessage.Failed">Aşağıdaki dosya(lar)ın karma değerleri eşleşmiyor:</sys:String>
+    <sys:String x:Key="Hash_Checker_CompareMessage.Error">Aşağıdaki dosya(lar) işlenirken hatalar oluştu:</sys:String>
+    <sys:String x:Key="Hash_Checker_CompareMessage.Skipped">Aşağıdaki dosya(lar) karma değeri bulunamadığından atlandı:</sys:String>
+
+    <!-- Settings page -->
+    <sys:String x:Key="Settings_General">Genel</sys:String>
+    <sys:String x:Key="Settings_Language">Dil</sys:String>
+    <sys:String x:Key="Settings_Language.Description">Uygulama dilini değiştir.</sys:String>
+    <sys:String x:Key="Settings_MatchOS">İşletim Sistemi Dili ile Eşleştir</sys:String>
+    <sys:String x:Key="Settings_Save">Ayarları kaydet</sys:String>
+    <sys:String x:Key="Settings_Save.Description">Enable this option to save all settings. Otherwise, all changes will be lost after restarting application.</sys:String>
+
+    <sys:String x:Key="Settings_Appearance">Görünüm &amp; Davranış</sys:String>
+    <sys:String x:Key="Settings_Theme">Görünüm ve davranış</sys:String>
+    <sys:String x:Key="Settings_Theme.Description">Uygulama temasını değiştir.</sys:String>
+    <sys:String x:Key="Settings_Auto_Dark_Theme">Otomatik koyu tema</sys:String>
+    <sys:String x:Key="Settings_Auto_Dark_Theme.Description">Sistem ayarlarını takip edin ve otomatik olarak koyu temaya geçin.</sys:String>
+    <sys:String x:Key="Settings_Theme_OpenColorSetting">Windows renk ayarı</sys:String>
+    <sys:String x:Key="Settings_Background">Arkaplan</sys:String>
+    <sys:String x:Key="Settings_Background.Description">Uygulama arka planını değiştir.</sys:String>
+    <sys:String x:Key="Settings_Background.Automatic">Otomatik</sys:String>
+    <sys:String x:Key="Settings_Background.Off">Yok</sys:String>
+    <sys:String x:Key="Settings_Background.Acrylic">Akrilik</sys:String>
+    <sys:String x:Key="Settings_Background.Blur">Bulanık</sys:String>
+    <sys:String x:Key="Settings_Background.Mica">Mica</sys:String>
+    <sys:String x:Key="Settings_Background.Bing">Bing duvar kağıdı</sys:String>
+    <sys:String x:Key="Settings_Background.Local">Yerel resim</sys:String>
+    <sys:String x:Key="Settings_SelectLocalImage.Description">Yerel bilgisayarınızdan bir resim seçin ve uygulama arka planı olarak ayarlayın.</sys:String>
+    <sys:String x:Key="Settings_SelectLocalImage.Button">Dosya Seç</sys:String>
+    <sys:String x:Key="Settings_Opacity">Saydamlık</sys:String>
+    <sys:String x:Key="Settings_Blur">Bulanıklık</sys:String>
+    <sys:String x:Key="Settings_Topmost">Her zaman üstte</sys:String>
+
+    <sys:String x:Key="Settings_Advanced">Gelişmiş</sys:String>
+    <sys:String x:Key="Settings_HardwareAcceleration">Donanım hızlandırma</sys:String>
+    <sys:String x:Key="Settings_HardwareAcceleration.Description">Uygulama iyi çalışıyorsa kapatmayın. Devre dışı bırakmak, uygulamanın performansını düşürecektir.</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy">Proxy</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_NeedRestart">You may need to restart Office Tool Plus for the changes to take effect.</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy.Type">Proxy türü</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy.None">Hiçbiri</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Host">Host</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Host.Hint">127.0.0.1:1080</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Authentication">Authentication</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Username">Kullanıcı Adı</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_Password">Şifre</sys:String>
+    <sys:String x:Key="Settings_Advanced_Proxy_PasswordSaved">The password has not been changed since it was last saved.</sys:String>
+
+    <sys:String x:Key="Settings_Deploy">Kurulum</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation">Kurulum Tamamlandıktan Sonra</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Description">Action to perform after Office download or installation is complete. Some actions require system support and administrator privileges.</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.None">Hiçbiri</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Quit">Office Tool Plus'ı Kapat</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.SignOut">Çıkış Yap</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Shutdown">Bilgisayarı Kapat</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Restart">Bilgisayarı Yeniden Başlat</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Sleep">Sleep</sys:String>
+    <sys:String x:Key="Settings_Deploy_Operation.Hibernate">Hibernate</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat">Ofis dilleri görüntüleme biçimi</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat.Default">Varsayılan ad</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat.Native">Yerel ad</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat.English">İngilizce adı</sys:String>
+    <sys:String x:Key="Settings_Deploy_LanguageFormat.Localized">Yerelleştirilmiş ad</sys:String>
+    <sys:String x:Key="Settings_Deploy_Internal">Dahili ürünleri ve kanalları görüntüle</sys:String>
+    <sys:String x:Key="Settings_Deploy_Internal.Description">Dahili ürünler ve kanallar kararsız veya desteklenmeyebilir.</sys:String>
+
+    <sys:String x:Key="Settings_Download">İndir</sys:String>
+    <sys:String x:Key="Settings_Download_Ask_Where_To_Save">Dosyaların nereye kaydedileceğini sor</sys:String>
+    <sys:String x:Key="Settings_Download_Ask_Where_To_Save.Description">Office'i indirmeden önce Office yükleme dosyalarının nereye kaydedeceğileceğini seçin.</sys:String>
+    <sys:String x:Key="Settings_Download_MsFileList_API">Microsoft'un API'sini kullanarak dosya listesini alın</sys:String>
+    <sys:String x:Key="Settings_Download_MsFileList_API.Description">Etkinleştirilirse dosya listesi Microsoft'un API'sinden alınacaktır, aksi takdirde dosya listesi yerleşik kurallar kullanılarak oluşturulacaktır.</sys:String>
+    <sys:String x:Key="Settings_Download_Engine">İndirme Aracı</sys:String>
+    <sys:String x:Key="Settings_Download_Engine.Description">Office'i indirirken hangi indirme aracının kullanılacağını seçin.</sys:String>
+    <!-- Do not translate 'bezzad.Downloader' -->
+    <sys:String x:Key="Settings_Download_Engine.Downloader">bezzad.Downloader</sys:String>
+    <sys:String x:Key="Settings_Download_Engine.OfficeToolPlus">Office Tool Plus</sys:String>
+    <sys:String x:Key="Settings_Download_Engine.OfficeDeploymentTool">Office Deployment Tool</sys:String>
+    <sys:String x:Key="Settings_Download_HTTPS">HTTPS kullanarak bağlan</sys:String>
+    <sys:String x:Key="Settings_Download_HTTPS.Description">Office'i indirmekte sorun yaşadığınızda bu seçeneği etkinleştirmeyi deneyin.</sys:String>
+    <sys:String x:Key="Settings_Download_Verify">Dosyaları doğrula</sys:String>
+    <sys:String x:Key="Settings_Download_Verify.Description">İndirme işleminden sonra Office kurulum dosyalarını doğrular.</sys:String>
+    <sys:String x:Key="Settings_Download_UA">Windows sürümü</sys:String>
+    <sys:String x:Key="Settings_Download_UA.Description">Geçerli Windows sürümü için Office'in varsayılan sürümü indirilir. Office'i farklı bir Windows sürümü için indirmek istiyorsanız bu seçeneği değiştirin.</sys:String>
+    <sys:String x:Key="Settings_Download_UA.AutoDetection">Otomatik algılama</sys:String>
+    <!-- Do not translate 'bezzad.Downloader' -->
+    <sys:String x:Key="Settings_Download_Downloader">bezzad.Downloader ayarları</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Chunks">Parçalar</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Chunks.Description">Dosyayı indirmek için belirtilen parçalara böler. Çok yükseğe ayarlamak hızı yavaşlatabilir.</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Parallel">Parçalar halinde paralel indirme</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Parallel.Description">Bir sabit disk sürücüsüne (HDD) indirirken bu seçeneğin etkinleştirilmesi, özellikle çok fazla parça ayarlanmışsa yazma hızlarını düşürebilir.</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Limit">Hız Limiti</sys:String>
+    <sys:String x:Key="Settings_Download_Downloader_Limit.Description">Dosyaları indirirken hızı sınırlayın, birim KBps'dir. Varsayılan değer 0'dır (limit yok).</sys:String>
+
+    <!-- About page -->
+    <sys:String x:Key="About_Link.Homepage">Anasayfa</sys:String>
+    <sys:String x:Key="About_Link.Docs">Belgeler</sys:String>
+    <sys:String x:Key="About_Link.Sponsor">Sponsor</sys:String>
+    <sys:String x:Key="About_Link.Report_Issue">Sorun bildir</sys:String>
+    <sys:String x:Key="About_Link.Email">Email</sys:String>
+    <sys:String x:Key="About_Version">Sürüm</sys:String>
+    <sys:String x:Key="About_ReleaseDate">Yayın tarihi:</sys:String>
+    <sys:String x:Key="About_CheckUpdate">_Güncellemeleri kontrol et</sys:String>
+    <sys:String x:Key="About_EnvInfo">Runtime version: {0}, OS version: {1}.</sys:String>
+    <sys:String x:Key="About_CreatorInfo">Ofis Deployment Tool Yerong tarafından geliştirilmiştir.</sys:String>
+    <sys:String x:Key="About_Copyright">Telif Hakkı © 2016-{0} Yerong Tüm Hakları Saklıdır.</sys:String>
+    <sys:String x:Key="About_TrademarkInfo">Microsoft Office, Microsoft Corporation'ın Amerika Birleşik Devletleri ve / veya diğer ülkelerdeki tescilli ticari markası veya ticari markasıdır.</sys:String>
+
+    <sys:String x:Key="About_Server_Provider">Sunucu sağlayıcıları</sys:String>
+    <sys:String x:Key="About_Translator">Çevirmenler</sys:String>
+
+    <sys:String x:Key="About_MoreInfo">Daha fazla bilgi</sys:String>
+    <sys:String x:Key="About_Image_Source">Arka plan resim kaynağı</sys:String>
+    <sys:String x:Key="About_Link.OpenSourceNotice">Açık Kaynak Bildirimi</sys:String>
+
+    <!-- Downloader -->
+    <sys:String x:Key="Downloader_ProgressBar.Name">Office download progress</sys:String>
+    <sys:String x:Key="Downloader_Resume">Devam et</sys:String>
+    <sys:String x:Key="Downloader_Pause">Duraklat</sys:String>
+    <sys:String x:Key="Downloader_Cancel">İptal Et</sys:String>
+    <sys:String x:Key="Downloader_Percentage">İndiriliyor, {0} tamamlandı.</sys:String>
+    <sys:String x:Key="Downloader_Remaining">İndirme, kalan süre: {0}</sys:String>
+    <sys:String x:Key="Downloader_Writing">Writing data...</sys:String>
+    <sys:String x:Key="Downloader_Pending">Bekletiliyor</sys:String>
+    <sys:String x:Key="Downloader_Pausing">Duraklatılıyor</sys:String>
+    <sys:String x:Key="Downloader_Paused">Duraklatıldı</sys:String>
+
+    <!-- Notification strings -->
+    <sys:String x:Key="Message">İleti</sys:String>
+    <sys:String x:Key="Notice">Bilgi</sys:String>
+    <sys:String x:Key="Warning">Uyarı</sys:String>
+    <sys:String x:Key="Error">Hata</sys:String>
+    <sys:String x:Key="Yes">_Evet</sys:String>
+    <sys:String x:Key="No">_Hayır</sys:String>
+    <sys:String x:Key="OK">_Tamam</sys:String>
+    <sys:String x:Key="Cancel">_İptal</sys:String>
+
+    <!-- Input box strings-->
+    <sys:String x:Key="Input_Command">Lütfen uygulama komutlarını girin</sys:String>
+    <sys:String x:Key="Input_URL">Lütfen URL'yi girin</sys:String>
+    <sys:String x:Key="Input_vNext_License_Name">Please enter the name</sys:String>
+
+    <!-- Office ISO Context Menu -->
+    <!-- What is &amp; means? '&amp;' stands for '&', so it is &Install now, users can press the hotkey (I) to execute the command when menu is opened. -->
+    <!-- Learn more about hotkey and autorun.inf: https://en.wikipedia.org/wiki/Autorun.inf#:~:text=shell%5Cverb%3Dmenu%20text -->
+    <!-- If you cannot understand what is hotkey, remove '&amp;' when you are translating. -->
+    <sys:String x:Key="CD-ROM_InstallNow">Şimd&amp;i Yükle</sys:String>
+
+    <!-- Task Message -->
+    <sys:String x:Key="Task_Checking_Updates">Güncellemeler kontrol ediliyor.</sys:String>
+    <sys:String x:Key="Task_Downloading_Updates">Güncellemeler indiriliyor, {0} tamamlandı ({1}/{2}).</sys:String>
+    <sys:String x:Key="Task_Downloading_Updates_NoPercentage">Güncellemeler indiriliyor, {0}/{1}.</sys:String>
+    <sys:String x:Key="Task_Verifying_Installation_Files">Dosyalar doğrulanıyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_Downloading_Web_Config">Web'den yapılandırma dosyası alınıyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_Preparing_Download">Office'i indirmeye hazırlanıyor.</sys:String>
+    <!-- Example: Creating Office ISO file, file size: 3.1GB, 45% completed. -->
+    <sys:String x:Key="Task_Creating_ISO">Office ISO dosyası oluşturuluyor, dosya boyutu: {0}, {1} tamamlandı.</sys:String>
+    <sys:String x:Key="Task_ODT">Şimdi indiriliyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_SPP">SPP şimdi çalışıyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_Searching_KMS_Events">KMS etkinleştirme olayları aranıyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_Searching_IAF_Events">İnternet etkinleştirme hatası olayları aranıyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_Checking_Office_Update_Channel">Office güncelleme kanalları bilgisi sorgulanıyor.</sys:String>
+    <sys:String x:Key="Task_Testing_KMS_Host">KMS sunucu bilgisayar erişilebilirliği test ediliyor.</sys:String>
+    <sys:String x:Key="Task_Collecting_Office_Logs">Collecting Office logs.</sys:String>
+    <sys:String x:Key="Task_Searching_MSI_Events">Searching for Windows Installer events, please wait.</sys:String>
+    <sys:String x:Key="Task_Searching_Application_Events">Searching for application events, please wait.</sys:String>
+    <sys:String x:Key="Task_Removing_Office">Office kaldırılıyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_Repairing_WMI">WMI bileşenleri onarılıyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_Converting_Documents">Office belgeleri dönüştürülüyor, {0} kaldı.</sys:String>
+    <sys:String x:Key="Task_Importing_Files">Dosyalar içe aktarılıyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_Computing_Hash">Hash değeri hesaplanıyor, {0} dosya kaldı.</sys:String>
+    <sys:String x:Key="Task_Exporting_Hash">Sonuçlar dışa aktarılıyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Task_Installing_App">{0} yükleniyor, lütfen bekleyin.</sys:String>
+
+    <!-- Question Message -->
+    <sys:String x:Key="Ques_Update.Title">Office Tool Plus Güncelleme</sys:String>
+    <sys:String x:Key="Ques_Update.Content">Güncelleme mevcut, şimdi indirilsin mi?</sys:String>
+    <sys:String x:Key="Ques_Exit">Office Tool Plus şu anda çalışıyor. Yine de çıkmak istiyor musunuz?</sys:String>
+    <sys:String x:Key="Ques_Can_Not_Verify_Signature">Dosyanın imzası doğrulanamıyor, yine de açmak istiyor musunuz?&#x000A;&#x000A;Dosya: {0}</sys:String>
+    <sys:String x:Key="Ques_Quick_Installation">{0} yüklemeyi seçtiniz.&#x000A;&#x000A;İndirdikten sonra yükleme yapmak için "Evet"i, indirme sırasında yükleme yapmak için "Hayır"ı tıklayın veya iptal etmek için pencereyi kapatın.</sys:String>
+    <sys:String x:Key="Ques_Select_Office_To_Download">İndirilecek Office sürümü olarak {0} belirlediniz, ancak biz farklı bir sürüm alıyoruz.&#x000A;&#x000A;"Evet" tıklandığında Office'in {1} sürümü indirilir.&#x000A;"Hayır"a tıklandığında Ofis'in {2} sürümü indirilecektir.</sys:String>
+    <sys:String x:Key="Ques_Deploy_Office">Office'i indirmeye hazır mısınız?</sys:String>
+    <sys:String x:Key="Ques_Deploy_Office.ToInstall">Kurulacak ürünler:</sys:String>
+    <sys:String x:Key="Ques_Deploy_Office.ToUninstall">Kaldırılacak ürünler:</sys:String>
+    <sys:String x:Key="Ques_Install_Office.Applications">Uygulama(lar): {0}</sys:String>
+    <sys:String x:Key="Ques_Install_Office.Architecture">Mimari: {0}</sys:String>
+    <sys:String x:Key="Ques_Install_Office.UpdateChannel">Güncelleme kanalı: {0}</sys:String>
+    <sys:String x:Key="Ques_Install_Office.OfficeVersion">Ofis sürümü: {0}</sys:String>
+    <sys:String x:Key="Ques_Install_Office.SourcePath">Kurulum dosyaları kaynak: {0}</sys:String>
+    <sys:String x:Key="Ques_Deploy_Configuration">Ayrıntılı yapılandırma için kodu görüntüleyin, yukarıdaki temel yapılandırma doğru mu?</sys:String>
+    <sys:String x:Key="Ques_Delete_All_Installations">Tüm yükleme dosyalarını silmek istediğinizden emin misiniz?</sys:String>
+    <sys:String x:Key="Ques_Delete_Installation">{0} silmek istediğinizden emin misiniz?</sys:String>
+    <sys:String x:Key="Ques_Delete_Installation_Package">{0} silmek istediğinizden emin misiniz?</sys:String>
+    <sys:String x:Key="Ques_Install_Custom_Software">PlaceHolder</sys:String>
+    <sys:String x:Key="Ques_Clear_Activation">Tüm lisansları ve anahtarları kaldırmak istediğinizden emin misiniz? Bu işlemden sonra lisansları yeniden yüklemeniz ve Office'i yeniden etkinleştirmeniz gerekecektir.</sys:String>
+    <sys:String x:Key="Ques_Install_Licenses">Office lisansını yükledikten sonra Office'te etkinleştirme bilgilerini göremeyebilirsiniz, ancak Office ToolPlus aracılığıyla bilgileri görüntüleyebilir veya Office'i etkinleştirebilirsiniz. Devam etmek istiyor musun?</sys:String>
+    <sys:String x:Key="Ques_Uninstall_Licenses">Tüm Office lisanslarını kaldırmak istediğinizden emin misiniz?</sys:String>
+    <sys:String x:Key="Ques_Uninstall_All_Keys">Tüm Office ürün anahtarlarını kaldırmak istediğinizden emin misiniz? Lütfen önce ürün anahtarlarınızı yedekleyin.</sys:String>
+    <sys:String x:Key="Ques_Uninstall_Product_Key">Ürün anahtarını kaldırmak istediğinizden emin misiniz?</sys:String>
+    <sys:String x:Key="Ques_Delete_vNextLicense">Lisansı silmek istediğinizden emin misiniz?</sys:String>
+    <sys:String x:Key="Ques_Remove_Office">Ofisi temizlediğinizden emin misiniz? Bir kez başlatıldığında, bu işlem iptal edilemez.</sys:String>
+    <sys:String x:Key="Ques_Invoke_Office_Update">Güncelleme kanalı değiştirildi, Office güncellemeleri şimdi kontrol edilsin mi?</sys:String>
+    <sys:String x:Key="Ques_Restart_System_Now">Do you want to restart system now?</sys:String>
+
+    <!-- Info Message -->
+    <sys:String x:Key="Info_OS_Outdated">İşletim sisteminiz artık desteklenmiyor, lütfen işletim sisteminizi yükseltin veya kullanmak için Office Tool Plus'ın eski bir sürümünü indirin.</sys:String>
+    <sys:String x:Key="Info_Restart_Required">Etkili olması için uygulamayı yeniden başlatmanız gerekiyor.</sys:String>
+    <sys:String x:Key="Info_No_Updates">Office Tool Plus'ın en son sürümünü kullanıyorsunuz.</sys:String>
+    <sys:String x:Key="Info_Update_In_Progress">Güncelleme(ler) devam ediyor, lütfen bekleyin.</sys:String>
+    <sys:String x:Key="Info_Updates_Incomplete">Güncellemeler uygulanamadı. Lütfen daha sonra tekrar deneyin.</sys:String>
+    <sys:String x:Key="Info_SystemDrive_Permissions">Your system drive permissions are incorrect. Please contact technical support for assistance.</sys:String>
+    <sys:String x:Key="Info_SystemDrive_NoSpace">Your system drive is running out of space, which may cause some operations to fail.</sys:String>
+    <sys:String x:Key="Info_No_Language_Added_For_Download">Dil eklemediğinizi tespit ettik. Çoğu durumda, sorunları önlemek için dil eklemenizi öneririz.</sys:String>
+    <sys:String x:Key="Info_Select_Where_To_Save_Office_Installation">Lütfen Office yükleme dosyalarını kaydedeceğiniz klasörü seçin.&#x000A;Varsayılan konumu kullanmak için, ayarlar sayfasında "Dosyaların nereye kaydedileceğini sor" seçeneğini devre dışı bırakın.</sys:String>
+    <sys:String x:Key="Info_All_Files_Exist">İndirmeye gerek yok, tüm dosyalar güncel.</sys:String>
+    <sys:String x:Key="Info_Office_Downloading">Office indiriliyor.</sys:String>
+    <sys:String x:Key="Info_Software_Installation_Complete">Yükleme tamamlandı.</sys:String>
+    <sys:String x:Key="Info_Software_Installation_Failed">Kurulum başarısız oldu.</sys:String>
+    <sys:String x:Key="Info_No_Events">Olay bulunamadı.</sys:String>
+    <sys:String x:Key="Info_No_Office_Licenses">Office lisansı bulunamadı.</sys:String>
+    <sys:String x:Key="Info_No_Office_Product_Key">Hiçbir Office ürün anahtarı algılanmadı.</sys:String>
+    <sys:String x:Key="Info_Number_Of_Keys_Uninstalled">Kaldırılan ürün anahtarlarının sayısı {0}.</sys:String>
+    <sys:String x:Key="Info_Number_Of_Lics_Uninstalled">Kaldırılan Office lisansının sayısı {0}.</sys:String>
+    <sys:String x:Key="Info_Office_License_Activation.Title">Ürün etkinleştirme sonuçları</sys:String>
+    <sys:String x:Key="Info_Office_License_Activation_Successful">Ürün aktivasyonu başarılı.</sys:String>
+    <sys:String x:Key="Info_KMS_Test_Result.Success">KMS test yöntemi: {0}. Test sonucu: başarılı, geçen süre: {1}ms.</sys:String>
+    <sys:String x:Key="Info_KMS_Test_Result.Failed">KMS test hatası.</sys:String>
+    <sys:String x:Key="Info_Enable_Mica">Mika efektini görüntülemek için,Windows11 işletim sistemi gereklidir.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.SignOut">We will sign you out in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.Shutdown">The system will shut down in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.Restart">The system will restart in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.Sleep">The system will enter sleep mode in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation.Hibernate">The system will enter hibernation in 30 seconds.</sys:String>
+    <sys:String x:Key="Info_Auto_Operation_Skip">Skip wait</sys:String>
+    <sys:String x:Key="Info_Auto_Operation_Cancel">Cancel</sys:String>
+
+    <!-- Success Message -->
+    <sys:String x:Key="Success_Download_Updates">Güncelleme(ler) başarıyla uygulandı.</sys:String>
+    <sys:String x:Key="Success_Add_Download_Task">İndirme görevleri başarıyla eklendi.</sys:String>
+    <sys:String x:Key="Success_Create_ISO">Office ISO dosyası oluşturuldu</sys:String>
+    <sys:String x:Key="Success_Installation_Verify">Yükleme dosyası doğrulandı ve hata bulunamadı.</sys:String>
+    <sys:String x:Key="Success_Installer_Exited">Office Deployment Tool aracı normal şekilde sonlandırıldı.</sys:String>
+    <sys:String x:Key="Success_Apply_Preferences">Office uygulama tercihleri ​​başarıyla uygulandı.</sys:String>
+    <sys:String x:Key="Success_Install_Licenses">Office lisansları başarıyla yüklendi.</sys:String>
+    <sys:String x:Key="Success_Install_Product_Key">Ürün anahtarı başarıyla yüklendi.</sys:String>
+    <sys:String x:Key="Success_Set_KMS">KMS ayarları başarıyla uygulandı.</sys:String>
+    <sys:String x:Key="Success_Save">Başarıyla kaydedildi.</sys:String>
+    <sys:String x:Key="Success_Collect_Logs">Günlük dosyalar toplandı ve kaydedildi: {0}</sys:String>
+    <sys:String x:Key="Success_Repair">Onarım işlemi başarılı oldu.</sys:String>
+    <sys:String x:Key="Success_Repair_System_Variables">Sistem değişkenlerinin sıfırlanması tamamlandı, değişikliklerin etkili olması için lütfen sisteminizi yeniden başlatın.</sys:String>
+    <sys:String x:Key="Success_Repair_WMI_Components">WMI bileşenleri onarımı tamamlandı, değişikliklerin etkili olması için lütfen sisteminizi yeniden başlatın.</sys:String>
+
+    <!-- Error Message -->
+    <sys:String x:Key="Err_Create_Temp_Path">Geçici yol oluşturulamıyor. Lütfen sistem değişkenlerini kontrol edin ve tekrar deneyin.</sys:String>
+    <sys:String x:Key="Err_Already_Running">Office Tool Plus zaten çalışıyor.</sys:String>
+    <sys:String x:Key="Err_Perform_Update">Güncelleştirme gerçekleştirilirken bir hata oluştu, lütfen Office Tool Plus'ın en son sürümünü el ile indirin.</sys:String>
+    <sys:String x:Key="Err_Unknown_Command">Bilinmeyen komut: {0}</sys:String>
+    <sys:String x:Key="Err_Command_Parameter">Gerekli parametreler eksik.</sys:String>
+    <sys:String x:Key="Err_Checking_Installation">Yükleme dosyaları denetlenirken bir hata oluştu. Lütfen daha sonra yeniden deneyin veya Office yükleme dosyalarını yeniden indirin.</sys:String>
+    <sys:String x:Key="Err_Installation_Corrupted">These installation files are corrupted, please delete them and download again.</sys:String>
+    <sys:String x:Key="Err_Installation">One or more errors occurred in the installation files {0}:&#x000A;{1}</sys:String>
+    <sys:String x:Key="Err_Installation_File_Missing">Dosya eksik: {0}</sys:String>
+    <sys:String x:Key="Err_Installation_File_Corrupted">File is corrupted: {0}</sys:String>
+    <sys:String x:Key="Err_Installation_Hash">Hash değeri hatalı, Dosya: {0}</sys:String>
+    <sys:String x:Key="Err_Installation_SignatureInvalid">The signature is invalid, file: {0}</sys:String>
+    <sys:String x:Key="Err_Installation_Version">Sürüm kontrolü hatası, dosya: {0}&#x000A;Sürüm: {1}&#x000A;İstemci sürümü: {2}</sys:String>
+    <sys:String x:Key="Err_Installation_Mismatch">Sürüm uyuşmazlığı, dosya: {0}&#x000A;Gerçek sürüm: {1}&#x000A;Mimari: {2}</sys:String>
+    <sys:String x:Key="Err_Installation_No_BasePack">Kurulum dosyaları temel paketi içermiyor, lütfen tekrar indirmeyi deneyin.</sys:String>
+    <sys:String x:Key="Err_Reading_Info">Office bilgileri okunurken bir hata oluştu.</sys:String>
+    <sys:String x:Key="Err_Saving_Info">Office bilgileri kaydedilirken bir hata oluştu.</sys:String>
+    <sys:String x:Key="Err_Start_Deploy.Download">Office indirilemiyor, bir ürün veya dil eklediğinizden emin olun ve yeniden deneyin.</sys:String>
+    <sys:String x:Key="Err_Start_Deploy.Deploy">Office indirilemiyor, temel ayarları doğru yaptığınızdan emin olun ve yeniden deneyin.</sys:String>
+    <sys:String x:Key="Err_Start_Deploy.Preferences">Uygulama tercihleri ​​ayarlanamıyor, uygulama tercihlerini doğru ayarladığınızdan emin olun ve tekrar deneyin.</sys:String>
+    <!-- {0} means product name, for example: Microsoft 365 Apps for Enterprise. -->
+    <sys:String x:Key="Err_Start_Deploy_ProductNotSupported">{0} bu Office sürümünde desteklenmiyor.</sys:String>
+    <!-- {0} means product name, for example: Visio Professional 2016. {1} means language code, for example: en-gb. -->
+    <sys:String x:Key="Err_Start_Deploy_CultureNotSupported">{0}, {1} dilini desteklemiyor.</sys:String>
+    <sys:String x:Key="Err_System_Variables_Incorrect">One or more system variables are incorrect, please repair them on the Toolbox page.</sys:String>
+    <sys:String x:Key="Err_Folder_Permissions_Incorrect">One or more folder permissions are incorrect, and we were unable to fix them. Please restart your system and try again, or contact technical support for assistance.</sys:String>
+    <sys:String x:Key="Err_Installation_Is_In_Progress">Another Office installation is in progress, check the Windows taskbar for status.</sys:String>
+    <sys:String x:Key="Err_Installer_Exited">Office Deployment Tool aracından anormal şekilde çıkıldı.</sys:String>
+    <sys:String x:Key="Err_Prepare_To_Download_Office">Office sürümü alınamıyor, lütfen yeniden deneyin veya indirme motoru olarak Office Deployment Tool Aracı'nı kullanın.</sys:String>
+    <sys:String x:Key="Err_Create_ISO">Hiçbir Office yükleme dosyası bulunamadı. Lütfen önce kurulum dosyalarını indirin veya mevcut kurulum dosyalarını seçip tekrar deneyin.</sys:String>
+    <sys:String x:Key="Err_WPA_Registry">An error was found in the WPA registry. Please follow [the instructions]({0}) to fix the error.</sys:String>
+    <sys:String x:Key="Err_Query_Office_Licenses">Office lisansları sorgulanamıyor, lütfen yeniden deneyin.</sys:String>
+    <sys:String x:Key="Err_Loading_Office_Licenses">Bu bilgisayarda Office'in Tıkla-Çalıştır sürümü algılanmadı, Office lisansları yüklenemedi. Lütfen Office'in en son sürümünün yüklü olduğundan emin olun.</sys:String>
+    <sys:String x:Key="Err_Product_Key_Invalid">Girilen ürün anahtarı geçersiz, lütfen kontrol edip tekrar deneyin.</sys:String>
+    <sys:String x:Key="Err_Confirmation_ID_Invalid">Girilen onay kimliği geçersiz, lütfen kontrol edin ve tekrar deneyin.</sys:String>
+    <sys:String x:Key="Err_KMS_Host_Invalid">KMS ayarları kaydedilemiyor, lütfen KMS ana bilgisayar adını kontrol edin ve tekrar deneyin.</sys:String>
+    <sys:String x:Key="Err_No_KMS_Lic">KMS ayarları kaydedilemiyor, sistemde geçerli bir Office KMS lisansı bulunamadı.</sys:String>
+    <sys:String x:Key="Err_Set_KMS">KMS ayarları kaydedilemiyor, lütfen tekrar deneyin.</sys:String>
+    <sys:String x:Key="Err_Act_Run_Commands">Komutlar yürütülürken bir hata oluştu.&#x000A;&#x000A;Hata Kodu: {0}</sys:String>
+    <sys:String x:Key="Err_Act_Office_License">Ürün etkinleştirilirken bir hata oluştu.&#x000A;&#x000A;Hata kodu: {0}</sys:String>
+    <sys:String x:Key="Err_Install_Office_Lic">Lisansı yüklerken bir hata oluştu.&#x000A;&#x000A;Hata kodu: {0}</sys:String>
+    <sys:String x:Key="Err_Install_Product_Key">Ürün anahtarını yüklerken bir hata oluştu.&#x000A;&#x000A;Hata kodu: {0}</sys:String>
+    <sys:String x:Key="Err_Uninstall_Product_Key">Ürün anahtarı kaldırılırken bir hata oluştu.&#x000A;&#x000A;Hata kodu: {0}</sys:String>
+    <sys:String x:Key="Err_Check_KMS_Status">KMS durumu kontrol edilemiyor, lütfen KMS ana bilgisayar adını kontrol edin ve tekrar deneyin.</sys:String>
+    <sys:String x:Key="Err_Office_App_NotFound">{0} bilgisayarda bulunamadı, lütfen Office'in en son sürümünün kurulu olup olmadığını onaylayın.</sys:String>
+    <sys:String x:Key="Err_Open_Clipboard">Panoya erişilemiyor, lütfen tekrar deneyin.</sys:String>
+</ResourceDictionary>

@@ -1,0 +1,179 @@
+package template
+
+import (
+	"encoding/json"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/build"
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/jandedobbeleer/oh-my-posh/src/maps"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/path"
+)
+
+var (
+	Cache *cache.Template
+
+	// routedEnvDataKeys are env-section keys the CLI layer already routes into
+	// runtime.Flags before Init runs (see runtime.Flags.EnvData), so by the
+	// time loadCache runs, env.Pwd()/StatusCodes()/ExecutionTime() already
+	// reflect the flag-precedence-resolved value (CLI flag > data file >
+	// live). They must never be applied a second time here, or a raw file
+	// value could clobber that resolved value. A key belongs here if and only
+	// if applyDataFile routes it - listing one it does not route would instead
+	// make that key unsettable from a data file.
+	routedEnvDataKeys = []string{"PWD", "Code", "ExecutionTime", "PipeStatus", "Interrupted", "Executed"}
+)
+
+func loadCache(vars maps.Simple[any], aliases *maps.Config) {
+	if !env.Flags().IsPrimary {
+		// Load the template cache for a non-primary prompt before rendering any templates.
+		if OK := restoreCache(); OK {
+			// Interrupted is a per-invocation flag, never a cached value: the
+			// restored blob was saved by the primary prompt (never interrupted),
+			// so it must be refreshed from the current flags.
+			Cache.Interrupted = env.Flags().Interrupted
+			return
+		}
+	}
+
+	// Build fully before assigning: a long-lived process (serve) rebuilds
+	// this per prompt while goroutines from an abandoned render cycle may
+	// still read the global - they must only ever observe a complete object.
+	tmpl := new(cache.Template)
+
+	tmpl.Root = env.Root()
+	tmpl.Shell = env.Shell()
+	tmpl.ShellVersion = env.Flags().ShellVersion
+	tmpl.Code, _ = env.StatusCodes()
+	tmpl.Interrupted = env.Flags().Interrupted
+	tmpl.Executed = !env.Flags().NoExitCode
+	tmpl.WSL = env.IsWsl()
+	tmpl.Segments = maps.NewConcurrent[any]()
+	tmpl.PromptCount = env.Flags().PromptCount
+	tmpl.Var = make(map[string]any)
+	tmpl.Jobs = env.Flags().JobCount
+	tmpl.Version = build.Version
+
+	if vars != nil {
+		tmpl.Var = vars
+	}
+
+	pwd := env.Pwd()
+	tmpl.PWD = path.ReplaceHomeDirPrefixWithTilde(pwd)
+
+	tmpl.AbsolutePWD = pwd
+	if env.IsWsl() {
+		tmpl.AbsolutePWD, _ = env.RunCommand("wslpath", "-m", pwd)
+	}
+
+	env.Flags().AbsolutePWD = tmpl.AbsolutePWD
+	tmpl.PSWD = env.Flags().PSWD
+
+	tmpl.Folder = path.Base(pwd)
+	if env.GOOS() == runtime.WINDOWS && strings.HasSuffix(tmpl.Folder, ":") {
+		tmpl.Folder += `\`
+	}
+
+	tmpl.UserName = env.User()
+	if host, err := env.Host(); err == nil {
+		tmpl.HostName = host
+	}
+
+	goos := env.GOOS()
+	tmpl.OS = goos
+	if goos == runtime.LINUX {
+		tmpl.OS = env.Platform()
+	}
+
+	val := env.Getenv("SHLVL")
+	if shlvl, err := strconv.Atoi(val); err == nil {
+		tmpl.SHLVL = shlvl
+	}
+
+	overlayEnvData(tmpl)
+
+	// Var is user configuration (or a hand-written data file), so its strings
+	// are trusted markup like a template body.
+	for key, value := range tmpl.Var {
+		tmpl.Var[key] = TrustMarkup(value)
+	}
+
+	// Alias mapping must apply to a data-provided value exactly as it does to
+	// a live one, so it runs after the overlay, on whichever value won.
+	tmpl.Shell = aliases.GetShellName(tmpl.Shell)
+	tmpl.UserName = aliases.GetUserName(tmpl.UserName)
+	tmpl.HostName = aliases.GetHostName(tmpl.HostName)
+
+	Cache = tmpl
+}
+
+// Only touches keys present in the data, so anything not specified keeps its
+// live value. Keys the CLI layer already routed into runtime.Flags (see
+// routedEnvDataKeys) are stripped first so a raw file value can never
+// clobber the flag-precedence-resolved value. Failures are logged, never
+// fatal - the prompt renders with live values regardless.
+func overlayEnvData(tmpl *cache.Template) {
+	data := env.Flags().EnvData
+	if len(data) == 0 {
+		return
+	}
+
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		log.Error(err)
+		return
+	}
+
+	for _, key := range routedEnvDataKeys {
+		delete(fields, key)
+	}
+
+	// SegmentsCache/Segments are internal cache plumbing, not user-facing
+	// template data; a data file must never be able to overwrite them. Var
+	// (template vars) is left alone - overriding it from the data file is
+	// intentional and useful.
+	delete(fields, "SegmentsCache")
+	delete(fields, "Segments")
+
+	overlay, err := json.Marshal(fields)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	if err := json.Unmarshal(overlay, &tmpl.SimpleTemplate); err != nil {
+		log.Error(err)
+	}
+}
+
+func restoreCache() bool {
+	defer log.Trace(time.Now())
+
+	val, OK := cache.Session.Get[cache.SimpleTemplate](cache.TEMPLATECACHE)
+	if !OK {
+		return false
+	}
+
+	Cache = new(cache.Template)
+	Cache.SimpleTemplate = val
+	Cache.Segments = Cache.SegmentsCache.ToConcurrent()
+
+	return true
+}
+
+func SaveCache() {
+	// only store this when in a primary prompt
+	// and when we have any extra prompt in the config
+	canSave := env.Flags().IsPrimary && env.Flags().HasExtra
+	if !canSave {
+		return
+	}
+
+	Cache.SegmentsCache = Cache.Segments.ToSimple()
+
+	cache.Session.Set(cache.TEMPLATECACHE, &Cache.SimpleTemplate, cache.ONEDAY)
+}

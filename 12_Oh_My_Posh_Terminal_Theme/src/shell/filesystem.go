@@ -1,0 +1,218 @@
+package shell
+
+import (
+	"bytes"
+	"fmt"
+	"hash/fnv"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/build"
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime"
+)
+
+var scriptPathCache string
+
+func hasScript(env runtime.Environment) (string, bool) {
+	if env.Flags().Debug || env.Flags().Eval || env.Flags().Shell == NU {
+		log.Debug("in debug or eval mode, no script path will be used")
+		return "", false
+	}
+
+	path, err := scriptPath(env)
+	if err != nil {
+		log.Debug("failed to get script path")
+		return "", false
+	}
+
+	_, err = os.Stat(path)
+	if err != nil {
+		log.Debug("script path does not exist")
+		return "", false
+	}
+
+	// check if we have the same context
+	if val, _ := cache.Device.Get[string](cacheKey(env.Flags())); val != cacheValue(env) {
+		log.Debug("script context has changed")
+		return "", false
+	}
+
+	log.Debug("script context is unchanged")
+	return path, true
+}
+
+func filesEqual(name string, data []byte) bool {
+	existing, err := os.ReadFile(name)
+	return err == nil && bytes.Equal(existing, data)
+}
+
+func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
+	if filesEqual(path, data) {
+		return nil
+	}
+
+	// the temp file must be in the same directory as the target,
+	// os.Rename is only atomic within the same volume
+	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.tmp")
+	if err != nil {
+		return err
+	}
+
+	defer os.Remove(tmp.Name())
+
+	if _, err = tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+
+	// CreateTemp creates the file with 0600
+	if err = tmp.Chmod(perm); err != nil {
+		tmp.Close()
+		return err
+	}
+
+	if err = tmp.Close(); err != nil {
+		return err
+	}
+
+	return os.Rename(tmp.Name(), path)
+}
+
+// On Windows, replacing a file via rename requires that no process has the
+// target open: MoveFileEx(MOVEFILE_REPLACE_EXISTING) fails with
+// ERROR_ACCESS_DENIED as long as a single handle exists, even one opened
+// with full sharing. Shells source the init script on startup (and every
+// prompt in async mode), so brief holds are normal — retry those. When the
+// file is still held after the retries (a shell keeping it open), fall back
+// to an in-place write: sharing rules allow overwriting a file others are
+// reading, we only lose atomicity for this write.
+func writeFile(path string, data []byte, perm os.FileMode) error {
+	const attempts = 4
+	wait := 50 * time.Millisecond
+
+	var err error
+
+	for attempt := 1; ; attempt++ {
+		if err = writeFileAtomic(path, data, perm); !canRetryWrite(err) || attempt == attempts {
+			break
+		}
+
+		time.Sleep(wait)
+		wait *= 2
+	}
+
+	if err == nil || !canRetryWrite(err) {
+		return err
+	}
+
+	return os.WriteFile(path, data, perm)
+}
+
+func writeScript(env runtime.Environment, script string) (string, error) {
+	path, err := scriptPath(env)
+	if err != nil {
+		return "", err
+	}
+
+	if err = writeFile(path, []byte(script), 0o644); err != nil {
+		log.Error(err)
+		return "", err
+	}
+
+	log.Debug("init script written successfully")
+	cache.Device.Set(cacheKey(env.Flags()), cacheValue(env), cache.INFINITE)
+
+	return path, nil
+}
+
+func cacheKey(flags *runtime.Flags) string {
+	key := fmt.Sprintf("INITVERSION%s", strings.ToUpper(flags.Shell))
+	if flags.Strict {
+		key += "STRICT"
+	}
+
+	return key
+}
+
+func cacheValue(env runtime.Environment) string {
+	return fmt.Sprintf("%d%s", env.Flags().ConfigHash, build.Version)
+}
+
+func InitScriptName(flags *runtime.Flags) string {
+	sh := flags.Shell
+	switch flags.Shell {
+	case PWSH:
+		sh = "ps1"
+	case CMD:
+		sh = "lua"
+	case BASH:
+		sh = "sh"
+	case ELVISH:
+		sh = "elv"
+	case XONSH:
+		sh = "xsh"
+	}
+
+	// to avoid a single init scripts for different configs
+	// we hash the config path as part of the script name
+	// that way we have a single init script per config
+	// avoiding conflicts
+	h := fnv.New64a()
+	h.Write([]byte(flags.ConfigPath))
+	hash := h.Sum64()
+	if flags.Strict {
+		return fmt.Sprintf("init.%d.strict.%s", hash, sh)
+	}
+
+	return fmt.Sprintf("init.%d.%s", hash, sh)
+}
+
+func scriptPath(env runtime.Environment) (string, error) {
+	if len(scriptPathCache) != 0 {
+		return scriptPathCache, nil
+	}
+
+	if env.Flags().Shell != NU {
+		scriptPathCache = filepath.Join(cache.Path(), InitScriptName(env.Flags()))
+		log.Debug("init script path for non-nu shell:", scriptPathCache)
+		return scriptPathCache, nil
+	}
+
+	const autoloadDir = "NUAUTOLOADDIR"
+	const fileName = "oh-my-posh.nu"
+
+	if dir, OK := cache.Device.Get[string](autoloadDir); OK {
+		scriptPathCache = filepath.Join(dir, fileName)
+		log.Debug("autoload path for nu from cache:", dir)
+		return scriptPathCache, nil
+	}
+
+	autoloadPath, err := env.RunCommand("nu", "-c", "$nu.data-dir | path join vendor autoload")
+	if err != nil || autoloadPath == "" {
+		log.Error(err)
+		return "", err
+	}
+
+	log.Debug("autoload path for nu:", autoloadPath)
+
+	// create the path if non-existent
+	_, err = os.Stat(autoloadPath)
+	if err != nil {
+		log.Debug("autoload path does not exist, creating")
+		err = os.MkdirAll(autoloadPath, 0o700)
+	}
+
+	if err != nil {
+		log.Debugf("failed to create autoload dir %s: %s", autoloadPath, err)
+		return "", err
+	}
+
+	cache.Device.Set(autoloadDir, autoloadPath, cache.INFINITE)
+	scriptPathCache = filepath.Join(autoloadPath, fileName)
+	log.Debug("script path for nu:", scriptPathCache)
+	return scriptPathCache, nil
+}

@@ -1,0 +1,208 @@
+//go:build !windows && !js
+
+package runtime
+
+import (
+	"errors"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/shirou/gopsutil/v4/host"
+	mem "github.com/shirou/gopsutil/v4/mem"
+	terminal "github.com/wayneashleyberry/terminal-dimensions"
+)
+
+func (term *Terminal) QueryWindowTitles(_, _ string) (string, error) {
+	return "", &NotImplemented{}
+}
+
+func (term *Terminal) QueryMediaPlayer(_ string) (*MediaInfo, error) {
+	return nil, &NotImplemented{}
+}
+
+func (term *Terminal) IsWsl() bool {
+	defer log.Trace(time.Now())
+	const key = "is_wsl"
+	if val, found := cache.Device.Get[bool](key); found {
+		return val
+	}
+
+	var val bool
+	defer func() {
+		cache.Device.Set(key, val, cache.INFINITE)
+	}()
+
+	val = term.HasCommand("wslpath")
+
+	return val
+}
+
+func (term *Terminal) IsWsl2() bool {
+	defer log.Trace(time.Now())
+	if !term.IsWsl() {
+		return false
+	}
+	uname := term.FileContent("/proc/sys/kernel/osrelease")
+	return strings.Contains(uname, "WSL2")
+}
+
+func (term *Terminal) IsCygwin() bool {
+	defer log.Trace(time.Now())
+	return false
+}
+
+func (term *Terminal) TerminalWidth() (int, error) {
+	defer log.Trace(time.Now())
+
+	if term.CmdFlags.TerminalWidth > 0 {
+		log.Debugf("terminal width: %d", term.CmdFlags.TerminalWidth)
+		return term.CmdFlags.TerminalWidth, nil
+	}
+
+	width, err := terminal.Width()
+	if width == 0 {
+		width, err = resolveTerminalWidth(width, err, term.Getenv("COLUMNS"))
+	}
+
+	if err != nil {
+		log.Error(err)
+	}
+
+	term.CmdFlags.TerminalWidth = int(width)
+	log.Debugf("terminal width: %d", term.CmdFlags.TerminalWidth)
+
+	return term.CmdFlags.TerminalWidth, err
+}
+
+func resolveTerminalWidth(width uint, terminalErr error, columns string) (uint, error) {
+	if width != 0 {
+		return width, terminalErr
+	}
+
+	columnWidth, err := strconv.Atoi(columns)
+	if err != nil {
+		return 0, errors.Join(terminalErr, err)
+	}
+	if columnWidth <= 0 {
+		return 0, errors.Join(terminalErr, errors.New("terminal width must be greater than zero"))
+	}
+
+	return uint(columnWidth), nil
+}
+
+func (term *Terminal) Platform() string {
+	const key = "environment_platform"
+	if val, found := cache.Device.Get[string](key); found {
+		return val
+	}
+
+	var platform string
+	defer func() {
+		cache.Device.Set(key, platform, cache.INFINITE)
+	}()
+
+	if wsl := term.Getenv("WSL_DISTRO_NAME"); len(wsl) != 0 {
+		platform, _, _ = strings.Cut(wsl, "-")
+		platform = strings.ToLower(platform)
+		log.Debug(platform)
+		return platform
+	}
+
+	platform, _, _, _ = host.PlatformInformation()
+	platform = term.getSpecialLinuxDistros(platform)
+
+	log.Debug(platform)
+	return platform
+}
+
+func (term *Terminal) getSpecialLinuxDistros(platform string) string {
+	lsbInfo := term.FileContent("/etc/lsb-release")
+
+	if platform == "debian" && strings.Contains(strings.ToLower(lsbInfo), "zorin") {
+		return "zorin"
+	}
+
+	if platform != "arch" {
+		return platform
+	}
+
+	if strings.Contains(strings.ToLower(lsbInfo), "manjaro") {
+		return "manjaro"
+	}
+
+	if strings.Contains(strings.ToLower(lsbInfo), "artix") {
+		return "artix"
+	}
+
+	return platform
+}
+
+func (term *Terminal) WindowsRegistryKeyValue(_ string) (*WindowsRegistryValue, error) {
+	return nil, &NotImplemented{}
+}
+
+func (term *Terminal) InWSLSharedDrive() bool {
+	if !term.IsWsl2() {
+		return false
+	}
+	windowsPath := term.ConvertToWindowsPath(term.Pwd())
+	return !strings.HasPrefix(windowsPath, `//wsl.localhost/`) && !strings.HasPrefix(windowsPath, `//wsl$/`)
+}
+
+func (term *Terminal) ConvertToWindowsPath(input string) string {
+	windowsPath, err := term.RunCommand("wslpath", "-m", input)
+	if err == nil {
+		return windowsPath
+	}
+	return input
+}
+
+func (term *Terminal) ConvertToLinuxPath(input string) string {
+	if linuxPath, err := term.RunCommand("wslpath", "-u", input); err == nil {
+		return linuxPath
+	}
+	return input
+}
+
+func (term *Terminal) Connection(_ ConnectionType) (*Connection, error) {
+	// added to disable the linting error, we can implement this later
+	if len(term.networks) == 0 {
+		return nil, &NotImplemented{}
+	}
+
+	return nil, &NotImplemented{}
+}
+
+func (term *Terminal) Memory() (*Memory, error) {
+	m := &Memory{}
+	memStat, err := mem.VirtualMemory()
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	m.PhysicalTotalMemory = memStat.Total
+	m.PhysicalAvailableMemory = memStat.Available
+	m.PhysicalFreeMemory = memStat.Free
+
+	if memStat.Total > 0 {
+		used := float64(memStat.Total) - float64(memStat.Available)
+		if used < 0 {
+			used = 0
+		}
+		m.PhysicalPercentUsed = used / float64(memStat.Total) * 100
+	}
+
+	swapStat, err := mem.SwapMemory()
+	if err != nil {
+		log.Error(err)
+	}
+
+	m.SwapTotalMemory = swapStat.Total
+	m.SwapFreeMemory = swapStat.Free
+	m.SwapPercentUsed = swapStat.UsedPercent
+	return m, nil
+}

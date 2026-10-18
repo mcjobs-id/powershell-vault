@@ -1,0 +1,71 @@
+---
+id: docker
+title: Docker
+sidebar_label: Docker
+---
+
+## What
+
+Display the current [Docker][docker] context, or a list of running containers when `display_mode` is set to `environment`.
+
+## Sample Configuration
+
+import Config from "@site/src/components/Config.js";
+
+<Config
+  data={{
+    type: "docker",
+    style: "powerline",
+    powerline_symbol: "\uE0B0",
+    foreground: "#000000",
+    background: "#0B59E7",
+    template: " \uf308 {{ .Context }} ",
+    options: {
+      display_mode: "environment",
+      docker_command: "docker",
+      filter: "name=oh-my-posh-db-1"
+    }
+  }}
+/>
+
+## Options
+
+| Name             | Type       | Default                      | Description                                                                                                               |
+| ---------------- | ---------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `display_mode`   | `string`   | `context`                    | `files`, `context`, or `environment`                                                                                      |
+| `fetch_context`  | `boolean`  | `true`                       | fetch context in `files` mode                                                                                             |
+| `docker_command` | `string`   | `docker`                     | command used in `environment` mode                                                                                        |
+| `filter`         | `string`   |                              | passed to `docker ps`, see [the filter documentation](https://docs.docker.com/engine/reference/commandline/ps/#filtering) |
+| `extensions`     | `[]string` | compose files and Dockerfile | overrides the file checks                                                                                                 |
+
+## Template ([info][templates])
+
+:::note default template
+
+```template
+\uf308 {{ .Context }}
+```
+
+:::
+
+### Properties
+
+| Name          | Type          | Description                                                   |
+| ------------- | ------------- | ------------------------------------------------------------- |
+| `.Context`    | `string`      | current active context                                        |
+| `.Containers` | `[]Container` | running containers from `docker ps` (`environment` mode only) |
+
+#### Container
+
+| Name       | Type     | Description       |
+| ---------- | -------- | ----------------- |
+| `.ID`      | `string` | container ID      |
+| `.Image`   | `string` | container image   |
+| `.Command` | `string` | container command |
+| `.Created` | `string` | created time      |
+| `.Status`  | `string` | container status  |
+| `.Ports`   | `string` | published ports   |
+| `.Names`   | `string` | container name    |
+
+[docker]: https://www.docker.com/
+[templates]: /docs/configuration/templates

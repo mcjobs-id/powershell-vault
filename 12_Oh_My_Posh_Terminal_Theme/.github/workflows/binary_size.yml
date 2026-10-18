@@ -1,0 +1,93 @@
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+name: Binary Size Check
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            asset: posh-linux-amd64
+          - goos: windows
+            asset: posh-windows-amd64.exe
+          - goos: darwin
+            asset: posh-darwin-amd64
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: src
+    steps:
+      - name: Checkout code 👋
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install Go 🗳
+        uses: ./.github/workflows/composite/bootstrap-go
+
+      - name: Build PR binary 🏗
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: amd64
+          GOEXPERIMENT: greenteagc,jsonv2
+        run: |
+          go build -a \
+            -ldflags="-s -w -extldflags '-static'" \
+            -tags="netgo osusergo static_build timetzdata" \
+            -o /tmp/posh-pr .
+
+      - name: Download latest release binary 📥
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download --repo "${{ github.repository }}" --pattern '${{ matrix.asset }}' --output /tmp/posh-baseline --clobber
+
+      - name: Compare sizes 📏
+        run: |
+          pr_size=$(stat -c%s /tmp/posh-pr)
+          baseline_size=$(stat -c%s /tmp/posh-baseline)
+          delta=$((pr_size - baseline_size))
+          percent=$(awk -v d="$delta" -v b="$baseline_size" 'BEGIN { printf "%.2f", (d / b) * 100 }')
+
+          cat <<EOF > /tmp/report-${{ matrix.goos }}.json
+          {
+            "goos": "${{ matrix.goos }}",
+            "asset": "${{ matrix.asset }}",
+            "pr_size": $pr_size,
+            "baseline_size": $baseline_size,
+            "delta": $delta,
+            "percent": $percent
+          }
+          EOF
+
+      - name: Upload size report 📤
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: size-report-${{ matrix.goos }}
+          retention-days: 1
+          path: /tmp/report-${{ matrix.goos }}.json
+
+  pr-context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Save PR number
+        run: echo "${{ github.event.pull_request.number }}" > pr-number.txt
+
+      - name: Upload PR number 📤
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: pr-number
+          retention-days: 1
+          path: pr-number.txt

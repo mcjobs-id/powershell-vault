@@ -1,0 +1,1232 @@
+package segments
+
+import (
+	"encoding/json"
+	"testing"
+	libtime "time"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/mock"
+	"github.com/jandedobbeleer/oh-my-posh/src/segments/options"
+	"github.com/jandedobbeleer/oh-my-posh/src/text"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestClaudeSegment(t *testing.T) {
+	cases := []struct {
+		Case                string
+		ClaudeData          *ClaudeData
+		ExpectedModel       string
+		ExpectedSession     string
+		ExpectedGitWorktree string
+		ExpectedEnabled     bool
+	}{
+		{
+			Case:            "No cache data",
+			ClaudeData:      nil,
+			ExpectedEnabled: false,
+		},
+		{
+			Case: "Valid cache data with all fields",
+			ClaudeData: &ClaudeData{
+				SessionID: "abc123",
+				Model: AIModel{
+					ID:          "claude-opus-4-1",
+					DisplayName: "Opus",
+				},
+				Workspace: ClaudeWorkspace{
+					CurrentDir:  "/repo/project/.worktrees/feature",
+					ProjectDir:  "/repo/project",
+					GitWorktree: "/repo/project/.worktrees/feature",
+				},
+				Cost: ClaudeCost{
+					TotalCostUSD:       0.01,
+					TotalDurationMS:    45000,
+					TotalAPIDurationMS: 30000,
+					TotalLinesAdded:    156,
+					TotalLinesRemoved:  23,
+				},
+				ContextWindow: ClaudeContextWindow{
+					TotalInputTokens:  15234,
+					TotalOutputTokens: 4521,
+					ContextWindowSize: 200000,
+					CurrentUsage: &ClaudeCurrentUsage{
+						InputTokens:  8500,
+						OutputTokens: 1200,
+					},
+				},
+				RateLimits: &ClaudeRateLimits{
+					FiveHour: &ClaudeRateLimitWindow{
+						UsedPercentage: new(24.5),
+						ResetsAt:       new(int64(1711180800)),
+					},
+					SevenDay: &ClaudeRateLimitWindow{
+						UsedPercentage: new(45.0),
+						ResetsAt:       new(int64(1711612800)),
+					},
+				},
+			},
+			ExpectedEnabled:     true,
+			ExpectedModel:       "Opus",
+			ExpectedSession:     "abc123",
+			ExpectedGitWorktree: "/repo/project/.worktrees/feature",
+		},
+		{
+			Case: "Valid cache data with partial fields",
+			ClaudeData: &ClaudeData{
+				SessionID: "xyz789",
+				Model: AIModel{
+					ID:          "claude-sonnet-3-5",
+					DisplayName: "Sonnet 3.5",
+				},
+				ContextWindow: ClaudeContextWindow{
+					TotalInputTokens:  1000,
+					TotalOutputTokens: 500,
+					ContextWindowSize: 100000,
+				},
+			},
+			ExpectedEnabled: true,
+			ExpectedModel:   "Sonnet 3.5",
+			ExpectedSession: "xyz789",
+		},
+	}
+
+	for _, tc := range cases {
+		// Setup cache for test
+		if tc.ClaudeData != nil {
+			cache.Session.Set(cache.CLAUDECACHE, *tc.ClaudeData, cache.INFINITE)
+		} else {
+			cache.Session.Delete(cache.CLAUDECACHE)
+		}
+
+		env := new(mock.Environment)
+		claude := &Claude{
+			env:     env,
+			options: options.Map{},
+		}
+
+		enabled := claude.Enabled()
+		assert.Equal(t, tc.ExpectedEnabled, enabled, tc.Case)
+
+		if tc.ExpectedEnabled {
+			assert.Equal(t, tc.ExpectedModel, claude.Model.DisplayName, tc.Case)
+			assert.Equal(t, tc.ExpectedSession, claude.SessionID, tc.Case)
+			assert.Equal(t, tc.ExpectedGitWorktree, claude.Workspace.GitWorktree, tc.Case)
+		}
+	}
+}
+
+func TestClaudeWorkspaceGitWorktree(t *testing.T) {
+	t.Cleanup(func() {
+		cache.Session.Delete(cache.CLAUDECACHE)
+	})
+
+	cases := []struct {
+		Case                string
+		ExpectedGitWorktree string
+		Workspace           ClaudeWorkspace
+	}{
+		{
+			Case: "Inside a linked worktree",
+			Workspace: ClaudeWorkspace{
+				CurrentDir:  "/repo/project/.worktrees/feature",
+				ProjectDir:  "/repo/project",
+				GitWorktree: "/repo/project/.worktrees/feature",
+			},
+			ExpectedGitWorktree: "/repo/project/.worktrees/feature",
+		},
+		{
+			Case: "Outside a linked worktree",
+			Workspace: ClaudeWorkspace{
+				CurrentDir: "/repo/project",
+				ProjectDir: "/repo/project",
+			},
+			ExpectedGitWorktree: "",
+		},
+	}
+
+	for _, tc := range cases {
+		cache.Session.Set(cache.CLAUDECACHE, ClaudeData{Workspace: tc.Workspace}, cache.INFINITE)
+
+		env := new(mock.Environment)
+		claude := &Claude{
+			env:     env,
+			options: options.Map{},
+		}
+
+		assert.True(t, claude.Enabled(), tc.Case)
+		assert.Equal(t, tc.ExpectedGitWorktree, claude.Workspace.GitWorktree, tc.Case)
+	}
+}
+
+func TestClaudeEffortAndThinking(t *testing.T) {
+	t.Cleanup(func() {
+		cache.Session.Delete(cache.CLAUDECACHE)
+	})
+
+	cases := []struct {
+		Effort           *ClaudeEffort
+		Thinking         *ClaudeThinking
+		Case             string
+		ExpectedLevel    string
+		ExpectedThinking bool
+	}{
+		{
+			Case:             "Reasoning effort active, thinking enabled",
+			Effort:           &ClaudeEffort{Level: "xhigh"},
+			ExpectedLevel:    "xhigh",
+			Thinking:         &ClaudeThinking{Enabled: true},
+			ExpectedThinking: true,
+		},
+		{
+			Case:             "Reasoning effort active, thinking disabled",
+			Effort:           &ClaudeEffort{Level: "high"},
+			ExpectedLevel:    "high",
+			ExpectedThinking: false,
+		},
+		{
+			Case:             "Reasoning effort absent, thinking enabled",
+			ExpectedLevel:    "",
+			Thinking:         &ClaudeThinking{Enabled: true},
+			ExpectedThinking: true,
+		},
+		{
+			Case:             "Reasoning effort absent, thinking disabled",
+			ExpectedLevel:    "",
+			ExpectedThinking: false,
+		},
+	}
+
+	for _, tc := range cases {
+		cache.Session.Set(cache.CLAUDECACHE, ClaudeData{
+			Effort:   tc.Effort,
+			Thinking: tc.Thinking,
+		}, cache.INFINITE)
+
+		env := new(mock.Environment)
+		claude := &Claude{
+			env:     env,
+			options: options.Map{},
+		}
+
+		assert.True(t, claude.Enabled(), tc.Case)
+
+		level := ""
+		if claude.Effort != nil {
+			level = claude.Effort.Level
+		}
+
+		thinking := false
+		if claude.Thinking != nil {
+			thinking = claude.Thinking.Enabled
+		}
+
+		assert.Equal(t, tc.ExpectedLevel, level, tc.Case)
+		assert.Equal(t, tc.ExpectedThinking, thinking, tc.Case)
+	}
+}
+
+func TestClaudeEffortAndThinkingJSONShape(t *testing.T) {
+	cases := []struct {
+		Case             string
+		JSON             string
+		ExpectedLevel    string
+		ExpectedThinking bool
+	}{
+		{
+			Case:             "Both fields present",
+			JSON:             `{"effort":{"level":"xhigh"},"thinking":{"enabled":true}}`,
+			ExpectedLevel:    "xhigh",
+			ExpectedThinking: true,
+		},
+		{
+			Case:             "Both fields absent",
+			JSON:             `{}`,
+			ExpectedLevel:    "",
+			ExpectedThinking: false,
+		},
+		{
+			Case:             "Effort object empty, thinking disabled",
+			JSON:             `{"effort":{},"thinking":{"enabled":false}}`,
+			ExpectedLevel:    "",
+			ExpectedThinking: false,
+		},
+	}
+
+	for _, tc := range cases {
+		var data ClaudeData
+		err := json.Unmarshal([]byte(tc.JSON), &data)
+		assert.NoError(t, err, tc.Case)
+
+		level := ""
+		if data.Effort != nil {
+			level = data.Effort.Level
+		}
+
+		thinking := false
+		if data.Thinking != nil {
+			thinking = data.Thinking.Enabled
+		}
+
+		assert.Equal(t, tc.ExpectedLevel, level, tc.Case)
+		assert.Equal(t, tc.ExpectedThinking, thinking, tc.Case)
+	}
+}
+
+func TestClaudeAdditionalStatusLineFieldsJSONShape(t *testing.T) {
+	const (
+		originalBranchName = "main"
+	)
+
+	cases := []struct {
+		Case                 string
+		JSON                 string
+		Expected             ClaudeData
+		ExpectedAddedDirsNil bool
+	}{
+		{
+			Case: "All fields present",
+			JSON: `{
+				"cwd": "/repo/project",
+				"session_name": "release-check",
+				"prompt_id": "prompt-456",
+				"transcript_path": "/repo/project/.claude/transcript.jsonl",
+				"version": "2.1.123",
+				"output_style": {
+					"name": "default"
+				},
+				"workspace": {
+					"added_dirs": ["/repo/shared", "/repo/docs"],
+					"repo": {
+						"host": "github.com",
+						"owner": "anthropics",
+						"name": "claude-code"
+					}
+				},
+				"exceeds_200k_tokens": true,
+				"vim": {
+					"mode": "NORMAL"
+				},
+				"agent": {
+					"name": "security-reviewer"
+				},
+				"pr": {
+					"number": 1234,
+					"url": "https://github.com/anthropics/claude-code/pull/1234",
+					"review_state": "pending"
+				},
+				"worktree": {
+					"name": "my-feature",
+					"path": "/repo/project/.claude/worktrees/my-feature",
+					"branch": "worktree-my-feature",
+					"original_cwd": "/repo/project",
+					"original_branch": "main"
+				},
+				"fast_mode": true
+			}`,
+			Expected: ClaudeData{
+				CWD:            "/repo/project",
+				SessionName:    "release-check",
+				PromptID:       "prompt-456",
+				TranscriptPath: "/repo/project/.claude/transcript.jsonl",
+				Version:        "2.1.123",
+				OutputStyle:    &ClaudeOutputStyle{Name: defaultStr},
+				Workspace: ClaudeWorkspace{
+					AddedDirs: []string{"/repo/shared", "/repo/docs"},
+					Repo: &ClaudeRepo{
+						Host:  "github.com",
+						Owner: "anthropics",
+						Name:  "claude-code",
+					},
+				},
+				Exceeds200KTokens: true,
+				Vim:               &ClaudeVim{Mode: "NORMAL"},
+				Agent:             &ClaudeAgent{Name: "security-reviewer"},
+				PR: &ClaudePR{
+					Number:      "1234",
+					URL:         "https://github.com/anthropics/claude-code/pull/1234",
+					ReviewState: "pending",
+				},
+				Worktree: &ClaudeWorktree{
+					Name:           "my-feature",
+					Path:           "/repo/project/.claude/worktrees/my-feature",
+					Branch:         "worktree-my-feature",
+					OriginalCWD:    "/repo/project",
+					OriginalBranch: originalBranchName,
+				},
+				FastMode: true,
+			},
+		},
+		{
+			Case:                 "All fields absent",
+			JSON:                 `{}`,
+			Expected:             ClaudeData{},
+			ExpectedAddedDirsNil: true,
+		},
+		{
+			Case: "PR number provided as string",
+			JSON: `{"pr":{"number":"1234"}}`,
+			Expected: ClaudeData{
+				PR: &ClaudePR{Number: "1234"},
+			},
+			ExpectedAddedDirsNil: true,
+		},
+		{
+			Case:                 "PR number explicitly null",
+			JSON:                 `{"pr":{"number":null}}`,
+			Expected:             ClaudeData{PR: &ClaudePR{}},
+			ExpectedAddedDirsNil: true,
+		},
+		{
+			Case: "Nested objects empty",
+			JSON: `{
+				"output_style": {},
+				"workspace": {},
+				"vim": {},
+				"agent": {},
+				"pr": {},
+				"worktree": {}
+			}`,
+			Expected: ClaudeData{
+				OutputStyle: &ClaudeOutputStyle{},
+				Vim:         &ClaudeVim{},
+				Agent:       &ClaudeAgent{},
+				PR:          &ClaudePR{},
+				Worktree:    &ClaudeWorktree{},
+			},
+			ExpectedAddedDirsNil: true,
+		},
+		{
+			Case: "Partial nested fields",
+			JSON: `{
+				"workspace": {
+					"added_dirs": ["/repo/shared"]
+				},
+				"worktree": {
+					"name": "review",
+					"path": "/repo/project/.claude/worktrees/review"
+				}
+			}`,
+			Expected: ClaudeData{
+				Workspace: ClaudeWorkspace{AddedDirs: []string{"/repo/shared"}},
+				Worktree: &ClaudeWorktree{
+					Name: "review",
+					Path: "/repo/project/.claude/worktrees/review",
+				},
+			},
+		},
+		{
+			Case: "Added dirs explicitly empty",
+			JSON: `{
+				"workspace": {
+					"added_dirs": []
+				}
+			}`,
+			Expected: ClaudeData{
+				Workspace: ClaudeWorkspace{AddedDirs: []string{}},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		// Act
+		var data ClaudeData
+		err := json.Unmarshal([]byte(tc.JSON), &data)
+
+		// Assert
+		assert.NoError(t, err, tc.Case)
+		assert.Equal(t, tc.Expected.CWD, data.CWD, tc.Case)
+		assert.Equal(t, tc.Expected.SessionName, data.SessionName, tc.Case)
+		assert.Equal(t, tc.Expected.PromptID, data.PromptID, tc.Case)
+		assert.Equal(t, tc.Expected.TranscriptPath, data.TranscriptPath, tc.Case)
+		assert.Equal(t, tc.Expected.Version, data.Version, tc.Case)
+		assert.Equal(t, tc.Expected.OutputStyle, data.OutputStyle, tc.Case)
+		if tc.ExpectedAddedDirsNil {
+			assert.Nil(t, data.Workspace.AddedDirs, tc.Case)
+		} else {
+			assert.Equal(t, tc.Expected.Workspace.AddedDirs, data.Workspace.AddedDirs, tc.Case)
+		}
+		assert.Equal(t, tc.Expected.Exceeds200KTokens, data.Exceeds200KTokens, tc.Case)
+		assert.Equal(t, tc.Expected.Vim, data.Vim, tc.Case)
+		assert.Equal(t, tc.Expected.Agent, data.Agent, tc.Case)
+		assert.Equal(t, tc.Expected.Workspace.Repo, data.Workspace.Repo, tc.Case)
+		assert.Equal(t, tc.Expected.PR, data.PR, tc.Case)
+		assert.Equal(t, tc.Expected.Worktree, data.Worktree, tc.Case)
+		assert.Equal(t, tc.Expected.FastMode, data.FastMode, tc.Case)
+	}
+}
+
+func TestClaudeTokenUsagePercent(t *testing.T) {
+	cases := []struct {
+		UsedPercentage           *int
+		Case                     string
+		InputTokens              int
+		OutputTokens             int
+		CurrentInput             int
+		CacheCreationInputTokens int
+		CacheReadInputTokens     int
+		ContextWindow            int
+		ExpectedPercent          text.Percentage
+		HasCurrentUsage          bool
+	}{
+		{
+			Case:            "Uses UsedPercentage when available",
+			UsedPercentage:  new(42),
+			ContextWindow:   200000,
+			ExpectedPercent: 42,
+		},
+		{
+			Case:            "UsedPercentage capped at 100",
+			UsedPercentage:  new(150),
+			ContextWindow:   200000,
+			ExpectedPercent: 100,
+		},
+		{
+			Case:            "UsedPercentage zero is valid",
+			UsedPercentage:  new(0),
+			ContextWindow:   200000,
+			ExpectedPercent: 0,
+		},
+		{
+			Case:            "Context reset - both UsedPercentage and CurrentUsage nil",
+			UsedPercentage:  nil,
+			HasCurrentUsage: false,
+			InputTokens:     50000, // High cumulative total - should be ignored
+			OutputTokens:    50000,
+			ContextWindow:   200000,
+			ExpectedPercent: 0, // Should return 0 after reset, not fallback to total
+		},
+		{
+			Case:            "Zero context window (no UsedPercentage)",
+			HasCurrentUsage: true,
+			InputTokens:     1000,
+			OutputTokens:    500,
+			ContextWindow:   0,
+			ExpectedPercent: 0,
+		},
+		{
+			Case:            "10% usage (fallback to total)",
+			HasCurrentUsage: true,
+			InputTokens:     8000,
+			OutputTokens:    2000,
+			ContextWindow:   100000,
+			ExpectedPercent: 10,
+		},
+		{
+			Case:            "50% usage (fallback to total)",
+			HasCurrentUsage: true,
+			InputTokens:     50000,
+			OutputTokens:    50000,
+			ContextWindow:   200000,
+			ExpectedPercent: 50,
+		},
+		{
+			Case:            "Over 100% usage (capped)",
+			HasCurrentUsage: true,
+			InputTokens:     100000,
+			OutputTokens:    50000,
+			ContextWindow:   100000,
+			ExpectedPercent: 100,
+		},
+		{
+			Case:            "Uses CurrentUsage input tokens",
+			HasCurrentUsage: true,
+			InputTokens:     100000, // High cumulative total
+			OutputTokens:    50000,
+			CurrentInput:    20000, // Current context input
+			ContextWindow:   200000,
+			ExpectedPercent: 10, // Should use current input (20000/200000 = 10%)
+		},
+		{
+			Case:                     "Uses CurrentUsage with cache tokens",
+			HasCurrentUsage:          true,
+			InputTokens:              100000, // High cumulative total
+			OutputTokens:             50000,
+			CurrentInput:             10000,
+			CacheCreationInputTokens: 5000,
+			CacheReadInputTokens:     5000,
+			ContextWindow:            200000,
+			ExpectedPercent:          10, // (10000+5000+5000)/200000 = 10%
+		},
+		{
+			Case:            "Uses CurrentUsage after compact (low current, high total)",
+			HasCurrentUsage: true,
+			InputTokens:     100000, // High cumulative total
+			OutputTokens:    50000,
+			CurrentInput:    6000, // Low current context (after compact)
+			ContextWindow:   200000,
+			ExpectedPercent: 3, // Should use current (6000/200000 = 3%)
+		},
+		{
+			Case:            "Fallback to total when CurrentUsage is zero",
+			HasCurrentUsage: true,
+			InputTokens:     20000,
+			OutputTokens:    10000,
+			CurrentInput:    0,
+			ContextWindow:   100000,
+			ExpectedPercent: 30, // Should fallback to total (30000/100000 = 30%)
+		},
+	}
+
+	for _, tc := range cases {
+		claude := &Claude{}
+		claude.ContextWindow.TotalInputTokens = tc.InputTokens
+		claude.ContextWindow.TotalOutputTokens = tc.OutputTokens
+		if tc.HasCurrentUsage {
+			claude.ContextWindow.CurrentUsage = &ClaudeCurrentUsage{
+				InputTokens:              tc.CurrentInput,
+				CacheCreationInputTokens: tc.CacheCreationInputTokens,
+				CacheReadInputTokens:     tc.CacheReadInputTokens,
+			}
+		}
+		claude.ContextWindow.UsedPercentage = tc.UsedPercentage
+		claude.ContextWindow.ContextWindowSize = tc.ContextWindow
+
+		percent := claude.TokenUsagePercent()
+		assert.Equal(t, tc.ExpectedPercent, percent, tc.Case)
+	}
+}
+
+func TestClaudeFormattedCost(t *testing.T) {
+	cases := []struct {
+		Case         string
+		ExpectedCost string
+		CostUSD      float64
+	}{
+		{
+			Case:         "Very small cost",
+			CostUSD:      0.0012,
+			ExpectedCost: "$0.0012",
+		},
+		{
+			Case:         "Small cost",
+			CostUSD:      0.0099,
+			ExpectedCost: "$0.0099",
+		},
+		{
+			Case:         "Regular cost",
+			CostUSD:      0.15,
+			ExpectedCost: "$0.15",
+		},
+		{
+			Case:         "Large cost",
+			CostUSD:      12.34,
+			ExpectedCost: "$12.34",
+		},
+	}
+
+	for _, tc := range cases {
+		claude := &Claude{}
+		claude.Cost.TotalCostUSD = tc.CostUSD
+
+		formatted := claude.FormattedCost()
+		assert.Equal(t, tc.ExpectedCost, formatted, tc.Case)
+	}
+}
+
+func TestClaudeFormattedDuration(t *testing.T) {
+	cases := []struct {
+		Case     string
+		Expected string
+		MS       DurationMS
+	}{
+		{Case: "Zero", MS: 0, Expected: "0m 0s"},
+		{Case: "Seconds only", MS: 45000, Expected: "0m 45s"},
+		{Case: "Minutes and seconds", MS: 125000, Expected: "2m 5s"},
+		{Case: "Exact minute", MS: 60000, Expected: "1m 0s"},
+	}
+
+	for _, tc := range cases {
+		claude := &Claude{}
+		claude.Cost.TotalDurationMS = tc.MS
+		assert.Equal(t, tc.Expected, claude.FormattedDuration(), tc.Case)
+	}
+}
+
+func TestClaudeFormattedAPIDuration(t *testing.T) {
+	cases := []struct {
+		Case     string
+		Expected string
+		MS       DurationMS
+	}{
+		{Case: "Zero", MS: 0, Expected: "0m 0s"},
+		{Case: "Seconds only", MS: 30000, Expected: "0m 30s"},
+		{Case: "Minutes and seconds", MS: 90000, Expected: "1m 30s"},
+	}
+
+	for _, tc := range cases {
+		claude := &Claude{}
+		claude.Cost.TotalAPIDurationMS = tc.MS
+		assert.Equal(t, tc.Expected, claude.FormattedAPIDuration(), tc.Case)
+	}
+}
+
+func TestClaudeFormattedTokens(t *testing.T) {
+	cases := []struct {
+		Case                     string
+		ExpectedFormat           string
+		InputTokens              int
+		OutputTokens             int
+		CurrentInput             int
+		CacheCreationInputTokens int
+		CacheReadInputTokens     int
+		HasCurrentUsage          bool
+	}{
+		{
+			Case:            "Small token count (fallback to total)",
+			HasCurrentUsage: true,
+			InputTokens:     300,
+			OutputTokens:    200,
+			ExpectedFormat:  "500",
+		},
+		{
+			Case:            "Thousands (fallback to total)",
+			HasCurrentUsage: true,
+			InputTokens:     8500,
+			OutputTokens:    1500,
+			ExpectedFormat:  "10.0K",
+		},
+		{
+			Case:            "Tens of thousands (fallback to total)",
+			HasCurrentUsage: true,
+			InputTokens:     50000,
+			OutputTokens:    25000,
+			ExpectedFormat:  "75.0K",
+		},
+		{
+			Case:            "Millions (fallback to total)",
+			HasCurrentUsage: true,
+			InputTokens:     1500000,
+			OutputTokens:    500000,
+			ExpectedFormat:  "2.0M",
+		},
+		{
+			Case:            "Uses CurrentUsage input tokens",
+			HasCurrentUsage: true,
+			InputTokens:     100000, // High cumulative total
+			OutputTokens:    50000,
+			CurrentInput:    10000, // Current context input
+			ExpectedFormat:  "10.0K",
+		},
+		{
+			Case:                     "Uses CurrentUsage with cache tokens",
+			HasCurrentUsage:          true,
+			InputTokens:              100000, // High cumulative total
+			OutputTokens:             50000,
+			CurrentInput:             5000,
+			CacheCreationInputTokens: 2500,
+			CacheReadInputTokens:     2500,
+			ExpectedFormat:           "10.0K", // 5000+2500+2500 = 10000
+		},
+		{
+			Case:            "Uses CurrentUsage after compact (low current)",
+			HasCurrentUsage: true,
+			InputTokens:     500000, // High cumulative total
+			OutputTokens:    200000,
+			CurrentInput:    500, // Low current context (after compact)
+			ExpectedFormat:  "500",
+		},
+		{
+			Case:            "Fallback to total when CurrentUsage is zero",
+			HasCurrentUsage: true,
+			InputTokens:     50000,
+			OutputTokens:    25000,
+			CurrentInput:    0,
+			ExpectedFormat:  "75.0K", // Should fallback to total
+		},
+		{
+			Case:            "Nil CurrentUsage falls back to total",
+			HasCurrentUsage: false,
+			InputTokens:     50000,
+			OutputTokens:    25000,
+			ExpectedFormat:  "75.0K", // Should fallback to total
+		},
+	}
+
+	for _, tc := range cases {
+		claude := &Claude{}
+		claude.ContextWindow.TotalInputTokens = tc.InputTokens
+		claude.ContextWindow.TotalOutputTokens = tc.OutputTokens
+		if tc.HasCurrentUsage {
+			claude.ContextWindow.CurrentUsage = &ClaudeCurrentUsage{
+				InputTokens:              tc.CurrentInput,
+				CacheCreationInputTokens: tc.CacheCreationInputTokens,
+				CacheReadInputTokens:     tc.CacheReadInputTokens,
+			}
+		}
+
+		formatted := claude.FormattedTokens()
+		assert.Equal(t, tc.ExpectedFormat, formatted, tc.Case)
+	}
+}
+
+func TestClaudeRateLimitUsage(t *testing.T) {
+	cases := []struct {
+		RateLimits    *ClaudeRateLimits
+		Case          string
+		ExpectedFive  text.Percentage
+		ExpectedSeven text.Percentage
+	}{
+		{
+			Case:          "Nil RateLimits",
+			RateLimits:    nil,
+			ExpectedFive:  0,
+			ExpectedSeven: 0,
+		},
+		{
+			Case: "Nil FiveHour window",
+			RateLimits: &ClaudeRateLimits{
+				SevenDay: &ClaudeRateLimitWindow{UsedPercentage: new(50.0)},
+			},
+			ExpectedFive:  0,
+			ExpectedSeven: 50,
+		},
+		{
+			Case: "Nil SevenDay window",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{UsedPercentage: new(25.0)},
+			},
+			ExpectedFive:  25,
+			ExpectedSeven: 0,
+		},
+		{
+			Case: "Nil UsedPercentage",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{UsedPercentage: nil},
+				SevenDay: &ClaudeRateLimitWindow{UsedPercentage: nil},
+			},
+			ExpectedFive:  0,
+			ExpectedSeven: 0,
+		},
+		{
+			Case: "Valid percentages",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{UsedPercentage: new(42.7)},
+				SevenDay: &ClaudeRateLimitWindow{UsedPercentage: new(75.3)},
+			},
+			ExpectedFive:  43,
+			ExpectedSeven: 75,
+		},
+		{
+			Case: "Value over 100 capped",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{UsedPercentage: new(150.0)},
+				SevenDay: &ClaudeRateLimitWindow{UsedPercentage: new(200.0)},
+			},
+			ExpectedFive:  100,
+			ExpectedSeven: 100,
+		},
+		{
+			Case: "Zero percentages",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{UsedPercentage: new(0.0)},
+				SevenDay: &ClaudeRateLimitWindow{UsedPercentage: new(0.0)},
+			},
+			ExpectedFive:  0,
+			ExpectedSeven: 0,
+		},
+	}
+
+	for _, tc := range cases {
+		claude := &Claude{}
+		claude.RateLimits = tc.RateLimits
+
+		assert.Equal(t, tc.ExpectedFive, claude.FiveHourUsage(), tc.Case+" (FiveHour)")
+		assert.Equal(t, tc.ExpectedSeven, claude.SevenDayUsage(), tc.Case+" (SevenDay)")
+	}
+}
+
+func TestClaudeGaugeMethods(t *testing.T) {
+	cases := []struct {
+		RateLimits             *ClaudeRateLimits
+		Case                   string
+		MarkedChar             string
+		UnmarkedChar           string
+		ExpectedTokenGauge     string
+		ExpectedTokenGaugeUsed string
+		ExpectedFiveHourGauge  string
+		ExpectedSevenDayGauge  string
+		UsedPercentage         int
+	}{
+		{
+			Case:                   "Default chars (▰▱) at 40% used",
+			MarkedChar:             "▰",
+			UnmarkedChar:           "▱",
+			UsedPercentage:         40,
+			ExpectedTokenGauge:     "▰▰▰▱▱", // 60% remaining = 3 blocks
+			ExpectedTokenGaugeUsed: "▰▰▱▱▱", // 40% used = 2 blocks
+		},
+		{
+			Case:                   "Custom chars (█░) at 40% used",
+			MarkedChar:             "█",
+			UnmarkedChar:           "░",
+			UsedPercentage:         40,
+			ExpectedTokenGauge:     "███░░", // 60% remaining = 3 blocks
+			ExpectedTokenGaugeUsed: "██░░░", // 40% used = 2 blocks
+		},
+		{
+			Case:           "Custom chars with rate limits",
+			MarkedChar:     "█",
+			UnmarkedChar:   "░",
+			UsedPercentage: 0,
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{UsedPercentage: new(60.0)},
+				SevenDay: &ClaudeRateLimitWindow{UsedPercentage: new(20.0)},
+			},
+			ExpectedFiveHourGauge: "███░░", // 60% used = 3 blocks
+			ExpectedSevenDayGauge: "█░░░░", // 20% used = 1 block
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Case, func(t *testing.T) {
+			usedPct := tc.UsedPercentage
+			claude := &Claude{
+				markedChar:   tc.MarkedChar,
+				unmarkedChar: tc.UnmarkedChar,
+			}
+			claude.ContextWindow.UsedPercentage = &usedPct
+			claude.RateLimits = tc.RateLimits
+
+			if tc.ExpectedTokenGauge != "" {
+				assert.Equal(t, tc.ExpectedTokenGauge, claude.TokenGauge(), tc.Case+" (TokenGauge)")
+			}
+
+			if tc.ExpectedTokenGaugeUsed != "" {
+				assert.Equal(t, tc.ExpectedTokenGaugeUsed, claude.TokenGaugeUsed(), tc.Case+" (TokenGaugeUsed)")
+			}
+
+			if tc.ExpectedFiveHourGauge != "" {
+				assert.Equal(t, tc.ExpectedFiveHourGauge, claude.FiveHourGauge(), tc.Case+" (FiveHourGauge)")
+			}
+
+			if tc.ExpectedSevenDayGauge != "" {
+				assert.Equal(t, tc.ExpectedSevenDayGauge, claude.SevenDayGauge(), tc.Case+" (SevenDayGauge)")
+			}
+		})
+	}
+}
+
+func TestClaudeGaugeOptionsReadInEnabled(t *testing.T) {
+	t.Cleanup(func() {
+		cache.Session.Delete(cache.CLAUDECACHE)
+	})
+
+	cache.Session.Set(cache.CLAUDECACHE, ClaudeData{
+		Model: AIModel{DisplayName: "Opus"},
+	}, cache.INFINITE)
+
+	env := new(mock.Environment)
+	claude := &Claude{
+		env: env,
+		options: options.Map{
+			gaugeMarkedChar:   "█",
+			gaugeUnmarkedChar: "░",
+		},
+	}
+
+	assert.True(t, claude.Enabled())
+	assert.Equal(t, "█", claude.markedChar)
+	assert.Equal(t, "░", claude.unmarkedChar)
+}
+
+func TestClaudeRateLimitResetsAt(t *testing.T) {
+	fiveHourTS := int64(1711180800) // 2024-03-23 08:00:00 UTC
+	sevenDayTS := int64(1711612800) // 2024-03-28 08:00:00 UTC
+
+	cases := []struct {
+		ExpectedFiveHour libtime.Time
+		ExpectedSevenDay libtime.Time
+		RateLimits       *ClaudeRateLimits
+		Case             string
+	}{
+		{
+			Case:             "Nil RateLimits",
+			RateLimits:       nil,
+			ExpectedFiveHour: libtime.Time{},
+			ExpectedSevenDay: libtime.Time{},
+		},
+		{
+			Case: "Nil FiveHour window",
+			RateLimits: &ClaudeRateLimits{
+				SevenDay: &ClaudeRateLimitWindow{ResetsAt: &sevenDayTS},
+			},
+			ExpectedFiveHour: libtime.Time{},
+			ExpectedSevenDay: libtime.Unix(sevenDayTS, 0),
+		},
+		{
+			Case: "Nil SevenDay window",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{ResetsAt: &fiveHourTS},
+			},
+			ExpectedFiveHour: libtime.Unix(fiveHourTS, 0),
+			ExpectedSevenDay: libtime.Time{},
+		},
+		{
+			Case: "Nil ResetsAt pointers",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{ResetsAt: nil},
+				SevenDay: &ClaudeRateLimitWindow{ResetsAt: nil},
+			},
+			ExpectedFiveHour: libtime.Time{},
+			ExpectedSevenDay: libtime.Time{},
+		},
+		{
+			Case: "Valid timestamps for both windows",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{ResetsAt: &fiveHourTS},
+				SevenDay: &ClaudeRateLimitWindow{ResetsAt: &sevenDayTS},
+			},
+			ExpectedFiveHour: libtime.Unix(fiveHourTS, 0),
+			ExpectedSevenDay: libtime.Unix(sevenDayTS, 0),
+		},
+	}
+
+	for _, tc := range cases {
+		claude := &Claude{}
+		claude.RateLimits = tc.RateLimits
+
+		assert.Equal(t, tc.ExpectedFiveHour, claude.FiveHourResetsAt(), tc.Case+" (FiveHour)")
+		assert.Equal(t, tc.ExpectedSevenDay, claude.SevenDayResetsAt(), tc.Case+" (SevenDay)")
+	}
+}
+
+func TestClaudeRateLimitResetsIn(t *testing.T) {
+	pastTS := libtime.Now().Add(-libtime.Hour).Unix()
+	futureTS := libtime.Now().Add(24 * libtime.Hour).Unix()
+
+	cases := []struct {
+		RateLimits   *ClaudeRateLimits
+		Case         string
+		FiveHourSign int // -1=negative, 0=zero, 1=positive
+		SevenDaySign int
+	}{
+		{
+			Case:         "Nil RateLimits",
+			RateLimits:   nil,
+			FiveHourSign: 0,
+			SevenDaySign: 0,
+		},
+		{
+			Case:         "Nil windows",
+			RateLimits:   &ClaudeRateLimits{},
+			FiveHourSign: 0,
+			SevenDaySign: 0,
+		},
+		{
+			Case: "Nil ResetsAt",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{},
+				SevenDay: &ClaudeRateLimitWindow{},
+			},
+			FiveHourSign: 0,
+			SevenDaySign: 0,
+		},
+		{
+			Case: "Past timestamp",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{ResetsAt: &pastTS},
+				SevenDay: &ClaudeRateLimitWindow{ResetsAt: &pastTS},
+			},
+			FiveHourSign: -1,
+			SevenDaySign: -1,
+		},
+		{
+			Case: "Future timestamp",
+			RateLimits: &ClaudeRateLimits{
+				FiveHour: &ClaudeRateLimitWindow{ResetsAt: &futureTS},
+				SevenDay: &ClaudeRateLimitWindow{ResetsAt: &futureTS},
+			},
+			FiveHourSign: 1,
+			SevenDaySign: 1,
+		},
+	}
+
+	assertSign := func(t *testing.T, d libtime.Duration, sign int, name string) {
+		t.Helper()
+		switch sign {
+		case 0:
+			assert.Equal(t, libtime.Duration(0), d, name)
+		case 1:
+			assert.Positive(t, d, name)
+		case -1:
+			assert.Negative(t, d, name)
+		}
+	}
+
+	for _, tc := range cases {
+		claude := &Claude{}
+		claude.RateLimits = tc.RateLimits
+		assertSign(t, claude.FiveHourResetsIn(), tc.FiveHourSign, tc.Case+" (FiveHour)")
+		assertSign(t, claude.SevenDayResetsIn(), tc.SevenDaySign, tc.Case+" (SevenDay)")
+	}
+}
+
+func TestClaudePromptCacheJSONShape(t *testing.T) {
+	cases := []struct {
+		Expected *ClaudePromptCache
+		Case     string
+		JSON     string
+	}{
+		{
+			Case:     "Absent before first API response or on older Claude Code",
+			JSON:     `{"session_id": "abc"}`,
+			Expected: nil,
+		},
+		{
+			Case:     "Explicit null",
+			JSON:     `{"prompt_cache": null}`,
+			Expected: nil,
+		},
+		{
+			Case: "v2.1.251 payload without miss cause fields",
+			JSON: `{"prompt_cache": {
+				"warm": true,
+				"caching_observed": true,
+				"ttl": "5m",
+				"expires_at": 1738429200,
+				"requests": 3,
+				"misses": 0,
+				"expected_rebuilds": 0,
+				"hit_ratio": 0.5,
+				"cache_write_tokens": 1000,
+				"miss_recache_tokens": 0,
+				"last_miss_at": null,
+				"recache_tokens_if_cold": 800
+			}}`,
+			Expected: &ClaudePromptCache{
+				Warm:                true,
+				CachingObserved:     true,
+				TTL:                 "5m",
+				ExpiresAt:           new(int64(1738429200)),
+				Requests:            3,
+				HitRatio:            new(0.5),
+				CacheWriteTokens:    1000,
+				RecacheTokensIfCold: new(800),
+			},
+		},
+		{
+			Case: "Full payload with null counters",
+			JSON: `{"prompt_cache": {
+				"warm": false,
+				"caching_observed": true,
+				"ttl": "1h",
+				"expires_at": null,
+				"requests": 14,
+				"misses": 2,
+				"expected_rebuilds": 1,
+				"hit_ratio": null,
+				"cache_write_tokens": 352000,
+				"miss_recache_tokens": 310200,
+				"last_miss_at": 1738425230,
+				"last_miss_cause": {
+					"causes": ["tools_changed", "system_prompt_changed"],
+					"tools_added": 2,
+					"tools_removed": 1,
+					"system_char_delta": -40
+				},
+				"miss_causes": {"tools_changed": 2},
+				"recache_tokens_if_cold": null
+			}}`,
+			Expected: &ClaudePromptCache{
+				CachingObserved:   true,
+				TTL:               "1h",
+				Requests:          14,
+				Misses:            2,
+				ExpectedRebuilds:  1,
+				CacheWriteTokens:  352000,
+				MissRecacheTokens: 310200,
+				LastMissAt:        new(int64(1738425230)),
+				LastMissCause: &ClaudeLastMissCause{
+					Causes:          []string{"tools_changed", "system_prompt_changed"},
+					ToolsAdded:      2,
+					ToolsRemoved:    1,
+					SystemCharDelta: -40,
+				},
+				MissCauses: map[string]int{"tools_changed": 2},
+			},
+		},
+		{
+			Case: "Null last_miss_cause",
+			JSON: `{"prompt_cache": {"warm": true, "misses": 1, "last_miss_cause": null}}`,
+			Expected: &ClaudePromptCache{
+				Warm:   true,
+				Misses: 1,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		var data ClaudeData
+
+		require.NoError(t, json.Unmarshal([]byte(tc.JSON), &data), tc.Case)
+		assert.Equal(t, tc.Expected, data.PromptCache, tc.Case)
+	}
+}
+
+func TestClaudePromptCacheHitRatio(t *testing.T) {
+	cases := []struct {
+		PromptCache *ClaudePromptCache
+		Case        string
+		Expected    text.Percentage
+	}{
+		{Case: "Nil prompt cache", PromptCache: nil, Expected: 0},
+		{Case: "Nil hit ratio", PromptCache: &ClaudePromptCache{}, Expected: 0},
+		{Case: "Zero", PromptCache: &ClaudePromptCache{HitRatio: new(0.0)}, Expected: 0},
+		{Case: "Rounds up", PromptCache: &ClaudePromptCache{HitRatio: new(0.915)}, Expected: 92},
+		{Case: "Rounds down", PromptCache: &ClaudePromptCache{HitRatio: new(0.914)}, Expected: 91},
+		{Case: "Full", PromptCache: &ClaudePromptCache{HitRatio: new(1.0)}, Expected: 100},
+		{Case: "Above one is capped", PromptCache: &ClaudePromptCache{HitRatio: new(1.5)}, Expected: 100},
+		{Case: "Negative is floored", PromptCache: &ClaudePromptCache{HitRatio: new(-0.5)}, Expected: 0},
+	}
+
+	for _, tc := range cases {
+		claude := &Claude{}
+		claude.PromptCache = tc.PromptCache
+
+		assert.Equal(t, tc.Expected, claude.PromptCacheHitRatio(), tc.Case)
+	}
+}
+
+func TestClaudePromptCacheGauge(t *testing.T) {
+	claude := &Claude{markedChar: "█", unmarkedChar: "░"}
+	assert.Equal(t, "░░░░░", claude.PromptCacheGauge(), "nil prompt cache")
+
+	claude.PromptCache = &ClaudePromptCache{HitRatio: new(0.6)}
+	assert.Equal(t, "███░░", claude.PromptCacheGauge())
+}
+
+func TestClaudePromptCacheExpires(t *testing.T) {
+	claude := &Claude{}
+	assert.True(t, claude.PromptCacheExpiresAt().IsZero(), "nil prompt cache")
+	assert.Zero(t, claude.PromptCacheExpiresIn(), "nil prompt cache")
+
+	claude.PromptCache = &ClaudePromptCache{}
+	assert.True(t, claude.PromptCacheExpiresAt().IsZero(), "nil expires_at")
+	assert.Zero(t, claude.PromptCacheExpiresIn(), "nil expires_at")
+
+	future := libtime.Now().Add(10 * libtime.Minute).Unix()
+	claude.PromptCache.ExpiresAt = &future
+	assert.Equal(t, libtime.Unix(future, 0), claude.PromptCacheExpiresAt())
+	assert.Greater(t, claude.PromptCacheExpiresIn(), 9*libtime.Minute)
+
+	past := libtime.Now().Add(-10 * libtime.Minute).Unix()
+	claude.PromptCache.ExpiresAt = &past
+	assert.Less(t, claude.PromptCacheExpiresIn(), libtime.Duration(0))
+}
+
+func TestClaudeFormattedCacheTokens(t *testing.T) {
+	claude := &Claude{}
+	assert.Equal(t, "0", claude.FormattedCacheWriteTokens(), "nil prompt cache")
+	assert.Equal(t, "0", claude.FormattedMissRecacheTokens(), "nil prompt cache")
+
+	claude.PromptCache = &ClaudePromptCache{CacheWriteTokens: 352000, MissRecacheTokens: 310200}
+	assert.Equal(t, "352.0K", claude.FormattedCacheWriteTokens())
+	assert.Equal(t, "310.2K", claude.FormattedMissRecacheTokens())
+
+	claude.PromptCache = &ClaudePromptCache{CacheWriteTokens: 999, MissRecacheTokens: 2500000}
+	assert.Equal(t, "999", claude.FormattedCacheWriteTokens())
+	assert.Equal(t, "2.5M", claude.FormattedMissRecacheTokens())
+}

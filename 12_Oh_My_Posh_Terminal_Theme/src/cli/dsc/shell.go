@@ -1,0 +1,235 @@
+// Package dsc holds CLI-only Desired State Configuration resources. It lives
+// under cli, not shell, because shell is imported by the wasm render build
+// for its shell-name constants and feature flags; importing the base dsc
+// package from there would pull invopop/jsonschema (go/ast, go/parser,
+// go/doc) and the command tree/flag machinery into every binary that links shell.
+package dsc
+
+import (
+	_ "embed"
+	"encoding/gob"
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+
+	basedsc "github.com/jandedobbeleer/oh-my-posh/src/dsc"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/jandedobbeleer/oh-my-posh/src/regex"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/cmd"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/path"
+	"github.com/jandedobbeleer/oh-my-posh/src/shell"
+)
+
+func init() {
+	gob.Register([]*Shell{})
+}
+
+const (
+	initCommandRegex = `oh-my-posh(?:\.exe)?\s+init`
+)
+
+//go:embed shell.schema.json
+var shellSchema string
+
+func ShellDSC() *basedsc.Resource[*Shell] {
+	return &basedsc.Resource[*Shell]{SchemaJSON: shellSchema}
+}
+
+type Shell struct {
+	Command          string `json:"command,omitempty" jsonschema:"title=Command,description=The oh-my-posh init command to run"`
+	Name             string `json:"name,omitempty" jsonschema:"title=Shell name,description=The name of the shell"`
+	SkipExistingInit bool   `json:"skipExistingInit,omitempty" jsonschema:"title=Skip existing init,description=Treat any existing oh-my-posh init line as compliant instead of rewriting it"` //nolint:lll
+}
+
+func (s *Shell) Equal(other *Shell) bool {
+	if other == nil {
+		return false
+	}
+
+	return s.Name == other.Name
+}
+
+func (s *Shell) Resolve() (*Shell, bool) {
+	return nil, false
+}
+
+func (s *Shell) Apply() error {
+	if s.Command == "" {
+		return nil
+	}
+
+	log.Debug("applying shell configuration with command: %s", s.Command)
+
+	// Get the shell configuration file path
+	configPath, err := s.getShellConfigPath()
+	if err != nil {
+		return fmt.Errorf("failed to get shell config path: %w", err)
+	}
+
+	if err := s.validateShellConfigPath(configPath); err != nil {
+		return err
+	}
+
+	// Read current configuration
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		log.Debug("failed to read shell config file")
+		return err
+	}
+
+	contentStr, updated := s.updateShellConfig(string(content))
+	if !updated {
+		log.Debug("shell config already up to date, skipping write")
+		return nil
+	}
+
+	return os.WriteFile(configPath, []byte(contentStr), 0644)
+}
+
+func (s *Shell) getShellConfigPath() (string, error) {
+	home := path.Home()
+	if home == "" {
+		return "", fmt.Errorf("failed to get home directory")
+	}
+
+	switch s.Name {
+	case shell.BASH:
+		bashrc := filepath.Join(home, ".bashrc")
+		if _, err := os.Stat(bashrc); err == nil {
+			return bashrc, nil
+		}
+
+		return filepath.Join(home, ".bash_profile"), nil
+	case shell.ZSH:
+		return filepath.Join(home, ".zshrc"), nil
+	case shell.FISH:
+		configDir := filepath.Join(home, ".config", "fish")
+		return filepath.Join(configDir, "config.fish"), nil
+	case shell.PWSH:
+		return cmd.Run(s.Name, "-NoProfile", "-Command", "$PROFILE")
+	case shell.NU:
+		return cmd.Run("nu", "-c", "$nu.config-path")
+	case shell.ELVISH:
+		return filepath.Join(home, ".elvish", "rc.elv"), nil
+	case shell.XONSH:
+		return filepath.Join(home, ".xonshrc"), nil
+	case shell.YASH:
+		return filepath.Join(home, ".yashrc"), nil
+	default:
+		return "", fmt.Errorf("unsupported shell type: %s", s.Name)
+	}
+}
+
+func (s *Shell) validateShellConfigPath(configPath string) error {
+	log.Debug("validating shell config path:", configPath)
+
+	_, err := os.Stat(configPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	if !os.IsNotExist(err) {
+		return nil
+	}
+
+	log.Debug("shell config file does not exist")
+
+	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
+		log.Debug("failed to create shell config directory")
+		return err
+	}
+
+	if err := os.WriteFile(configPath, []byte(""), 0644); err != nil {
+		log.Debug("failed to create shell config file")
+		return err
+	}
+
+	return nil
+}
+
+func (s *Shell) updateShellConfig(content string) (string, bool) {
+	log.Debug("current shell config content:\n", content)
+
+	lines := strings.Split(content, "\n")
+	initLinePos := s.getLastInitLinePosition(lines)
+
+	if initLinePos < 0 {
+		return s.addInitLine(content), true
+	}
+
+	initLineStr := lines[initLinePos]
+	shellCommand := s.shellCommand()
+
+	if s.SkipExistingInit {
+		log.Debug("existing oh-my-posh init line found, skipping update")
+		return content, false
+	}
+
+	// validate if we have the same command
+	if strings.Contains(initLineStr, shellCommand) {
+		log.Debug("oh-my-posh already correctly configured")
+		return content, false
+	}
+
+	lines[initLinePos] = whitespacePrefix(initLineStr) + shellCommand
+	content = strings.Join(lines, "\n")
+	log.Debug("updated shell config content:\n", content)
+
+	return content, true
+}
+
+func (s *Shell) addInitLine(content string) string {
+	log.Debug("oh-my-posh not initialized, adding initialization")
+
+	// Add the initialization command to the end of the file
+	if !strings.HasSuffix(content, "\n") {
+		content += "\n"
+	}
+	content += s.shellCommand() + "\n"
+
+	return content
+}
+
+func (s *Shell) getLastInitLinePosition(lines []string) int {
+	for i, line := range slices.Backward(lines) {
+		if regex.MatchString(initCommandRegex, line) && !strings.HasPrefix(strings.TrimSpace(line), "#") {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func (s *Shell) shellCommand() string {
+	switch s.Name {
+	case shell.BASH, shell.ZSH, shell.YASH:
+		return fmt.Sprintf(`eval "$(%s)"`, s.Command)
+	case shell.FISH:
+		return s.Command + " | source"
+	case shell.PWSH:
+		return s.Command + " | Invoke-Expression"
+	case shell.ELVISH:
+		return fmt.Sprintf(`eval (%s)`, s.Command)
+	case shell.XONSH:
+		return fmt.Sprintf(`execx($(%s))`, s.Command)
+	default:
+		return s.Command
+	}
+}
+
+func whitespacePrefix(s string) string {
+	var builder strings.Builder
+
+	for _, char := range s {
+		if char == ' ' || char == '\t' {
+			builder.WriteRune(char)
+			continue
+		}
+
+		break
+	}
+
+	return builder.String()
+}

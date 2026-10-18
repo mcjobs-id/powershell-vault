@@ -1,0 +1,125 @@
+package color
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/template"
+)
+
+type Palette map[Ansi]Ansi
+
+const (
+	paletteKeyPrefix         = "p:"
+	paletteKeyError          = "palette: requested color %s does not exist in palette of colors %s"
+	paletteMaxRecursionDepth = 3 // allows 3 or less recursive resolutions
+	paletteRecursiveKeyError = "palette: recursive resolution of color %s returned palette reference %s and reached recursion depth %d"
+)
+
+// Returns colorName unchanged if it is not a palette reference.
+func (p Palette) ResolveColor(colorName Ansi) (Ansi, error) {
+	return p.resolveColor(colorName, 1, &colorName)
+}
+
+// originalColorName is a pointer to save allocations
+func (p Palette) resolveColor(colorName Ansi, depth int, originalColorName *Ansi) (Ansi, error) {
+	key, ok := asPaletteKey(colorName)
+	// colorName is not a palette key, return it as is
+	if !ok {
+		return colorName, nil
+	}
+
+	color, ok := p[key]
+	if !ok {
+		return "", &PaletteKeyError{Key: key, palette: p}
+	}
+
+	if strings.Contains(color.String(), "{{") {
+		rendered, err := template.RenderTrusted(color.String(), nil)
+		if err != nil {
+			return "", err
+		}
+
+		color = Ansi(strings.TrimSpace(rendered))
+	}
+
+	if _, isKey := isPaletteKey(color); isKey {
+		if depth > paletteMaxRecursionDepth {
+			return "", &PaletteRecursiveKeyError{Key: *originalColorName, Value: color, depth: depth}
+		}
+
+		return p.resolveColor(color, depth+1, originalColorName)
+	}
+
+	return color, nil
+}
+
+func asPaletteKey(colorName Ansi) (Ansi, bool) {
+	prefix, isKey := isPaletteKey(colorName)
+	if !isKey {
+		return "", false
+	}
+
+	key := strings.TrimPrefix(colorName.String(), prefix.String())
+
+	return Ansi(key), true
+}
+
+func isPaletteKey(colorName Ansi) (Ansi, bool) {
+	return paletteKeyPrefix, strings.HasPrefix(colorName.String(), paletteKeyPrefix)
+}
+
+type PaletteKeyError struct {
+	palette Palette
+	Key     Ansi
+}
+
+func (p *PaletteKeyError) Error() string {
+	keys := make([]string, 0, len(p.palette))
+	for key := range p.palette {
+		keys = append(keys, key.String())
+	}
+	sort.Strings(keys)
+	allColors := strings.Join(keys, ",")
+	errorStr := fmt.Sprintf(paletteKeyError, p.Key, allColors)
+	return errorStr
+}
+
+type PaletteRecursiveKeyError struct {
+	Key   Ansi
+	Value Ansi
+	depth int
+}
+
+func (p *PaletteRecursiveKeyError) Error() string {
+	errorStr := fmt.Sprintf(paletteRecursiveKeyError, p.Key, p.Value, p.depth)
+	return errorStr
+}
+
+// resolveShade resolves a darken(...)/lighten(...) call's color argument through the
+// palette, so a reference like darken(p:accent, 20) reaches Defaults.ToAnsi with a
+// concrete color. Returns colorString unchanged when it isn't a shade call.
+func (p Palette) resolveShade(colorString Ansi) (Ansi, error) {
+	dir, inner, percent, ok := colorString.ShadeArgs()
+	if !ok {
+		return colorString, nil
+	}
+
+	resolved, err := p.ResolveColor(inner)
+	if err != nil {
+		return "", err
+	}
+
+	return withShadeCall(dir, resolved, percent), nil
+}
+
+// Returns emptyColor instead of surfacing errors, since a Block has no way to handle color errors.
+func (p Palette) MaybeResolveColor(colorName Ansi) Ansi {
+	color, err := p.ResolveColor(colorName)
+	if err != nil {
+		return ""
+	}
+
+	return color
+}

@@ -1,0 +1,64 @@
+package template
+
+import (
+	"testing"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/mock"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestUrl(t *testing.T) {
+	cases := []struct {
+		Case        string
+		Expected    string
+		Template    string
+		ShouldError bool
+	}{
+		{Case: "valid url", Expected: "<LINK>https://ohmyposh.dev<TEXT>link</TEXT></LINK>", Template: `{{ url "link" "https://ohmyposh.dev" }}`},
+		{Case: "invalid url keeps the label", Expected: "link", Template: `{{ url "link" "Foo" }}`},
+	}
+
+	env := &mock.Environment{}
+	env.On("Shell").Return("foo")
+
+	Cache = new(cache.Template)
+
+	Init(env, nil, nil)
+
+	for _, tc := range cases {
+		text, err := RenderTrusted(tc.Template, nil)
+		if tc.ShouldError {
+			assert.Error(t, err)
+			continue
+		}
+
+		assert.Equal(t, tc.Expected, text, tc.Case)
+	}
+}
+
+func TestPath(t *testing.T) {
+	cases := []struct {
+		Case     string
+		Expected string
+		Template string
+	}{
+		{Case: "valid path", Expected: "<LINK>file:/test/test<TEXT>link</TEXT></LINK>", Template: `{{ path "link" "/test/test" }}`},
+		{Case: "path with spaces", Expected: "<LINK>file:/test/my%20folder/my%20file<TEXT>link</TEXT></LINK>", Template: `{{ path "link" "/test/my folder/my file" }}`},
+		{Case: "windows path with spaces", Expected: "<LINK>file:C:/Users/NO%201/Documents<TEXT>link</TEXT></LINK>", Template: `{{ path "link" "C:/Users/NO 1/Documents" }}`},
+	}
+
+	env := &mock.Environment{}
+	env.On("Shell").Return("foo")
+
+	Cache = new(cache.Template)
+
+	Init(env, nil, nil)
+
+	for _, tc := range cases {
+		text, _ := RenderTrusted(tc.Template, nil)
+
+		assert.Equal(t, tc.Expected, text, tc.Case)
+	}
+}

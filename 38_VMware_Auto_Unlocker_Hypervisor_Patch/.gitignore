@@ -1,0 +1,11 @@
+﻿/.vs
+/exe
+/out
+CMakeSettings.json
+/testing
+/LIBS
+/debug.log
+/test.tar
+/test.zip
+/testtar
+/tools

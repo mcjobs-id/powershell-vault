@@ -1,0 +1,762 @@
+﻿<#
+	.SYNOPSIS
+	Initial checks before proceeding to module execution
+
+	.VERSION
+	7.0.0
+
+	.DATE
+	11.10.2026
+
+	.COPYRIGHT
+	(c) 2014—2026 Team Sophia
+
+	.LINK
+	https://github.com/farag2/Sophia-Script-for-Windows
+#>
+function InitialActions
+{
+	Clear-Host
+	$Global:Error.Clear()
+
+	Set-StrictMode -Version Latest
+
+	$Host.UI.RawUI.WindowTitle = "Sophia Script for Windows 10 v7.0.0 | Made with $([System.Char]::ConvertFromUtf32(0x1F497)) of Windows | $([System.Char]0x00A9) Team Sophia, 2014$([System.Char]0x2013)2026"
+
+	# Unblock all files in the script folder by removing the Zone.Identifier alternate data stream with a value of "3"
+	Get-ChildItem -Path $PSScriptRoot\..\..\ -File -Recurse -Force | Unblock-File
+
+	[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
+	# Progress bar can significantly impact cmdlet performance
+	# https://github.com/PowerShell/PowerShell/issues/2138
+	$Global:ProgressPreference = "SilentlyContinue"
+
+	# Check whether all files were expanded before running
+	$ScriptFiles = [Array]::TrueForAll(@(
+		"$PSScriptRoot\..\Localizations\de-DE\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\en-US\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\es-ES\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\fr-FR\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\hu-HU\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\it-IT\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\pl-PL\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\pt-BR\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\ru-RU\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\tr-TR\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\uk-UA\Sophia.psd1",
+		"$PSScriptRoot\..\Localizations\zh-CN\Sophia.psd1",
+
+		"$PSScriptRoot\..\..\Module\Private\Add-Policy.ps1",
+		"$PSScriptRoot\..\..\Module\Private\Get-Hash.ps1",
+		"$PSScriptRoot\..\..\Module\Private\InitialActions.ps1",
+		"$PSScriptRoot\..\..\Module\Private\PostActions.ps1",
+		"$PSScriptRoot\..\..\Module\Private\Remove-Policy.ps1",
+		"$PSScriptRoot\..\..\Module\Private\Send-ConsoleBackspace.ps1",
+		"$PSScriptRoot\..\..\Module\Private\Set-KnownFolderPath.ps1",
+		"$PSScriptRoot\..\..\Module\Private\Set-UserShellFolder.ps1",
+		"$PSScriptRoot\..\..\Module\Private\Show-Menu.ps1",
+		"$PSScriptRoot\..\..\Module\Private\WinAPI.ps1",
+		"$PSScriptRoot\..\..\Module\Private\Write-ExtensionKeys.ps1",
+
+		"$PSScriptRoot\..\..\Module\Sophia.psm1",
+		"$PSScriptRoot\..\Manifest\SophiaScript.psd1",
+		"$PSScriptRoot\..\..\Import-TabCompletion.ps1",
+
+		"$PSScriptRoot\..\Binaries\LGPO.exe"
+	),
+	[Predicate[string]]{
+		param($File)
+
+		Test-Path -Path $File
+	})
+	if (-not $ScriptFiles)
+	{
+		Write-Warning -Message "Required files are missing. Please, do not download the whole code from the repository, but download the archive from the release page for your system."
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/releases/latest" -Verbose
+		Write-Information -MessageData "" -InformationAction Continue
+
+		Write-Verbose -Message "In case you have a question, open an issue on GitHub or ask the community." -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		$Global:Failed = $true
+
+		exit
+	}
+
+	# Try to import localizations
+	try
+	{
+		Import-LocalizedData -BindingVariable Global:Localization -UICulture $PSUICulture -BaseDirectory $PSScriptRoot\..\Localizations -FileName Sophia -ErrorAction Stop
+	}
+	catch
+	{
+		# If there's no folder with current localization ID ($PSUICulture), then import en-US localization
+		Import-LocalizedData -BindingVariable Global:Localization -UICulture en-US -BaseDirectory $PSScriptRoot\..\Localizations -FileName Sophia
+	}
+
+	# Checking Windows components: services, WMI providers and Microsoft Defender
+	try
+	{
+		$null = @(
+			Get-Service -Name Windefend, SecurityHealthService, wscsvc, wdFilter -ErrorAction Stop
+			Get-Service -Name SecurityHealthService -ErrorAction Stop | Start-Service -ErrorAction Stop
+			Get-Service -Name VSS, swprv -ErrorAction Stop | Where-Object -FilterScript {$_.StartType -eq "Disabled"} | Set-Service -StartupType Manual -ErrorAction Stop
+			Get-Service -Name SysMain -ErrorAction Stop | Set-Service -StartupType Automatic -PassThru -ErrorAction Stop | Start-Service -ErrorAction Stop
+
+			Get-CimInstance -Namespace root/CIMV2 -ClassName CIM_OperatingSystem -ErrorAction Stop
+			Get-CimInstance -Namespace root/CIMV2 -ClassName Win32_Volume -ErrorAction Stop
+			Get-CimInstance -Namespace root/CIMV2 -ClassName Win32_ShadowStorage -ErrorAction Stop
+			Get-CimInstance -Namespace root/StandardCimv2 -ClassName MSFT_NetAdapter -ErrorAction Stop
+			Get-CimInstance -Namespace root/CIMV2 -ClassName CIM_ComputerSystem -ErrorAction Stop | Set-CimInstance -Property @{AutomaticManagedPageFile = $true} -ErrorAction Stop
+			Get-CimInstance -Namespace root/CIMV2/mdm/dmmap -ClassName MDM_EnterpriseModernAppManagement_AppManagement01 -ErrorAction Stop
+
+			Get-CimInstance -Namespace root/CIMV2/Security/MicrosoftVolumeEncryption -ClassName Win32_EncryptableVolume -ErrorAction Stop
+			Get-CimInstance -Namespace root/Microsoft/Windows/Defender -ClassName MSFT_MpComputerStatus -ErrorAction Stop
+			Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProduct -ErrorAction Stop
+			Get-MpPreference -ErrorAction Stop
+		)
+	}
+	catch
+	{
+		# Get the exact string where script failed
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Warning -Message (($Localization.WindowsComponentStabilityDisrupted -f $_.InvocationInfo.Line.Replace(" -ErrorAction Stop", "").Trim()), $Localization.ReinstallWindows -join " ")
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Verbose -Message "https://massgrave.dev/genuine-installation-media" -Verbose
+		Write-Information -MessageData "" -InformationAction Continue
+
+		# Display available AVs
+		try
+		{
+			Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProduct -ErrorAction Stop
+		}
+		catch {}
+
+		Write-Verbose -Message $Localization.AskQuestion -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://t.me/sophianews" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		$Global:Failed = $true
+
+		exit
+	}
+
+	# Check whether the current module version is the latest one
+	try
+	{
+		# https://github.com/farag2/Sophia-Script-for-Windows/blob/main/Sophia_Script_Releases.json
+		$Parameters = @{
+			Uri             = "https://raw.githubusercontent.com/farag2/Sophia-Script-for-Windows/main/Sophia_Script_Releases.json"
+			UseBasicParsing = $true
+			TimeoutSec      = 5
+			Verbose         = $true
+		}
+		$LatestRelease = (Invoke-RestMethod @Parameters).Sophia_Script_Windows_10
+		$CurrentRelease = (Get-Module -Name SophiaScript).Version.ToString()
+
+		if ([System.Version]$LatestRelease -gt [System.Version]$CurrentRelease)
+		{
+			Write-Information -MessageData "" -InformationAction Continue
+			Write-Warning -Message ($Localization.NewSophiaScriptFound -f $LatestRelease)
+			Write-Information -MessageData "" -InformationAction Continue
+			Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/releases/latest" -Verbose
+			Write-Information -MessageData "" -InformationAction Continue
+
+			Write-Verbose -Message $Localization.AskQuestion -Verbose
+			Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+			Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+			Write-Verbose -Message "https://t.me/sophianews" -Verbose
+			Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+			$Global:Failed = $true
+
+			exit
+		}
+	}
+	catch [System.Net.WebException]
+	{
+		Write-Warning -Message ($Localization.NoConnectionEstablished -f "$($Parameters.Uri)")
+		Write-Error -Message ($Localization.NoConnectionEstablished -f "$($Parameters.Uri)") -ErrorAction SilentlyContinue
+	}
+
+	# Check whether the script was run via PowerShell 5.1
+	if ($PSVersionTable.PSVersion.Major -ne 5)
+	{
+		Write-Information -MessageData "" -InformationAction Continue
+		$MandatoryPSVersion = (Import-PowerShellDataFile -Path "$PSScriptRoot\..\Manifest\SophiaScript.psd1").PowerShellVersion
+		Write-Warning -Message ($Localization.UnsupportedPowerShell -f $PSVersionTable.PSVersion.Major, $PSVersionTable.PSVersion.Minor, $MandatoryPSVersion)
+		Write-Information -MessageData "" -InformationAction Continue
+
+		Write-Verbose -Message $Localization.AskQuestion -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://t.me/sophianews" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		$Global:Failed = $true
+
+		exit
+	}
+
+	# Detect Windows bitness
+	if (-not [System.Environment]::Is64BitOperatingSystem)
+	{
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Warning -Message $Localization.UnsupportedWindowsBitness
+		Write-Information -MessageData "" -InformationAction Continue
+
+		Write-Verbose -Message $Localization.AskQuestion -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://t.me/sophianews" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		$Global:Failed = $true
+
+		exit
+	}
+
+	# Extract localized "Browse" string from %SystemRoot%\System32\shell32.dll
+	$Global:Browse = [WinAPI.GetStrings]::GetString(9015)
+	# Extract localized "&No" string from %SystemRoot%\System32\shell32.dll
+	$Global:No = [WinAPI.GetStrings]::GetString(33232).Replace("&", "")
+	# Extract localized "&Yes" string from %SystemRoot%\System32\shell32.dll
+	$Global:Yes = [WinAPI.GetStrings]::GetString(33224).Replace("&", "")
+	$Global:KeyboardArrows = $Localization.KeyboardArrows -f [System.Char]::ConvertFromUtf32(0x2191), [System.Char]::ConvertFromUtf32(0x2193)
+	# Extract localized "Skip" string from %SystemRoot%\System32\shell32.dll
+	$Global:Skip = [WinAPI.GetStrings]::GetString(16956)
+
+	# Check the language mode
+	if ($ExecutionContext.SessionState.LanguageMode -ne "FullLanguage")
+	{
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Warning -Message $Localization.UnsupportedLanguageMode
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Verbose -Message "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_language_modes" -Verbose
+		Write-Information -MessageData "" -InformationAction Continue
+
+		Write-Verbose -Message $Localization.AskQuestion -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://t.me/sophianews" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		$Global:Failed = $true
+
+		exit
+	}
+
+	# Check whether the logged-in user is an admin
+	$CurrentUserName = (Get-Process -Id $PID -IncludeUserName).UserName | Split-Path -Leaf
+	# Take explorer.exe from the current session only
+	$SessionId = (Get-Process -Id $PID).SessionId
+	$LoginUserName = (Get-CimInstance -Namespace root/CIMV2 -ClassName Win32_Process -Filter "Name = 'explorer.exe' AND SessionId = $SessionId" | Invoke-CimMethod -MethodName GetOwner | Select-Object -First 1).User
+	# Skip the check if explorer.exe is not running or its owner cannot be determined
+	if ($LoginUserName -and ($CurrentUserName -ne $LoginUserName))
+	{
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Warning -Message ($Localization.LoggedInUserNotAdmin -f $CurrentUserName, $LoginUserName)
+		Write-Information -MessageData "" -InformationAction Continue
+
+		Write-Verbose -Message $Localization.AskQuestion -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://t.me/sophianews" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		$Global:Failed = $true
+
+		exit
+	}
+
+	# Check whether the script was run in PowerShell ISE or VS Code
+	if (($Host.Name -match "ISE") -or ($env:TERM_PROGRAM -eq "vscode"))
+	{
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Warning -Message ($Localization.UnsupportedHost -f $Host.Name.Replace("Host", ""))
+		Write-Information -MessageData "" -InformationAction Continue
+
+		Write-Verbose -Message $Localization.AskQuestion -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://t.me/sophianews" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		$Global:Failed = $true
+
+		exit
+	}
+
+	# Check whether Windows was broken by 3rd party harmful tweakers, trojans, or custom Windows images
+	$Tweakers = @{
+		# https://www.youtube.com/GHOSTSPECTRE
+		"Ghost Toolbox"  = Test-Path -Path "$env:SystemRoot\System32\migwiz\dlmanifests\run.ghost.cmd"
+		# https://win10tweaker.ru
+		"Win 10 Tweaker" = Test-Path -Path "HKCU:\Software\Win 10 Tweaker"
+		# https://revi.cc
+		"Revision Tool"  = Test-Path -Path "${env:ProgramFiles(x86)}\Revision Tool"
+		# https://github.com/Atlas-OS/Atlas
+		AtlasOS          = Test-Path -Path "$env:SystemRoot\AtlasModules"
+		# https://boosterx.ru
+		BoosterX         = Test-Path -Path "$env:ProgramFiles\GameModeX\GameModeX.exe"
+		# https://www.youtube.com/watch?v=5NBqbUUB1Pk
+		WinClean         = Test-Path -Path "$env:ProgramFiles\WinClean Plus Apps"
+		# https://pc-np.com
+		PCNP             = Test-Path -Path "HKCU:\Software\PCNP"
+		# https://www.reddit.com/r/TronScript/
+		Tron             = Test-Path -Path "$env:SystemDrive\logs\tron"
+		# https://crystalcry.ru
+		CrystalCry       = Test-Path -Path "HKLM:\SOFTWARE\CrystalCry"
+		# https://github.com/es3n1n/defendnot
+		defendnot        = Test-Path -Path "$env:SystemRoot\System32\Tasks\defendnot"
+		# https://github.com/zoicware/RemoveWindowsAI
+		RemoveWindowsAI  = Test-Path -Path "HKLM:\SOFTWARE\RemoveWindowsAI"
+		# https://forum.ru-board.com/topic.cgi?forum=62&topic=30617&start=1600#14
+		AutoSettingsPS   = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths" -Name *AutoSettingsPS* -ErrorAction Ignore
+		# https://forum.ru-board.com/topic.cgi?forum=5&topic=50519
+		"Modern Tweaker" = Get-ItemProperty -Path "HKCU:\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\MuiCache" -Name *ModernTweaker* -ErrorAction Ignore
+	}
+	foreach ($Tweaker in $Tweakers.Keys)
+	{
+		if ($Tweakers[$Tweaker])
+		{
+			Write-Information -MessageData "" -InformationAction Continue
+			Write-Warning -Message (($Localization.HarmfulTweakerFound -f $Tweaker), $Localization.ReinstallWindows -join " ")
+			Write-Information -MessageData "" -InformationAction Continue
+			Write-Verbose -Message "https://massgrave.dev/genuine-installation-media" -Verbose
+			Write-Information -MessageData "" -InformationAction Continue
+
+			Write-Verbose -Message $Localization.AskQuestion -Verbose
+			Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+			Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+			Write-Verbose -Message "https://t.me/sophianews" -Verbose
+			Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+			$Global:Failed = $true
+
+			exit
+		}
+	}
+
+	# Check whether third-party entries were added to the hosts file
+	$HostsEntries = Get-Content -Path "$env:SystemRoot\System32\drivers\etc\hosts" -Force | Where-Object -FilterScript {$_.Trim() -and (-not $_.Trim().StartsWith("#"))}
+	if ($HostsEntries)
+	{
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Verbose -Message $Localization.HostsEntriesFound -Verbose
+
+		do
+		{
+			$Choice = Show-Menu -Menu @($Yes, $No) -Default 2
+
+			switch ($Choice)
+			{
+				$Yes
+				{
+					continue
+				}
+				$No
+				{
+					Invoke-Item -Path "$env:SystemRoot\System32\drivers\etc"
+
+					Write-Verbose -Message $Localization.AskQuestion -Verbose
+					Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+					Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+					Write-Verbose -Message "https://t.me/sophianews" -Verbose
+					Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+					$Global:Failed = $true
+
+					exit
+				}
+				$KeyboardArrows {}
+			}
+		}
+		until ($Choice -ne $KeyboardArrows)
+	}
+
+	# Check whether the Microsoft Store or Windows Feature Experience Pack was removed
+	@("Microsoft.WindowsStore", "MicrosoftWindows.Client.CBS") | ForEach-Object -Process {
+		if (-not (Get-AppxPackage -Name $_))
+		{
+			Write-Information -MessageData "" -InformationAction Continue
+			Write-Warning -Message (($Localization.UWPComponentsMissing -f $_), $Localization.ReinstallWindows -join " ")
+			Write-Information -MessageData "" -InformationAction Continue
+			Write-Verbose -Message "https://massgrave.dev/genuine-installation-media" -Verbose
+			Write-Information -MessageData "" -InformationAction Continue
+
+			Write-Verbose -Message $Localization.AskQuestion -Verbose
+			Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+			Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+			Write-Verbose -Message "https://t.me/sophianews" -Verbose
+			Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+			$Global:Failed = $true
+
+			exit
+		}
+	}
+
+	#region Defender checks
+	# Check whether necessary Microsoft Defender components exist
+	$DefenderFiles = @(
+		"$env:SystemRoot\System32\smartscreen.exe",
+		"$env:SystemRoot\System32\SecurityHealthSystray.exe",
+		"$env:SystemRoot\System32\CompatTelRunner.exe"
+	)
+	$DefenderFiles | ForEach-Object -Process {
+		if (-not (Test-Path -Path $_))
+		{
+			Write-Information -MessageData "" -InformationAction Continue
+			Write-Warning -Message (($Localization.DefenderComponentsMissing -f $_), $Localization.ReinstallWindows -join " ")
+			Write-Information -MessageData "" -InformationAction Continue
+			Write-Verbose -Message "https://massgrave.dev/genuine-installation-media" -Verbose
+			Write-Information -MessageData "" -InformationAction Continue
+
+			Write-Verbose -Message $Localization.AskQuestion -Verbose
+			Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+			Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+			Write-Verbose -Message "https://t.me/sophianews" -Verbose
+			Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+			$Global:Failed = $true
+
+			exit
+		}
+	}
+
+	# Check whether Microsoft Defender is a default AV
+	$InstalledAVs = @(Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProduct)
+	if (($InstalledAVs.displayName | Measure-Object).Count -gt 1)
+	{
+		$Global:DefenderDefaultAV = $false
+		$productState = ($InstalledAVs | Where-Object -FilterScript {$_.instanceGuid -eq "{D68DDC3A-831F-4fae-9E44-DA132C1ACF46}"}).productState
+		$DefenderState = ('0x{0:x}' -f $productState).Substring(3, 2)
+		if ($DefenderState -notmatch "00|01")
+		{
+			# Defender is a default AV
+			$Global:DefenderDefaultAV = $true
+		}
+	}
+	else
+	{
+		# Defender is a default AV
+		$Global:DefenderDefaultAV = $true
+	}
+
+	# Check whether Controlled Folder Access is enabled
+	if ((Get-MpPreference).EnableControlledFolderAccess -eq 1)
+	{
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Warning -Message $Localization.DisableControlledFolderAccess
+		Write-Information -MessageData "" -InformationAction Continue
+
+		Write-Verbose -Message $Localization.AskQuestion -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://t.me/sophianews" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		Start-Process -FilePath "windowsdefender://RansomwareProtection"
+
+		$Global:Failed = $true
+
+		exit
+	}
+	#endregion Defender checks
+
+	# Check for a pending reboot
+	$PendingActions = [Array]::Exists(@(
+		# CBS pending
+		"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending",
+		"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootInProgress",
+		"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\PackagesPending",
+
+		# Windows Update pending
+		"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\PostRebootReporting",
+		"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired"
+	),
+	[Predicate[string]]{
+		param($PendingAction)
+
+		Test-Path -Path $PendingAction
+	})
+	if ($PendingActions)
+	{
+		Write-Information -MessageData "" -InformationAction Continue
+		Write-Warning -Message $Localization.RebootPending
+		Write-Information -MessageData "" -InformationAction Continue
+
+		Write-Verbose -Message $Localization.AskQuestion -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://t.me/sophianews" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		$Global:Failed = $true
+
+		exit
+	}
+
+	# Check whether BitLocker drive encryption is off, despite drive is encrypted
+	if (Get-BitLockerVolume -MountPoint $env:SystemDrive | Where-Object -FilterScript {($_.ProtectionStatus -eq "Off") -and ($_.VolumeStatus -eq "FullyEncrypted")})
+	{
+		Clear-Host
+
+		Write-Warning -Message $Localization.SystemDriveEncryptedBitLockerDisabled
+		Write-Verbose -Message "https://www.neowin.net/guides/how-to-remove-bitlocker-drive-encryption-in-windows-11/" -Verbose
+
+		do
+		{
+			$Choice = Show-Menu -Menu @($Yes, $No) -Default 2
+
+			switch ($Choice)
+			{
+				$Yes
+				{
+					Disable-BitLocker -MountPoint $env:SystemDrive
+					Write-Error -Message "https://www.neowin.net/guides/how-to-remove-bitlocker-drive-encryption-in-windows-11/" -ErrorAction SilentlyContinue
+				}
+				$No
+				{
+					continue
+				}
+				$KeyboardArrows {}
+			}
+		}
+		until ($Choice -ne $KeyboardArrows)
+	}
+
+	# Windows 10 Pro
+	$WINDOWS_LONG = [WinAPI.Winbrand]::BrandingFormatString("%WINDOWS_LONG%")
+	if ($WINDOWS_LONG -notmatch "Windows 10")
+	{
+		Write-Information -MessageData "" -InformationAction Continue
+		# e.g. 22H2
+		$DisplayVersion = Get-ItemPropertyValue -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name DisplayVersion
+
+		Write-Warning -Message ($Localization.WrongSophiaScriptVersion -f $WINDOWS_LONG, $DisplayVersion)
+		Write-Information -MessageData "" -InformationAction Continue
+
+		Write-Verbose -Message $Localization.AskQuestion -Verbose
+		Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+		Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+		Write-Verbose -Message "https://t.me/sophianews" -Verbose
+		Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+		# Receive updates for other Microsoft products when you update Windows
+		(New-Object -ComObject Microsoft.Update.ServiceManager).AddService2("7971f918-a847-4430-9279-4a52d1efe18d", 7, "")
+
+		# Check for updates
+		& "$env:SystemRoot\System32\UsoClient.exe" StartInteractiveScan
+
+		$Global:Failed = $true
+
+		exit
+	}
+
+	# Check whether Windows build is the latest one
+	try
+	{
+		# https://github.com/farag2/Sophia-Script-for-Windows/blob/main/Windows_Builds.json
+		$Parameters = @{
+			Uri             = "https://raw.githubusercontent.com/farag2/Sophia-Script-for-Windows/main/Windows_Builds.json"
+			UseBasicParsing = $true
+			TimeoutSec      = 5
+			Verbose         = $true
+		}
+		$LatestSupportedMinorBuild = (Invoke-RestMethod @Parameters).Windows_10_Minor
+	}
+	catch [System.Net.WebException]
+	{
+		# https://learn.microsoft.com/en-us/windows/release-health/windows10-release-information
+		$LatestSupportedMinorBuild = 7663
+
+		Write-Warning -Message ($Localization.NoConnectionEstablished -f "$($Parameters.Uri)")
+		Write-Error -Message ($Localization.NoConnectionEstablished -f "$($Parameters.Uri)") -ErrorAction SilentlyContinue
+	}
+
+	# Windows 10 Pro
+	$WINDOWS_LONG = [WinAPI.Winbrand]::BrandingFormatString("%WINDOWS_LONG%")
+	# e.g. 22H2
+	$DisplayVersion = Get-ItemPropertyValue -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name DisplayVersion
+	# Check Windows minor build version
+	$CurrentBuild = Get-ItemPropertyValue -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name CurrentBuild
+	$UBR = Get-ItemPropertyValue -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name UBR
+
+	switch ([int](Get-CimInstance -Namespace root/CIMV2 -ClassName CIM_OperatingSystem).BuildNumber)
+	{
+		{$_ -ne 19045}
+		{
+			Write-Information -MessageData "" -InformationAction Continue
+			Write-Warning -Message ($Localization.UpdateWindowsBuild -f 19045, $LatestSupportedMinorBuild, $WINDOWS_LONG, $DisplayVersion, $CurrentBuild, $UBR)
+			Write-Information -MessageData "" -InformationAction Continue
+
+			Write-Verbose -Message $Localization.AskQuestion -Verbose
+			Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+			Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+			Write-Verbose -Message "https://t.me/sophianews" -Verbose
+			Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+			# Receive updates for other Microsoft products when you update Windows
+			(New-Object -ComObject Microsoft.Update.ServiceManager).AddService2("7971f918-a847-4430-9279-4a52d1efe18d", 7, "")
+
+			# Check for UWP apps updates
+			Get-CimInstance -Namespace root/CIMV2/mdm/dmmap -ClassName MDM_EnterpriseModernAppManagement_AppManagement01 | Invoke-CimMethod -MethodName UpdateScanMethod
+
+			# Check for updates
+			& "$env:SystemRoot\System32\UsoClient.exe" StartInteractiveScan
+
+			# Open the "Windows Update" page
+			Start-Process -FilePath "ms-settings:windowsupdate"
+
+			$Global:Failed = $true
+
+			exit
+		}
+		19045
+		{
+			# We may use Test-Path -Path variable:LatestSupportedMinorBuild
+			if ((Get-ItemPropertyValue -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name UBR) -lt $LatestSupportedMinorBuild)
+			{
+				Write-Information -MessageData "" -InformationAction Continue
+				Write-Warning -Message ($Localization.UpdateWindowsBuild -f 19045, $LatestSupportedMinorBuild, $WINDOWS_LONG, $DisplayVersion, $CurrentBuild, $UBR)
+				Write-Information -MessageData "" -InformationAction Continue
+
+				Write-Verbose -Message $Localization.AskQuestion -Verbose
+				Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+				Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+				Write-Verbose -Message "https://t.me/sophianews" -Verbose
+				Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+				# Receive updates for other Microsoft products when you update Windows
+				(New-Object -ComObject Microsoft.Update.ServiceManager).AddService2("7971f918-a847-4430-9279-4a52d1efe18d", 7, "")
+
+				# Check for UWP apps updates
+				Get-CimInstance -Namespace root/CIMV2/mdm/dmmap -ClassName MDM_EnterpriseModernAppManagement_AppManagement01 | Invoke-CimMethod -MethodName UpdateScanMethod
+
+				# Check for updates
+				& "$env:SystemRoot\System32\UsoClient.exe" StartInteractiveScan
+
+				# Open the "Windows Update" page
+				Start-Process -FilePath "ms-settings:windowsupdate"
+
+				$Global:Failed = $true
+
+				exit
+			}
+
+			# Offer ESU
+			# https://learn.microsoft.com/lifecycle/faq/extended-security-updates
+			if ((Get-ItemPropertyValue -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name UBR) -eq $LatestSupportedMinorBuild)
+			{
+				Clear-Host
+
+				Write-Information -MessageData "" -InformationAction Continue
+				Write-Warning -Message $Localization.ESUProgramEnrollment
+				Write-Information -MessageData "" -InformationAction Continue
+				Write-Verbose -Message "https://support.microsoft.com/windows/windows-10-support-has-ended-on-october-14-2025-2ca8b313-1946-43d3-b55c-2b95b107f281" -Verbose
+				Write-Verbose -Message "https://learn.microsoft.com/lifecycle/faq/extended-security-updates" -Verbose
+				Write-Information -MessageData "" -InformationAction Continue
+				Write-Verbose -Message "https://massgrave.dev/windows10_eol" -Verbose
+				Write-Verbose -Message "https://github.com/abbodi1406/ConsumerESU" -Verbose
+
+				do
+				{
+					$Choice = Show-Menu -Menu @($Yes, $No) -Default 2
+
+					switch ($Choice)
+					{
+						$Yes
+						{
+							Start-Process -FilePath "https://massgrave.dev/windows10_eol"
+							Start-Process -FilePath "https://github.com/abbodi1406/ConsumerESU"
+						}
+						$No
+						{
+							continue
+						}
+						$KeyboardArrows {}
+					}
+				}
+				until ($Choice -ne $KeyboardArrows)
+			}
+		}
+	}
+
+	# If you do not use old applications, there's no need to force old applications based on legacy .NET Framework 2.0, 3.0, or 3.5 to use .NET Framework 4.8.1
+	Remove-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\.NETFramework, HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NETFramework -Name OnlyUseLatestCLR -Force -ErrorAction Ignore
+
+	# PowerShell 5.1 (7.6 too) interprets 8.3 file name literally, if an environment variable contains a non-Latin word
+	# https://github.com/PowerShell/PowerShell/issues/21070
+	Get-Item -Path "$env:TEMP\LGPO.txt" -Force -ErrorAction Ignore | Remove-Item -Force -ErrorAction Ignore
+
+	# Save all opened folders in order to restore them after File Explorer restart
+	$Global:OpenedFolders = {(New-Object -ComObject Shell.Application).Windows() | ForEach-Object -Process {$_.Document.Folder.Self.Path}}.Invoke()
+
+	Clear-Host
+
+	# https://patorjk.com/software/taag/#p=display&f=Tmplr
+	Write-Information -MessageData "┌┐    ┐ ·    ┌┐   ·     ┌      ┐ ┌·   ┐ " -InformationAction Continue
+	Write-Information -MessageData "└┐┌┐┌┐├┐┐┌┐  └┐┌┌┐┐┌┐┼  ┼┌┐┌┐  │││┐┌┐┌┤┌┐┐┌┌┌" -InformationAction Continue
+	Write-Information -MessageData "└┘└┘├┘┘└└└┴  └┘└┘ └├┘└  ┘└┘┘   └┴┘└┘└└┴└┘└┴┘┘" -InformationAction Continue
+	Write-Information -MessageData "    ┘              ┘                   " -InformationAction Continue
+
+	Write-Verbose -Message $Localization.AskQuestion -Verbose
+	Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+	Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+	Write-Verbose -Message "https://t.me/sophianews" -Verbose
+	Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+	Write-Information -MessageData "" -InformationAction Continue
+	Write-Verbose -Message $Localization.DonateToastTitle -Verbose
+	Write-Verbose -Message "https://ko-fi.com/farag" -Verbose
+	Write-Information -MessageData "" -InformationAction Continue
+
+	# Display a warning message about whether a user has customized the preset file
+	# Get the name of a preset (e.g. Sophia.ps1) regardless of how it was named
+	[string]$PresetName = ((Get-PSCallStack).Position | Where-Object -FilterScript {($_.Text -match "InitialActions") -and ($_.Text -notmatch "Get-PSCallStack")}).File
+
+	# Do not ask if the function was called from Import-TabCompletion.ps1: there is no preset file to customize
+	if ((Split-Path -Path $PresetName -Leaf) -ne "Import-TabCompletion.ps1")
+	{
+		Write-Verbose -Message ($Localization.CheckSophiaScriptPreset -f $PresetName) -Verbose
+
+		do
+		{
+			$Choice = Show-Menu -Menu @($Yes, $No) -Default 2
+
+			switch ($Choice)
+			{
+				$Yes
+				{
+					continue
+				}
+				$No
+				{
+					Invoke-Item -Path $PresetName
+
+					Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows#how-to-use" -Verbose
+
+					Write-Verbose -Message $Localization.AskQuestion -Verbose
+					Write-Verbose -Message "https://github.com/farag2/Sophia-Script-for-Windows/issues" -Verbose
+					Write-Verbose -Message "https://t.me/sophia_chat" -Verbose
+					Write-Verbose -Message "https://t.me/sophianews" -Verbose
+					Write-Verbose -Message "https://discord.gg/sSryhaEv79" -Verbose
+
+					$Global:Failed = $true
+
+					exit
+				}
+				$KeyboardArrows {}
+			}
+		}
+		until ($Choice -ne $KeyboardArrows)
+	}
+}

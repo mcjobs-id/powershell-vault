@@ -1,0 +1,1015 @@
+package segments
+
+import (
+	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/mock"
+	"github.com/jandedobbeleer/oh-my-posh/src/segments/options"
+
+	"github.com/alecthomas/assert"
+
+	testify_ "github.com/stretchr/testify/mock"
+)
+
+const (
+	hasFiles = "HasFiles"
+)
+
+type MockDirEntry struct {
+	fileInfo fs.FileInfo
+	err      error
+	name     string
+	fileMode fs.FileMode
+	isDir    bool
+}
+
+func (m *MockDirEntry) Name() string {
+	return m.name
+}
+
+func (m *MockDirEntry) IsDir() bool {
+	return m.isDir
+}
+
+func (m *MockDirEntry) Type() fs.FileMode {
+	return m.fileMode
+}
+
+func (m *MockDirEntry) Info() (fs.FileInfo, error) {
+	return m.fileInfo, m.err
+}
+
+func TestPackage(t *testing.T) {
+	cases := []struct {
+		Name            string
+		Case            string
+		File            string
+		PackageContents string
+		ExpectedString  string
+		ExpectedEnabled bool
+	}{
+		{
+			Case:            "1.0.0 node.js",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 test",
+			Name:            "node",
+			File:            "package.json",
+			PackageContents: "{\"version\":\"1.0.0\",\"name\":\"test\"}",
+		},
+		{
+			Case:            "1.0.0 deno",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 test",
+			Name:            "deno",
+			File:            "deno.json",
+			PackageContents: "{\"version\":\"1.0.0\",\"name\":\"test\"}",
+		},
+		{
+			Case:            "1.0.0 deno jsonc",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 test",
+			Name:            "deno",
+			File:            "deno.jsonc",
+			PackageContents: "{\n// comment\n\"version\":\"1.0.0\",\n\"name\":\"test\"\n}",
+		},
+		{
+			Case:            "1.0.0 jsr",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 @scope/library",
+			Name:            "jsr",
+			File:            "jsr.json",
+			PackageContents: "{\"version\":\"1.0.0\",\"name\":\"@scope/library\"}",
+		},
+		{
+			Case:            "1.0.0 jsr jsonc",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 @scope/library",
+			Name:            "jsr",
+			File:            "jsr.jsonc",
+			PackageContents: "{\n// comment\n\"version\":\"1.0.0\",\n\"name\":\"@scope/library\"\n}",
+		},
+		{
+			Case:            "1.0.0 php",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 test",
+			Name:            "php",
+			File:            "composer.json",
+			PackageContents: "{\"version\":\"1.0.0\",\"name\":\"test\"}",
+		},
+		{
+			Case:            "3.2.1 node.js",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 3.2.1 test",
+			Name:            "node", File: "package.json",
+			PackageContents: "{\"version\":\"3.2.1\",\"name\":\"test\"}",
+		},
+		{
+			Case:            "1.0.0 dart",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 test",
+			Name:            "dart",
+			File:            "pubspec.yaml",
+			PackageContents: "name: test\nversion: 1.0.0",
+		},
+		{
+			Case:            "3.2.1 dart",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 3.2.1 test",
+			Name:            "dart",
+			File:            "pubspec.yaml",
+			PackageContents: "name: test\nversion: 3.2.1",
+		},
+		{
+			Case:            "1.0.0 cargo",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 test",
+			Name:            "cargo",
+			File:            "Cargo.toml",
+			PackageContents: "[package]\nname=\"test\"\nversion=\"1.0.0\"\n",
+		},
+		{
+			Case:            "3.2.1 cargo",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 3.2.1 test",
+			Name:            "cargo",
+			File:            "Cargo.toml",
+			PackageContents: "[package]\nname=\"test\"\nversion=\"3.2.1\"\n",
+		},
+		{
+			Case:            "1.0.0 python (poetry)",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 test",
+			Name:            "python",
+			File:            "pyproject.toml",
+			PackageContents: "[tool.poetry]\nname=\"test\"\nversion=\"1.0.0\"\n",
+		},
+		{
+			Case:            "3.2.1 python (poetry)",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 3.2.1 test",
+			Name:            "python",
+			File:            "pyproject.toml",
+			PackageContents: "[tool.poetry]\nname=\"test\"\nversion=\"3.2.1\"\n",
+		},
+		{
+			Case:            "1.0.0 python (pep621)",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 test",
+			Name:            "python",
+			File:            "pyproject.toml",
+			PackageContents: "[project]\nname=\"test\"\nversion=\"1.0.0\"\n",
+		},
+		{
+			Case:            "3.2.1 python (pep621)",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 3.2.1 test",
+			Name:            "python",
+			File:            "pyproject.toml",
+			PackageContents: "[project]\nname=\"test\"\nversion=\"3.2.1\"\n",
+		},
+		{
+			Case:            "1.0.0 mojo",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0 test",
+			Name:            "mojo",
+			File:            "mojoproject.toml",
+			PackageContents: "[project]\nname=\"test\"\nversion=\"1.0.0\"\n",
+		},
+		{
+			Case:            "3.2.1 mojo",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 3.2.1 test",
+			Name:            "mojo",
+			File:            "mojoproject.toml",
+			PackageContents: "[project]\nname=\"test\"\nversion=\"3.2.1\"\n",
+		},
+		{
+			Case:            "No version present node.js",
+			ExpectedEnabled: true,
+			ExpectedString:  "test",
+			Name:            "node",
+			File:            "package.json",
+			PackageContents: "{\"name\":\"test\"}",
+		},
+		{
+			Case:            "No version present deno",
+			ExpectedEnabled: true,
+			ExpectedString:  "test",
+			Name:            "deno",
+			File:            "deno.json",
+			PackageContents: "{\"name\":\"test\"}",
+		},
+		{
+			Case:            "No version present jsr",
+			ExpectedEnabled: true,
+			ExpectedString:  "@scope/library",
+			Name:            "jsr",
+			File:            "jsr.json",
+			PackageContents: "{\"name\":\"@scope/library\"}",
+		},
+		{
+			Case:            "No version present dart",
+			ExpectedEnabled: true,
+			ExpectedString:  "test",
+			Name:            "dart",
+			File:            "pubspec.yaml",
+			PackageContents: "name: test",
+		},
+		{
+			Case:            "No version present cargo",
+			ExpectedEnabled: true,
+			ExpectedString:  "test",
+			Name:            "cargo",
+			File:            "Cargo.toml",
+			PackageContents: "[package]\nname=\"test\"\n",
+		},
+		{
+			Case:            "No version present python (poetry)",
+			ExpectedEnabled: true,
+			ExpectedString:  "test",
+			Name:            "python",
+			File:            "pyproject.toml",
+			PackageContents: "[tool.poetry]\nname=\"test\"\n",
+		},
+		{
+			Case:            "No version present python (pep621)",
+			ExpectedEnabled: true,
+			ExpectedString:  "test",
+			Name:            "python",
+			File:            "pyproject.toml",
+			PackageContents: "[project]\nname=\"test\"\n",
+		},
+		{
+			Case:            "No version present mojo",
+			ExpectedEnabled: true,
+			ExpectedString:  "test",
+			Name:            "mojo",
+			File:            "mojoproject.toml",
+			PackageContents: "[project]\nname=\"test\"\n",
+		},
+		{
+			Case:            "No name present node.js",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0",
+			Name:            "node",
+			File:            "package.json",
+			PackageContents: "{\"version\":\"1.0.0\"}",
+		},
+		{
+			Case:            "No name present deno",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0",
+			Name:            "deno",
+			File:            "deno.json",
+			PackageContents: "{\"version\":\"1.0.0\"}",
+		},
+		{
+			Case:            "No name present jsr",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0",
+			Name:            "jsr",
+			File:            "jsr.json",
+			PackageContents: "{\"version\":\"1.0.0\"}",
+		},
+		{
+			Case:            "No name present dart",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0",
+			Name:            "dart",
+			File:            "pubspec.yaml",
+			PackageContents: "version: 1.0.0",
+		},
+		{
+			Case:            "No name present cargo",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0",
+			Name:            "cargo",
+			File:            "Cargo.toml",
+			PackageContents: "[package]\nversion=\"1.0.0\"\n",
+		},
+		{
+			Case:            "No name present python (poetry)",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0",
+			Name:            "python",
+			File:            "pyproject.toml",
+			PackageContents: "[tool.poetry]\nversion=\"1.0.0\"\n",
+		},
+		{
+			Case:            "No name present python (pep621)",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0",
+			Name:            "python",
+			File:            "pyproject.toml",
+			PackageContents: "[project]\nversion=\"1.0.0\"\n",
+		},
+		{
+			Case:            "No name present mojo",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 1.0.0",
+			Name:            "mojo",
+			File:            "mojoproject.toml",
+			PackageContents: "[project]\nversion=\"1.0.0\"\n",
+		},
+		{
+			Case:            "Empty project package node.js",
+			ExpectedEnabled: true,
+			Name:            "node",
+			File:            "package.json",
+			PackageContents: "{}",
+		},
+		{
+			Case:            "Empty project package deno",
+			ExpectedEnabled: true,
+			Name:            "deno",
+			File:            "deno.json",
+			PackageContents: "{}",
+		},
+		{
+			Case:            "Empty project package jsr",
+			ExpectedEnabled: true,
+			Name:            "jsr",
+			File:            "jsr.json",
+			PackageContents: "{}",
+		},
+		{
+			Case:            "Empty project package dart",
+			ExpectedEnabled: true,
+			Name:            "dart",
+			File:            "pubspec.yaml",
+			PackageContents: "",
+		},
+		{
+			Case:            "Empty project package cargo",
+			ExpectedEnabled: true,
+			Name:            "cargo",
+			File:            "Cargo.toml",
+			PackageContents: "",
+		},
+		{
+			Case:            "Empty project package python",
+			ExpectedEnabled: true,
+			Name:            "python",
+			File:            "pyproject.toml",
+			PackageContents: "",
+		},
+		{
+			Case:            "Empty project package mojo",
+			ExpectedEnabled: true,
+			Name:            "mojo",
+			File:            "mojoproject.toml",
+			PackageContents: "",
+		},
+		{
+			Case:            "Invalid json",
+			ExpectedString:  "invalid character '}' looking for beginning of value",
+			Name:            "node",
+			File:            "package.json",
+			PackageContents: "}",
+		},
+		{
+			Case:            "Invalid json deno",
+			ExpectedString:  "invalid character '}' looking for beginning of value",
+			Name:            "deno",
+			File:            "deno.json",
+			PackageContents: "}",
+		},
+		{
+			Case:            "Invalid json jsr",
+			ExpectedString:  "invalid character '}' looking for beginning of value",
+			Name:            "jsr",
+			File:            "jsr.json",
+			PackageContents: "}",
+		},
+		{
+			Case:            "Invalid toml",
+			ExpectedString:  "toml: line 1: unexpected end of table name (table names cannot be empty)",
+			Name:            "cargo",
+			File:            "Cargo.toml",
+			PackageContents: "[",
+		},
+		{
+			Case:            "Invalid yaml",
+			ExpectedString:  "[1:1] sequence was used where mapping is expected\n>  1 | [\n       ^",
+			Name:            "dart",
+			File:            "pubspec.yaml",
+			PackageContents: "[",
+		},
+		{
+			Case:            "Julia project",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 0.1.0 ProjectEuler",
+			Name:            "julia",
+			File:            "JuliaProject.toml",
+			PackageContents: "name = \"ProjectEuler\"\nversion = \"0.1.0\"",
+		},
+		{
+			Case:            "Julia project no name",
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 0.1.0",
+			Name:            "julia",
+			File:            "JuliaProject.toml",
+			PackageContents: "version = \"0.1.0\"",
+		},
+		{
+			Case:            "Julia project no version",
+			ExpectedEnabled: true,
+			ExpectedString:  "ProjectEuler",
+			Name:            "julia",
+			File:            "JuliaProject.toml",
+			PackageContents: "name = \"ProjectEuler\"",
+		},
+		{
+			Case:            "Julia project invalid toml",
+			ExpectedString:  "toml: line 1: unexpected end of table name (table names cannot be empty)",
+			Name:            "julia",
+			File:            "JuliaProject.toml",
+			PackageContents: "[",
+		},
+		{
+			Case:            "lakefile.lean plain name",
+			ExpectedEnabled: true,
+			ExpectedString:  "Example1",
+			Name:            "lake",
+			File:            "lakefile.lean",
+			PackageContents: "import Lake\nopen Lake DSL\n\npackage Example1 where\n\nlean_lib Example1 where\n  precompileModules := true\n",
+		},
+		{
+			Case:            "lakefile.lean guillemet name",
+			ExpectedEnabled: true,
+			ExpectedString:  "Example2",
+			Name:            "lake",
+			File:            "lakefile.lean",
+			PackageContents: "import Lake\nopen Lake DSL\n\npackage «Example2» where\n\nrequire mathlib from git\n  \"https://github.com/leanprover-community/mathlib4.git\"\n",
+		},
+		{
+			Case:            "lakefile.toml name",
+			ExpectedEnabled: true,
+			ExpectedString:  "example",
+			Name:            "lake",
+			File:            "lakefile.toml",
+			PackageContents: "name = \"example\"\ndefaultTargets = [\"Example\"]\n\n[[require]]\nname = \"foo\"\npath = \"foo\"\n",
+		},
+		{
+			Case:            "lakefile.lean no package name",
+			ExpectedEnabled: false,
+			Name:            "lake",
+			File:            "lakefile.lean",
+			PackageContents: "import Lake\nopen Lake DSL\n\nlean_lib Foo where\n",
+		},
+		{
+			Case:            "lakefile.toml no name",
+			ExpectedEnabled: true,
+			ExpectedString:  "",
+			Name:            "lake",
+			File:            "lakefile.toml",
+			PackageContents: "defaultTargets = [\"Example\"]\n",
+		},
+		{
+			Case:            "lakefile.toml invalid toml",
+			ExpectedString:  "toml: line 1: unexpected end of table name (table names cannot be empty)",
+			Name:            "lake",
+			File:            "lakefile.toml",
+			PackageContents: "[",
+		},
+	}
+
+	for _, tc := range cases {
+		env := new(mock.Environment)
+		env.On(hasFiles, testify_.Anything).Run(func(args testify_.Arguments) {
+			for _, c := range env.ExpectedCalls {
+				if c.Method == hasFiles {
+					c.ReturnArguments = testify_.Arguments{args.Get(0).(string) == tc.File}
+				}
+			}
+		})
+		env.On("FileContent", tc.File).Return(tc.PackageContents)
+		pkg := &Project{}
+		pkg.Init(options.Map{}, env)
+		assert.Equal(t, tc.ExpectedEnabled, pkg.Enabled(), tc.Case)
+		if tc.ExpectedEnabled {
+			assert.Equal(t, tc.ExpectedString, renderTemplate(env, pkg.Template(), pkg), tc.Case)
+		}
+	}
+}
+
+func TestDenoProjectUsesJsrMetadata(t *testing.T) {
+	env := new(mock.Environment)
+	env.On(hasFiles, "deno.json").Return(true)
+	env.On(hasFiles, "deno.jsonc").Return(false)
+	env.On(hasFiles, "jsr.json").Return(true)
+	env.On(hasFiles, "jsr.jsonc").Return(false)
+	env.On(hasFiles, testify_.Anything).Return(false)
+	env.On("FileContent", "deno.json").Return("{\"name\":\"library\"}")
+	env.On("FileContent", "jsr.json").Return("{\"version\":\"1.0.0\",\"name\":\"@scope/library\"}")
+
+	pkg := &Project{}
+	pkg.Init(options.Map{}, env)
+
+	assert.True(t, pkg.Enabled())
+	assert.Equal(t, "\uf487 1.0.0 @scope/library", renderTemplate(env, pkg.Template(), pkg))
+}
+
+func TestProjectPriority(t *testing.T) {
+	cases := []struct {
+		Case           string
+		ExpectedString string
+		Priority       []string
+	}{
+		{
+			Case:           "no priority set keeps default order (node before php)",
+			ExpectedString: " 1.0.0 node-pkg",
+		},
+		{
+			Case:           "priority promotes php over node",
+			Priority:       []string{"php"},
+			ExpectedString: " 2.0.0 php-pkg",
+		},
+		{
+			Case:           "unknown name in priority is ignored, default order preserved",
+			Priority:       []string{"does-not-exist"},
+			ExpectedString: " 1.0.0 node-pkg",
+		},
+	}
+
+	for _, tc := range cases {
+		env := new(mock.Environment)
+		env.On(hasFiles, testify_.Anything).Run(func(args testify_.Arguments) {
+			for _, c := range env.ExpectedCalls {
+				if c.Method != hasFiles {
+					continue
+				}
+				file := args.Get(0).(string)
+				c.ReturnArguments = testify_.Arguments{file == fileName || file == "composer.json"}
+			}
+		})
+		env.On("FileContent", fileName).Return("{\"version\":\"1.0.0\",\"name\":\"node-pkg\"}")
+		env.On("FileContent", "composer.json").Return("{\"version\":\"2.0.0\",\"name\":\"php-pkg\"}")
+
+		opts := options.Map{}
+		if len(tc.Priority) > 0 {
+			opts[Priority] = tc.Priority
+		}
+
+		pkg := &Project{}
+		pkg.Init(opts, env)
+		assert.True(t, pkg.Enabled(), tc.Case)
+		assert.Equal(t, tc.ExpectedString, renderTemplate(env, pkg.Template(), pkg), tc.Case)
+	}
+}
+
+func TestNuspecPackage(t *testing.T) {
+	cases := []struct {
+		Case            string
+		FileName        string
+		ExpectedString  string
+		HasFiles        bool
+		ExpectedEnabled bool
+	}{
+		{
+			Case:            "valid file",
+			FileName:        "../test/valid.nuspec",
+			HasFiles:        true,
+			ExpectedEnabled: true,
+			ExpectedString:  "\uf487 0.1.0 Az.Compute",
+		},
+		{
+			Case:            "invalid file",
+			FileName:        "../test/invalid.nuspec",
+			HasFiles:        true,
+			ExpectedEnabled: false,
+		},
+		{
+			Case:            "no info in file",
+			FileName:        "../test/empty.nuspec",
+			HasFiles:        true,
+			ExpectedEnabled: true,
+		},
+		{
+			Case:            "no files",
+			HasFiles:        false,
+			ExpectedEnabled: false,
+		},
+	}
+
+	for _, tc := range cases {
+		env := new(mock.Environment)
+		env.On(hasFiles, testify_.Anything).Run(func(args testify_.Arguments) {
+			for _, c := range env.ExpectedCalls {
+				if c.Method != hasFiles {
+					continue
+				}
+				if args.Get(0).(string) == "*.nuspec" {
+					c.ReturnArguments = testify_.Arguments{tc.HasFiles}
+					continue
+				}
+				c.ReturnArguments = testify_.Arguments{false}
+			}
+		})
+		env.On("Pwd").Return("posh")
+		env.On("LsDir", "posh").Return([]fs.DirEntry{
+			&MockDirEntry{
+				name: tc.FileName,
+			},
+		})
+		content, _ := os.ReadFile(tc.FileName)
+		env.On("FileContent", tc.FileName).Return(string(content))
+		pkg := &Project{}
+		pkg.Init(options.Map{}, env)
+		assert.Equal(t, tc.ExpectedEnabled, pkg.Enabled(), tc.Case)
+		if tc.ExpectedEnabled {
+			assert.Equal(t, tc.ExpectedString, renderTemplate(env, pkg.Template(), pkg), tc.Case)
+		}
+	}
+}
+
+func TestDotnetProject(t *testing.T) {
+	cases := []struct {
+		Case            string
+		FileName        string
+		ProjectContents string
+		ExpectedString  string
+		HasFiles        bool
+		ExpectedEnabled bool
+	}{
+		{
+			Case:            "valid .csproj file",
+			FileName:        "Valid.csproj",
+			HasFiles:        true,
+			ProjectContents: "...<TargetFramework>net7.0</TargetFramework>...",
+			ExpectedEnabled: true,
+			ExpectedString:  "Valid \uf4de net7.0",
+		},
+		{
+			Case:            "valid .fsproj file",
+			FileName:        "Valid.fsproj",
+			HasFiles:        true,
+			ProjectContents: "...<TargetFramework>net6.0</TargetFramework>...",
+			ExpectedEnabled: true,
+			ExpectedString:  "Valid \uf4de net6.0",
+		},
+		{
+			Case:            "valid .vbproj file",
+			FileName:        "Valid.vbproj",
+			HasFiles:        true,
+			ProjectContents: "...<TargetFramework>net5.0</TargetFramework>...",
+			ExpectedEnabled: true,
+			ExpectedString:  "Valid \uf4de net5.0",
+		},
+		{
+			Case:            "invalid or empty contents",
+			FileName:        "Invalid.csproj",
+			HasFiles:        true,
+			ExpectedEnabled: true,
+			ExpectedString:  "Invalid",
+		},
+		{
+			Case:            "no files",
+			HasFiles:        false,
+			ExpectedEnabled: false,
+		},
+	}
+
+	for _, tc := range cases {
+		env := new(mock.Environment)
+		env.On(hasFiles, testify_.Anything).Run(func(args testify_.Arguments) {
+			for _, c := range env.ExpectedCalls {
+				if c.Method == hasFiles {
+					pattern := "*" + filepath.Ext(tc.FileName)
+					c.ReturnArguments = testify_.Arguments{args.Get(0).(string) == pattern}
+				}
+			}
+		})
+		env.On("Pwd").Return("posh")
+		env.On("LsDir", "posh").Return([]fs.DirEntry{
+			&MockDirEntry{
+				name: tc.FileName,
+			},
+		})
+		env.On("FileContent", tc.FileName).Return(tc.ProjectContents)
+		env.On("HasParentFilePath", "Directory.Build.props", false).Return((*runtime.FileInfo)(nil), errors.New("not found"))
+		pkg := &Project{}
+		pkg.Init(options.Map{}, env)
+		assert.Equal(t, tc.ExpectedEnabled, pkg.Enabled(), tc.Case)
+		if tc.ExpectedEnabled {
+			assert.Equal(t, tc.ExpectedString, renderTemplate(env, pkg.Template(), pkg), tc.Case)
+		}
+	}
+}
+
+func TestDotnetSolutionResolvesTargetFramework(t *testing.T) {
+	cases := []struct {
+		SubDirs             map[string][]fs.DirEntry
+		FileContents        map[string]string
+		Options             options.Map
+		DirectoryBuildProps *runtime.FileInfo
+		Case                string
+		SolutionFile        string
+		ExpectedString      string
+		ExpectedEnabled     bool
+	}{
+		{
+			Case:         ".sln with .csproj one level deep",
+			SolutionFile: "MyApp.sln",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.sln"},
+					&MockDirEntry{name: "App", isDir: true},
+				},
+				filepath.Join("posh", "App"): {
+					&MockDirEntry{name: "App.csproj"},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.sln":                        "",
+				filepath.Join("App", "App.csproj"): "<Project><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>",
+			},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp \uf4de net8.0",
+		},
+		{
+			Case:         ".sln with .csproj next to it",
+			SolutionFile: "MyApp.sln",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.sln"},
+					&MockDirEntry{name: "App.csproj"},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.sln":  "",
+				"App.csproj": "<Project><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>",
+			},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp \uf4de net8.0",
+		},
+		{
+			Case:         ".sln with .csproj at depth 2",
+			SolutionFile: "MyApp.sln",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.sln"},
+					&MockDirEntry{name: "src", isDir: true},
+				},
+				filepath.Join("posh", "src"): {
+					&MockDirEntry{name: "App", isDir: true},
+				},
+				filepath.Join("posh", "src", "App"): {
+					&MockDirEntry{name: "App.csproj"},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.sln": "",
+				filepath.Join("src", "App", "App.csproj"): "<Project><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>",
+			},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp \uf4de net8.0",
+		},
+		{
+			Case:         "depth limit exceeded - .csproj at depth 3, max depth 2",
+			SolutionFile: "MyApp.sln",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.sln"},
+					&MockDirEntry{name: "src", isDir: true},
+				},
+				filepath.Join("posh", "src"): {
+					&MockDirEntry{name: "nested", isDir: true},
+				},
+				filepath.Join("posh", "src", "nested"): {
+					&MockDirEntry{name: "deep", isDir: true},
+				},
+				filepath.Join("posh", "src", "nested", "deep"): {
+					&MockDirEntry{name: "App.csproj"},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.sln": "",
+			},
+			Options:         options.Map{SolutionSearchDepth: 2},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp",
+		},
+		{
+			Case:         "opt-out with resolve_target_from_solution=false",
+			SolutionFile: "MyApp.sln",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.sln"},
+					&MockDirEntry{name: "App", isDir: true},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.sln": "",
+			},
+			Options:         options.Map{ResolveTargetFromSolution: false},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp",
+		},
+		{
+			Case:         ".slnx triggers scanning - resolves TFM from .fsproj",
+			SolutionFile: "MyApp.slnx",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.slnx"},
+					&MockDirEntry{name: "Lib", isDir: true},
+				},
+				filepath.Join("posh", "Lib"): {
+					&MockDirEntry{name: "Lib.fsproj"},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.slnx":                       "",
+				filepath.Join("Lib", "Lib.fsproj"): "<Project><PropertyGroup><TargetFramework>net9.0</TargetFramework></PropertyGroup></Project>",
+			},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp \uf4de net9.0",
+		},
+		{
+			Case:         ".slnf does NOT trigger scanning",
+			SolutionFile: "MyApp.slnf",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.slnf"},
+					&MockDirEntry{name: "App", isDir: true},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.slnf": "",
+			},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp",
+		},
+		{
+			Case:         "no project files in subdirs",
+			SolutionFile: "MyApp.sln",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.sln"},
+					&MockDirEntry{name: "docs", isDir: true},
+				},
+				filepath.Join("posh", "docs"): {
+					&MockDirEntry{name: "README.md"},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.sln": "",
+			},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp",
+		},
+		{
+			Case:         "TFM defined centrally in Directory.Build.props",
+			SolutionFile: "MyApp.sln",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.sln"},
+					&MockDirEntry{name: "App", isDir: true},
+				},
+				filepath.Join("posh", "App"): {
+					&MockDirEntry{name: "App.csproj"},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.sln":                                    "",
+				filepath.Join("App", "App.csproj"):             "<Project><PropertyGroup></PropertyGroup></Project>",
+				filepath.Join("posh", "Directory.Build.props"): "<Project><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>",
+			},
+			DirectoryBuildProps: &runtime.FileInfo{
+				Path:         filepath.Join("posh", "Directory.Build.props"),
+				ParentFolder: "posh",
+			},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp  net10.0",
+		},
+		{
+			Case:         "no TFM anywhere, Directory.Build.props not found",
+			SolutionFile: "MyApp.sln",
+			SubDirs: map[string][]fs.DirEntry{
+				"posh": {
+					&MockDirEntry{name: "MyApp.sln"},
+					&MockDirEntry{name: "App", isDir: true},
+				},
+				filepath.Join("posh", "App"): {
+					&MockDirEntry{name: "App.csproj"},
+				},
+			},
+			FileContents: map[string]string{
+				"MyApp.sln":                        "",
+				filepath.Join("App", "App.csproj"): "<Project><PropertyGroup></PropertyGroup></Project>",
+			},
+			ExpectedEnabled: true,
+			ExpectedString:  "MyApp",
+		},
+	}
+
+	for _, tc := range cases {
+		env := new(mock.Environment)
+		env.On(hasFiles, testify_.Anything).Run(func(args testify_.Arguments) {
+			for _, c := range env.ExpectedCalls {
+				if c.Method == hasFiles {
+					pattern := "*" + filepath.Ext(tc.SolutionFile)
+					c.ReturnArguments = testify_.Arguments{args.Get(0).(string) == pattern}
+				}
+			}
+		})
+		env.On("Pwd").Return("posh")
+
+		// Set up LsDir mocks for all paths
+		for path, entries := range tc.SubDirs {
+			env.On("LsDir", path).Return(entries)
+		}
+
+		// Set up FileContent mocks
+		for path, content := range tc.FileContents {
+			env.On("FileContent", path).Return(content)
+		}
+
+		if tc.DirectoryBuildProps != nil {
+			env.On("HasParentFilePath", "Directory.Build.props", false).Return(tc.DirectoryBuildProps, nil)
+		} else {
+			env.On("HasParentFilePath", "Directory.Build.props", false).Return((*runtime.FileInfo)(nil), errors.New("not found"))
+		}
+
+		opts := tc.Options
+		if opts == nil {
+			opts = options.Map{}
+		}
+
+		pkg := &Project{}
+		pkg.Init(opts, env)
+		assert.Equal(t, tc.ExpectedEnabled, pkg.Enabled(), tc.Case)
+		if tc.ExpectedEnabled {
+			assert.Equal(t, tc.ExpectedString, renderTemplate(env, pkg.Template(), pkg), tc.Case)
+		}
+	}
+}
+
+func TestPowerShellModuleProject(t *testing.T) {
+	cases := []struct {
+		Case            string
+		FileName        string
+		Content         string
+		ExpectedString  string
+		HasFiles        bool
+		ExpectedEnabled bool
+	}{
+		{
+			Case:            "valid PowerShell module file",
+			HasFiles:        true,
+			ExpectedEnabled: true,
+			FileName:        "oh-my-posh.psd1",
+			ExpectedString:  "\uf487 1.0.0.0 oh-my-posh",
+		},
+		{
+			Case:            "root module name ending on a character of its extension",
+			HasFiles:        true,
+			ExpectedEnabled: true,
+			FileName:        "Terminal-Icons.psd1",
+			Content:         "@{\nModuleVersion = '0.11.0'\nRootModule = 'Terminal-Icons.psm1'\n}",
+			ExpectedString:  "\uf487 0.11.0 Terminal-Icons",
+		},
+		{
+			Case:            "binary root module",
+			HasFiles:        true,
+			ExpectedEnabled: true,
+			FileName:        "Microsoft.PowerShell.Archive.psd1",
+			Content:         "@{\nModuleVersion = '2.0.1'\nRootModule = 'Microsoft.PowerShell.Archive.dll'\n}",
+			ExpectedString:  "\uf487 2.0.1 Microsoft.PowerShell.Archive",
+		},
+	}
+
+	for _, tc := range cases {
+		env := new(mock.Environment)
+		env.On(hasFiles, testify_.Anything).Run(func(args testify_.Arguments) {
+			for _, c := range env.ExpectedCalls {
+				if c.Method == hasFiles {
+					c.ReturnArguments = testify_.Arguments{args.Get(0).(string) == "*.psd1"}
+				}
+			}
+		})
+		env.On("Pwd").Return("posh")
+		env.On("LsDir", "posh").Return([]fs.DirEntry{
+			&MockDirEntry{
+				name: tc.FileName,
+			},
+		})
+		moduleContent := tc.Content
+		if tc.HasFiles && moduleContent == "" {
+			content, _ := os.ReadFile("../test/oh-my-posh.psd1")
+			moduleContent = string(content)
+		}
+		env.On("FileContent", tc.FileName).Return(moduleContent)
+		pkg := &Project{}
+		pkg.Init(options.Map{}, env)
+		assert.Equal(t, tc.ExpectedEnabled, pkg.Enabled(), tc.Case)
+		if tc.ExpectedEnabled {
+			assert.Equal(t, tc.ExpectedString, renderTemplate(env, pkg.Template(), pkg), tc.Case)
+		}
+	}
+}

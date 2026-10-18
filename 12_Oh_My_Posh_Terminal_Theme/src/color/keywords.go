@@ -1,0 +1,99 @@
+package color
+
+import "slices"
+
+const (
+	Transparent      Ansi = "transparent"
+	Accent           Ansi = "accent"
+	ParentBackground Ansi = "parentBackground"
+	ParentForeground Ansi = "parentForeground"
+	Background       Ansi = "background"
+	Foreground       Ansi = "foreground"
+)
+
+func (color Ansi) isKeyword() bool {
+	switch color {
+	case Transparent, ParentBackground, ParentForeground, Background, Foreground:
+		return true
+	default:
+		return false
+	}
+}
+
+func (color Ansi) Resolve(current *Set, parents []*Set) Ansi {
+	resolveParentColor := func(keyword Ansi) Ansi {
+		// parents is a stack pushed tail-first (see terminal.SetParentColors):
+		// the nearest ancestor is the last element, so walk back-to-front.
+		for _, parentColor := range slices.Backward(parents) {
+			if parentColor == nil {
+				return Transparent
+			}
+
+			switch keyword {
+			case ParentBackground:
+				keyword = parentColor.Background
+			case ParentForeground:
+				keyword = parentColor.Foreground
+			default:
+				if keyword == "" {
+					return Transparent
+				}
+				return keyword.GradientLast()
+			}
+
+			if !keyword.IsGradient() {
+				continue
+			}
+
+			// a parent gradient collapses to its last stop; a keyword stop refers to
+			// that SAME parent's colors, never to the child segment asking for the
+			// parent color. A parentBackground/parentForeground stop walks further up
+			// through the next iteration; an unresolvable self-reference degrades to
+			// transparent instead of leaking a keyword the child would misresolve.
+			stop := keyword.GradientLast()
+
+			switch stop { //nolint:exhaustive
+			case Foreground:
+				stop = parentColor.Foreground.GradientLast()
+			case Background:
+				stop = parentColor.Background.GradientLast()
+			}
+
+			if stop.isKeyword() && stop != ParentBackground && stop != ParentForeground && stop != Transparent {
+				return Transparent
+			}
+
+			keyword = stop
+		}
+
+		if keyword == "" {
+			return Transparent
+		}
+
+		return keyword.GradientLast()
+	}
+
+	resolveKeyword := func(keyword Ansi) Ansi {
+		switch {
+		case keyword == Background && current != nil:
+			return current.Background
+		case keyword == Foreground && current != nil:
+			return current.Foreground
+		case (keyword == ParentBackground || keyword == ParentForeground) && len(parents) != 0:
+			return resolveParentColor(keyword)
+		default:
+			return Transparent
+		}
+	}
+
+	for color.isKeyword() {
+		resolved := resolveKeyword(color)
+		if resolved == color {
+			break
+		}
+
+		color = resolved
+	}
+
+	return color
+}

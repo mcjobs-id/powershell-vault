@@ -1,0 +1,112 @@
+/*
+ * Copyright (c) 2022 Winsider Seminars & Solutions, Inc.  All rights reserved.
+ *
+ * This file is part of System Informer.
+ *
+ * Authors:
+ *
+ *     dmex    2012-2023
+ *     jxy-s   2023-2024
+ *
+ */
+
+#ifndef _PH_SEARCHBOX_H
+#define _PH_SEARCHBOX_H
+
+EXTERN_C_START
+
+typedef _Function_class_(PH_SEARCHCONTROL_CALLBACK)
+VOID NTAPI PH_SEARCHCONTROL_CALLBACK(
+    _In_ ULONG_PTR MatchHandle,
+    _In_opt_ PVOID Context
+    );
+typedef PH_SEARCHCONTROL_CALLBACK* PPH_SEARCHCONTROL_CALLBACK;
+
+PHLIBAPI
+VOID
+NTAPI
+PhCreateSearchControlEx(
+    _In_ HWND ParentWindowHandle,
+    _In_ HWND SearchWindowHandle,
+    _In_opt_ PCWSTR BannerText,
+    _In_ PVOID ImageBaseAddress,
+    _In_ PCWSTR SearchButtonResource,
+    _In_ PCWSTR SearchButtonActiveResource,
+    _In_ PCWSTR RegexButtonResource,
+    _In_ PCWSTR CaseButtonResource,
+    _In_opt_ PCWSTR FuzzyButtonResource,
+    _In_ PCWSTR RegexSetting,
+    _In_ PCWSTR CaseSetting,
+    _In_ PCWSTR FuzzySetting,
+    _In_ PPH_SEARCHCONTROL_CALLBACK Callback,
+    _In_opt_ PVOID Context
+    );
+
+PHLIBAPI
+VOID
+NTAPI
+PhSearchControlClear(
+    _In_ HWND SearchWindowHandle
+    );
+
+PHLIBAPI
+BOOLEAN
+NTAPI
+PhSearchControlMatch(
+    _In_ ULONG_PTR MatchHandle,
+    _In_ PCPH_STRINGREF Text
+    );
+
+typedef struct _PH_SEARCHCONTROL_MATCH_RANGE
+{
+    ULONG Start; // WCHAR offset into the matched text
+    ULONG Length; // in WCHARs
+} PH_SEARCHCONTROL_MATCH_RANGE, *PPH_SEARCHCONTROL_MATCH_RANGE;
+
+PHLIBAPI
+BOOLEAN
+NTAPI
+PhSearchControlMatchEx(
+    _In_ ULONG_PTR MatchHandle,
+    _In_ PCPH_STRINGREF Text,
+    _Out_writes_to_opt_(MaximumRanges, *RangeCount) PPH_SEARCHCONTROL_MATCH_RANGE Ranges,
+    _In_ ULONG MaximumRanges,
+    _Out_opt_ PULONG RangeCount
+    );
+
+PHLIBAPI
+BOOLEAN
+NTAPI
+PhSearchControlMatchZ(
+    _In_ ULONG_PTR MatchHandle,
+    _In_ PCWSTR Text
+    );
+
+PHLIBAPI
+BOOLEAN
+NTAPI
+PhSearchControlMatchLongHintZ(
+    _In_ ULONG_PTR MatchHandle,
+    _In_ PCWSTR Text
+    );
+
+PHLIBAPI
+BOOLEAN
+NTAPI
+PhSearchControlMatchPointer(
+    _In_ ULONG_PTR MatchHandle,
+    _In_ PVOID Pointer
+    );
+
+PHLIBAPI
+BOOLEAN
+NTAPI
+PhSearchControlMatchPointerRange(
+    _In_ ULONG_PTR MatchHandle,
+    _In_ PVOID Pointer,
+    _In_ SIZE_T Size
+    );
+
+EXTERN_C_END
+
+#endif

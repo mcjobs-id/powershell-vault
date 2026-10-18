@@ -1,0 +1,35 @@
+name: Chocolatey push
+
+on:
+  workflow_dispatch:
+
+jobs:
+  Chocolatey:
+    name: Push
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@main
+
+      - name: Preparation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          . "Scripts\Chocolatey.ps1"
+
+      - name: Pack and push to Chocolatey
+        run: |
+          # $Latest_Release.Sophia_Script_Windows_11
+          Write-Verbose -Message $env:LatestRelease -Verbose
+
+          # Replace variables with script latest versions
+          (Get-Content -Path "Scripts\Chocolatey\sophia.nuspec" -Encoding utf8NoBOM -Raw) -replace ("SophiaScriptVersion", "${{ env.LatestRelease }}") | Set-Content -Path "Scripts\Chocolatey\sophia.nuspec" -Encoding utf8NoBOM -Force
+
+          choco pack Scripts\Chocolatey\sophia.nuspec --outputdirectory Scripts\Chocolatey
+          choco apikey --key ${{ secrets.CHOCOLATEY_SECRET }} --source https://push.chocolatey.org/
+
+          [xml]$Version = Get-Content -Path Scripts\Chocolatey\sophia.nuspec
+          [string]$Version = $Version.package.metadata.version
+          Write-Verbose -Message $Version -Verbose
+
+          choco push Scripts\Chocolatey\sophia.$Version.nupkg --source https://push.chocolatey.org/ --yes

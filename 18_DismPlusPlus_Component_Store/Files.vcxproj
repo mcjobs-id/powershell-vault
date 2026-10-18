@@ -1,0 +1,271 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{449EC66A-E39D-4022-A36F-48A30602C6CA}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Files</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Xml Include="Data.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\bg.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\cs.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\de.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\en.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\es.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\fr.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\it.xml" />
+    <Xml Include="Languages\ja.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\ko.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\pl-PL.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\pt.xml" />
+    <Xml Include="Languages\ru.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\zh-Hans.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="Languages\zh-Hant.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+    <Xml Include="www.chuyu.me\de.xml" />
+    <Xml Include="www.chuyu.me\en.xml" />
+    <Xml Include="www.chuyu.me\es.xml" />
+    <Xml Include="www.chuyu.me\fr.xml" />
+    <Xml Include="www.chuyu.me\ja.xml" />
+    <Xml Include="www.chuyu.me\zh-Hans.xml" />
+    <Xml Include="www.chuyu.me\zh-Hant.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+    <None Include="www.chuyu.me\404.html" />
+    <None Include="www.chuyu.me\Base.html" />
+    <None Include="www.chuyu.me\Document\index.html" />
+    <None Include="www.chuyu.me\Document\log.html" />
+    <None Include="www.chuyu.me\en\Document.html" />
+    <None Include="www.chuyu.me\en\library\$navigation.md" />
+    <None Include="www.chuyu.me\en\library\bestpractice\使用Dism++安装系统.md" />
+    <None Include="www.chuyu.me\en\library\bestpractice\给ISO离线集成补丁.md" />
+    <None Include="www.chuyu.me\en\library\Dism2Dism++.md" />
+    <None Include="www.chuyu.me\en\library\Quickstart.md" />
+    <None Include="www.chuyu.me\en\library\reference\术语.md" />
+    <None Include="www.chuyu.me\en\library\reference\自定义规则.md" />
+    <None Include="www.chuyu.me\en\library\reference\规则结构参考.md" />
+    <None Include="www.chuyu.me\en\library\reference\隐藏功能.md" />
+    <None Include="www.chuyu.me\en\library\start.md" />
+    <None Include="www.chuyu.me\en\log.html" />
+    <None Include="www.chuyu.me\index.html" />
+    <None Include="www.chuyu.me\zh-Hans\Document.html" />
+    <None Include="www.chuyu.me\zh-Hans\library\$navigation.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\Best\使用Dism++安装系统.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\Best\给ISO离线集成补丁.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\Dism++Library\Dism++sut.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\Dism++Library\术语.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\Dism++Library\自定义规则.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\Dism++Library\规则结构参考.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\Dism++Library\隐藏功能.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\Dism2Dism++.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\Quickstart.md" />
+    <None Include="www.chuyu.me\zh-Hans\library\start.md" />
+    <None Include="www.chuyu.me\zh-Hans\log.html" />
+    <None Include="www.chuyu.me\zh-Hant\Document.html" />
+    <None Include="www.chuyu.me\zh-Hant\library\$navigation.md" />
+    <None Include="www.chuyu.me\zh-Hant\library\Best\使用Dism++安裝系統.md" />
+    <None Include="www.chuyu.me\zh-Hant\library\Best\給ISO離線整合更新.md" />
+    <None Include="www.chuyu.me\zh-Hant\library\Dism++Library\自訂規則.md" />
+    <None Include="www.chuyu.me\zh-Hant\library\Dism++Library\術語.md" />
+    <None Include="www.chuyu.me\zh-Hant\library\Dism++Library\規則結構參考.md" />
+    <None Include="www.chuyu.me\zh-Hant\library\Dism++Library\隱藏功能.md" />
+    <None Include="www.chuyu.me\zh-Hant\library\Dism2Dism++.md" />
+    <None Include="www.chuyu.me\zh-Hant\library\Quickstart.md" />
+    <None Include="www.chuyu.me\zh-Hant\library\start.md" />
+    <None Include="www.chuyu.me\zh-Hant\log.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="HeplerDism.md" />
+    <Text Include="ThirdParty.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="www.chuyu.me\en\images\ApplyUUPESD.png" />
+    <Image Include="www.chuyu.me\en\images\ApplyWIMBoot.png" />
+    <Image Include="www.chuyu.me\en\images\BackupImage-WimPath.png" />
+    <Image Include="www.chuyu.me\en\images\BackupImage.png" />
+    <Image Include="www.chuyu.me\en\images\CleanupUI.png" />
+    <Image Include="www.chuyu.me\en\images\CompactOS.png" />
+    <Image Include="www.chuyu.me\en\images\ExportWIMBoot.png" />
+    <Image Include="www.chuyu.me\en\images\InstallUpdates.png" />
+    <Image Include="www.chuyu.me\en\images\ISOInstallOS.png" />
+    <Image Include="www.chuyu.me\en\images\MainUI.png" />
+    <Image Include="www.chuyu.me\en\images\OpenSession.png" />
+    <Image Include="www.chuyu.me\en\images\RecoveryImage.png" />
+    <Image Include="www.chuyu.me\en\images\SaveISO.png" />
+    <Image Include="www.chuyu.me\en\images\ScanUpdates.png" />
+    <Image Include="www.chuyu.me\zh-Hant\images\ApplyUUPESD.png" />
+    <Image Include="www.chuyu.me\zh-Hant\images\ApplyWIMBoot.png" />
+    <Image Include="www.chuyu.me\zh-Hant\images\CompactOS.png" />
+    <Image Include="www.chuyu.me\zh-Hant\images\ExportWIMBoot.png" />
+    <Image Include="www.chuyu.me\zh-Hant\images\InstallUpdates.png" />
+    <Image Include="www.chuyu.me\zh-Hant\images\ISOInstallOS.png" />
+    <Image Include="www.chuyu.me\zh-Hant\images\OpenSession.png" />
+    <Image Include="www.chuyu.me\zh-Hant\images\SaveISO.png" />
+    <Image Include="www.chuyu.me\zh-Hant\images\ScanUpdates.png" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

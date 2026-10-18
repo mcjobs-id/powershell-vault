@@ -1,0 +1,43 @@
+package segments
+
+import (
+	"path/filepath"
+)
+
+type Tauri struct {
+	Language
+}
+
+func (t *Tauri) Template() string {
+	return languageTemplate
+}
+
+func (t *Tauri) Enabled() bool {
+	t.loadSpec()
+
+	return t.Language.Enabled()
+}
+
+// Activation implements the activation gate; see Language.activation.
+func (t *Tauri) Activation() Activation {
+	t.loadSpec()
+
+	return t.activation()
+}
+
+func (t *Tauri) loadSpec() {
+	t.extensions = []string{"tauri.conf.json"}
+	t.folders = []string{"src-tauri"}
+	t.tooling = map[string]*cmd{
+		"tauri": {
+			regex:      `(?:(?P<version>((?P<major>[0-9]+).(?P<minor>[0-9]+).(?P<patch>[0-9]+))))`,
+			getVersion: t.getVersion,
+		},
+	}
+	t.defaultTooling = []string{"tauri"}
+	t.versionURLTemplate = "https://github.com/tauri-apps/tauri/releases/tag/tauri-v{{.Full}}"
+}
+
+func (t *Tauri) getVersion() (string, error) {
+	return t.nodePackageVersion(filepath.Join("@tauri-apps", "api"))
+}

@@ -1,0 +1,334 @@
+package e2e
+
+import (
+	"fmt"
+	"regexp"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/hinshun/vt10x"
+	"github.com/jandedobbeleer/oh-my-posh/e2e/harness"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+// featurePtyCols mirrors the pty width the harness fixes every session to (see
+// harness/session.go), used here to assert how close to the right edge the rprompt
+// renders.
+const featurePtyCols = 120
+
+// scenario is one behavior-layer case: the config overlays needed to enable it, any
+// shells that must be skipped (declaratively, with a reason), and the assertions to run
+// once the session's first prompt is up.
+type scenario struct {
+	name     string
+	overlays []harness.Overlay
+	skips    map[string]string // shell name -> skip reason
+	run      func(t *testing.T, sh harness.ShellDef, s *harness.Session)
+}
+
+// featureScenarios is the behavior-layer test matrix, crossed with harness.Shells by
+// TestFeatures.
+var featureScenarios = []scenario{
+	{
+		// exitCode boots with the base config, runs the shell's Fail command, and
+		// asserts the next prompt reports the expected exit code via the
+		// "E2E:<code>>" template.
+		name: "exit-code",
+		run: func(t *testing.T, sh harness.ShellDef, s *harness.Session) {
+			require.NotEmpty(t, sh.Fail.Command, "%s: no Fail command configured", sh.Name)
+
+			s.SendLine(sh.Fail.Command)
+
+			expected := fmt.Sprintf("E2E:%d>", sh.Fail.Code)
+			s.WaitFor(regexp.MustCompile(regexp.QuoteMeta(expected)))
+		},
+	},
+	{
+		// transient boots with the transient_prompt overlay, types a command, and
+		// asserts that once the command's output and the following prompt have both
+		// landed, the screen row that carried the accepted command line was
+		// rewritten to start with "TR>" — i.e. the primary prompt on that line was
+		// replaced by the transient one.
+		//
+		// bash only supports the transient prompt inside a ble.sh session (gated on
+		// the BLE_SESSION_ID environment variable, see src/shell/bash.go), which this
+		// harness's plain `bash --noprofile --rcfile ... -i` session does not
+		// provide, so bash is skipped explicitly rather than asserted against.
+		name:     "transient",
+		overlays: []harness.Overlay{harness.Transient},
+		skips: map[string]string{
+			"bash": "bash only supports a transient prompt inside a ble.sh session; not supported by this harness",
+		},
+		run: func(t *testing.T, sh harness.ShellDef, s *harness.Session) {
+			const echoedText = "transient-check"
+
+			s.SendLine("echo " + echoedText)
+
+			// (?s) lets '.' cross line boundaries: this only matches once the
+			// echoed output AND a subsequent primary prompt are both on screen,
+			// proving the command has fully run and the shell moved on to its
+			// next prompt.
+			readyRe := regexp.MustCompile(`(?s)` + echoedText + `.*E2E:\d+>`)
+			screen := s.WaitFor(readyRe)
+
+			var commandLine string
+			for _, line := range s.ScreenLines() {
+				if strings.Contains(line, "echo "+echoedText) {
+					commandLine = line
+					break
+				}
+			}
+
+			require.NotEmpty(t, commandLine,
+				"%s: could not find the accepted command line on screen:\n%s", sh.Name, screen)
+
+			trimmed := strings.TrimLeft(commandLine, " ")
+			assert.True(t, strings.HasPrefix(trimmed, "TR>"),
+				"%s: command line was not rewritten with the transient prompt: %q", sh.Name, commandLine)
+		},
+	},
+	{
+		// transient-multiline boots with a three-line primary prompt whose first line
+		// wraps (see harness.MultiLine) plus the transient overlay, and asserts that
+		// after Enter no row of it is left above the accepted command line (#7881).
+		// It fails when the prompt height is counted in logical lines instead of
+		// screen rows.
+		name:     "transient-multiline",
+		overlays: []harness.Overlay{harness.MultiLine, harness.Transient},
+		skips: map[string]string{
+			"bash": "bash only supports a transient prompt inside a ble.sh session; not supported by this harness",
+		},
+		run: func(t *testing.T, sh harness.ShellDef, s *harness.Session) {
+			const echoedText = "transient-multiline-check"
+
+			s.SendLine("echo " + echoedText)
+
+			readyRe := regexp.MustCompile(`(?s)` + echoedText + `.*` + echoedText + `.*E2E:\d+>`)
+			screen := s.WaitFor(readyRe)
+
+			lines := s.ScreenLines()
+			commandRow := -1
+			for i, line := range lines {
+				if strings.Contains(line, "echo "+echoedText) {
+					commandRow = i
+					break
+				}
+			}
+
+			require.NotEqual(t, -1, commandRow,
+				"%s: could not find the accepted command line on screen:\n%s", sh.Name, screen)
+
+			// ML1 starts the topmost row of the primary prompt and ML1END ends its
+			// wrapped continuation, so any stale row leaves one of them behind.
+			for _, line := range lines[:commandRow] {
+				assert.NotContains(t, line, "ML1",
+					"%s: stale primary prompt row left above the transient prompt:\n%s", sh.Name, screen)
+			}
+		},
+	},
+	{
+		// transient-rprompt boots with a single-line primary prompt carrying a right
+		// prompt plus the transient overlay, runs two commands, and asserts the first
+		// command's output survives the second Enter. The right prompt pads its line
+		// to full width between cursor save/restore sequences, so counting those
+		// bytes as cells makes the transient redraw erase the row above the prompt.
+		name:     "transient-rprompt",
+		overlays: []harness.Overlay{harness.RPrompt, harness.Transient},
+		skips: map[string]string{
+			"bash": "bash only supports a transient prompt inside a ble.sh session; not supported by this harness",
+		},
+		run: func(t *testing.T, sh harness.ShellDef, s *harness.Session) {
+			const firstOutput = "first-output"
+
+			s.SendLine("echo " + firstOutput)
+			s.WaitFor(regexp.MustCompile(`(?s)` + firstOutput + `.*` + firstOutput + `.*E2E:\d+>`))
+
+			s.SendLine("echo second-output")
+			screen := s.WaitFor(regexp.MustCompile(`(?s)second-output.*second-output.*E2E:\d+>`))
+
+			var found bool
+			for _, line := range s.ScreenLines() {
+				if strings.TrimSpace(line) == firstOutput {
+					found = true
+					break
+				}
+			}
+
+			assert.True(t, found, "%s: the first command's output was erased by the transient prompt:\n%s", sh.Name, screen)
+		},
+	},
+	{
+		// rprompt boots with the rprompt overlay and asserts the fixed "RMARK"
+		// marker renders on the same screen row as the primary "E2E:0>" prompt,
+		// right-aligned near the pty's 120th column.
+		//
+		// bash only renders a right prompt inside a ble.sh session (gated on the
+		// BLE_SESSION_ID environment variable, see src/shell/bash.go), which this
+		// harness's plain `bash --noprofile --rcfile ... -i` session does not
+		// provide, so bash is skipped explicitly rather than asserted against.
+		name:     "rprompt",
+		overlays: []harness.Overlay{harness.RPrompt},
+		skips: map[string]string{
+			"bash": "bash only renders a right prompt inside a ble.sh session; not supported by this harness",
+		},
+		run: func(t *testing.T, sh harness.ShellDef, s *harness.Session) {
+			var promptLine string
+			for _, line := range s.ScreenLines() {
+				if strings.Contains(line, "E2E:0>") {
+					promptLine = line
+					break
+				}
+			}
+
+			require.NotEmpty(t, promptLine,
+				"%s: could not find the primary prompt row on screen:\n%s", sh.Name, s.Screen())
+
+			require.Contains(t, promptLine, "RMARK",
+				"%s: RMARK not found on the same row as the primary prompt: %q", sh.Name, promptLine)
+
+			trimmed := strings.TrimRight(promptLine, " ")
+			assert.True(t, strings.HasSuffix(trimmed, "RMARK"),
+				"%s: RMARK is not right-aligned, trimmed row does not end with it: %q", sh.Name, promptLine)
+
+			endCol := strings.LastIndex(promptLine, "RMARK") + len("RMARK")
+			assert.InDelta(t, featurePtyCols, endCol, 2,
+				"%s: RMARK does not end near column %d (ended at %d): %q", sh.Name, featurePtyCols, endCol, promptLine)
+		},
+	},
+	{
+		// color boots with the Colored overlay and asserts the fixed "CLR" marker
+		// renders with its configured truecolor foreground/background, verifying
+		// screen-level color rendering rather than just the raw SGR bytes.
+		name:     "color",
+		overlays: []harness.Overlay{harness.Colored},
+		run: func(t *testing.T, sh harness.ShellDef, s *harness.Session) {
+			s.WaitFor(regexp.MustCompile(regexp.QuoteMeta("CLR")))
+
+			fg, bg, found := s.MarkerColor("CLR")
+			require.True(t, found, "%s: CLR marker not found on screen:\n%s", sh.Name, s.Screen())
+
+			assert.Equal(t, vt10x.Color(0xff0000), fg,
+				"%s: unexpected foreground color for CLR: %#06x", sh.Name, uint32(fg))
+			assert.Equal(t, vt10x.Color(0x0000ff), bg,
+				"%s: unexpected background color for CLR: %#06x", sh.Name, uint32(bg))
+		},
+	},
+	{
+		// syntax-error types an invalid command in fish and asserts the parse error
+		// reads as fish's own, without attribution to oh-my-posh's enter key handler
+		// or init script (#7862). Only fish rebinds Enter to a handler function that
+		// executes the buffer from within that function, so only fish is affected by
+		// the misattribution and only fish is exercised here.
+		name: "syntax-error",
+		skips: map[string]string{
+			"bash": "fish-specific: only fish rebinds Enter to a handler function, causing parse error misattribution (#7862)",
+			"zsh":  "fish-specific: only fish rebinds Enter to a handler function, causing parse error misattribution (#7862)",
+			"pwsh": "fish-specific: only fish rebinds Enter to a handler function, causing parse error misattribution (#7862)",
+			"nu":   "fish-specific: only fish rebinds Enter to a handler function, causing parse error misattribution (#7862)",
+		},
+		run: func(t *testing.T, sh harness.ShellDef, s *harness.Session) {
+			s.SendLine("echo $$")
+
+			screen := s.WaitFor(regexp.MustCompile(regexp.QuoteMeta("$$ is not the pid")))
+
+			assert.Contains(t, screen, "fish: $$ is not the pid. In fish, please use $fish_pid.",
+				"%s: parse error should read as fish's own:\n%s", sh.Name, screen)
+			assert.NotContains(t, screen, "_omp_enter_key_handler",
+				"%s: parse error must not be attributed to oh-my-posh's key handler:\n%s", sh.Name, screen)
+		},
+	},
+	{
+		// empty-enter presses Enter on a blank prompt and asserts a fresh prompt is
+		// drawn (regression: fish reports a strictly empty buffer as invalid via
+		// 'commandline --is-valid', status 1 - the same code as a genuine parse
+		// error - so a naive "is this an error?" check on that status alone treats
+		// every empty Enter as an error and never re-prompts).
+		name: "empty-enter",
+		skips: map[string]string{
+			"bash": "fish-specific: only fish's enter handler branches on 'commandline --is-valid'",
+			"zsh":  "fish-specific: only fish's enter handler branches on 'commandline --is-valid'",
+			"pwsh": "fish-specific: only fish's enter handler branches on 'commandline --is-valid'",
+			"nu":   "fish-specific: only fish's enter handler branches on 'commandline --is-valid'",
+		},
+		run: func(t *testing.T, sh harness.ShellDef, s *harness.Session) {
+			promptRe := regexp.MustCompile(`E2E:\d+>`)
+			before := len(promptRe.FindAllString(s.Screen(), -1))
+
+			s.SendLine("")
+
+			deadline := time.Now().Add(3 * time.Second)
+			for time.Now().Before(deadline) {
+				if len(promptRe.FindAllString(s.Screen(), -1)) > before {
+					break
+				}
+
+				time.Sleep(50 * time.Millisecond)
+			}
+
+			after := len(promptRe.FindAllString(s.Screen(), -1))
+			assert.Greater(t, after, before,
+				"%s: pressing Enter on an empty prompt did not draw a new prompt:\n%s", sh.Name, s.Screen())
+		},
+	},
+	{
+		// ftcs boots with the shell_integration overlay and asserts all four FTCS
+		// (Final Term Control Sequence) marks land in the raw byte stream: prompt
+		// start (133;A) and command start (133;B) around the first prompt, then
+		// pre-execution (133;C) and command-finished (133;D) around a typed command.
+		//
+		// nu's init script intentionally emits none of the FTCS marks: Features().Nu()'s
+		// switch does list a case for FTCSMarks (grouped with several other features), but
+		// that case deliberately returns an empty Code (see src/shell/nu.go), so the
+		// generated script never gets the hook that prints them.
+		name:     "ftcs",
+		overlays: []harness.Overlay{harness.ShellIntegration},
+		skips: map[string]string{
+			"nu": "nu's FTCSMarks case in src/shell/nu.go deliberately emits nothing, so shell_integration marks never appear for nu",
+		},
+		run: func(t *testing.T, sh harness.ShellDef, s *harness.Session) {
+			raw := s.Raw()
+			require.Contains(t, raw, "\x1b]133;A",
+				"%s: missing FTCS prompt-start mark (133;A) after first prompt:\n%s", sh.Name, raw)
+			require.Contains(t, raw, "\x1b]133;B",
+				"%s: missing FTCS command-start mark (133;B) after first prompt:\n%s", sh.Name, raw)
+
+			s.SendLine("echo ftcs-check")
+
+			readyRe := regexp.MustCompile(`(?s)ftcs-check.*E2E:\d+>`)
+			s.WaitFor(readyRe)
+
+			raw = s.Raw()
+			assert.Contains(t, raw, "\x1b]133;C",
+				"%s: missing FTCS pre-execution mark (133;C):\n%s", sh.Name, raw)
+			assert.Contains(t, raw, "\x1b]133;D",
+				"%s: missing FTCS command-finished mark (133;D):\n%s", sh.Name, raw)
+		},
+	},
+}
+
+// TestFeatures runs every featureScenarios case against every harness.Shells entry, as
+// "TestFeatures/<scenario>/<shell>". For each shell it skips cleanly (with the scenario's
+// declared reason) when the feature is unsupported by this harness, otherwise it writes
+// the scenario's config overlays, starts the shell, waits for the first prompt, and hands
+// off to the scenario's assertions.
+func TestFeatures(t *testing.T) {
+	for _, sc := range featureScenarios {
+		t.Run(sc.name, func(t *testing.T) {
+			for _, sh := range harness.Shells {
+				t.Run(sh.Name, func(t *testing.T) {
+					if reason, skip := sc.skips[sh.Name]; skip {
+						t.Skip(reason)
+					}
+
+					cfgPath := harness.WriteConfig(t, sc.overlays...)
+					session := harness.Start(t, sh, cfgPath)
+					session.WaitForPrompt()
+
+					sc.run(t, sh, session)
+				})
+			}
+		})
+	}
+}

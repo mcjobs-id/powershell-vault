@@ -1,0 +1,170 @@
+#################
+## Visual Studio
+#################
+
+# User-specific files
+*.suo
+*.user
+*.key
+*.sig
+*.orig
+
+# Build results
+*.exe
+*.sys
+*.dll
+*.lib
+*.appx
+*.appxbundle
+*.cer
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pfx
+*.pgc
+*.pgd
+*.pvk
+*.res
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tlog
+*.tmp
+*.vspscc
+*_i.c
+*_p.c
+*.bak
+
+# Visual C++ cache files
+*.aps
+*.idb
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.db
+
+# Visual Studio profiler
+*.psess
+*.vsp
+
+# ReSharper is a .NET coding add-in
+_ReSharper*
+
+# Click-Once directory
+publish
+
+# Others
+[Bb]in
+[Oo]bj
+*.Cache
+~$*
+
+# Backup & report files
+_UpgradeReport_Files/
+#Backup*/
+UpgradeLog*.XML
+
+# Windows image file caches
+Thumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Visual Studio files
+ipch/
+.vs/
+
+# VS Code files
+.vscode/*
+.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+
+*.code-workspace
+
+# NuGet Packages
+*.nupkg
+**/packages/
+**/vcpkg_installed/
+
+# CMake files
+**/.cmake/
+**/CMakeCache.txt
+**/CMakeFiles/
+
+# JSON Compilation Database
+**/compile_commands.json
+**/.cache/
+
+# AI / agent tooling (ignored by default)
+#
+# Policy: agent config, memory, and instruction files are NOT committed.
+# They are per-contributor choices, not project artifacts. To commit a
+# file that is genuinely critical to the repo, force-add it explicitly.
+#
+# Claude Code
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+# GitHub Copilot
+.github/copilot-instructions.md
+.github/instructions/
+.github/prompts/
+# Cursor
+.cursor/
+.cursorrules
+.cursorignore
+.cursorindexingignore
+# Cline / Roo Code
+.clinerules
+.cline/
+.roo/
+.roorules
+memory-bank/
+# Windsurf
+.windsurf/
+.windsurfrules
+# Aider
+.aider*
+# Continue
+.continue/
+# Codex / Gemini / generic agent files
+AGENTS.md
+.codex/
+GEMINI.md
+.gemini/
+# OpenCode
+.opencode/
+opencode.json
+opencode.jsonc
+# Context-dump tools
+repomix-output.*
+
+##########################
+## Project specific rules
+##########################
+
+**/bin/
+**/out/
+build/output/
+plugins-extra/
+sdk/
+target/
+tools/thirdparty/vcpkg_installed/*
+
+bin-cmake/
+build-*/
+**/node_modules/
+
+!KSystemInformer/bin-signed/*/ksi.dll
+!KSystemInformer/bin-signed/*/ksi.pdb
+!KSystemInformer/bin-signed/*/systeminformer.sys
+!KSystemInformer/bin-signed/*/systeminformer.pdb
+!tools/CustomSignTool/bin/Release*/CustomSignTool.exe
+!tools/fixlib/bin/Release/fixlib.exe

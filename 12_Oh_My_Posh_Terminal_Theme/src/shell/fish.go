@@ -1,0 +1,47 @@
+package shell
+
+import (
+	_ "embed"
+	"fmt"
+	"strings"
+)
+
+//go:embed scripts/omp.fish
+var fishInit string
+
+func (f Features) Fish() Code {
+	switch f {
+	case Transient:
+		return "set --global _omp_transient_prompt 1"
+	case TransientRPrompt:
+		return "set --global _omp_transient_rprompt 1"
+	case CursorPositioning:
+		return "set --global _omp_cursor_positioning 1"
+	case FTCSMarks:
+		return "set --global _omp_ftcs_marks 1"
+	case PromptMark:
+		return "set --global _omp_prompt_mark 1"
+	case Tooltips:
+		return "enable_poshtooltips"
+	case Streaming:
+		return "if not set -q POSH_DISABLE_STREAMING; set --global _omp_enable_streaming 1; end"
+	case Upgrade:
+		return unixUpgrade
+	case Notice:
+		return unixNotice
+	case VIMode:
+		return "_omp_enable_vimode"
+	case RPrompt, PoshGit, Azure, LineError, Jobs, Async, KeyHandlers:
+		fallthrough
+	default:
+		return ""
+	}
+}
+
+func quoteFishStr(str string) string {
+	if str == "" {
+		return "''"
+	}
+
+	return fmt.Sprintf("'%s'", strings.NewReplacer(`\`, `\\`, "'", `\'`).Replace(str))
+}

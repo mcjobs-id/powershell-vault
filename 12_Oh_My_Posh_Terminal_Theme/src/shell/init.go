@@ -1,0 +1,341 @@
+package shell
+
+import (
+	"fmt"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/path"
+	"github.com/jandedobbeleer/oh-my-posh/src/text"
+)
+
+const (
+	noExe = "echo \"Unable to find Oh My Posh executable\""
+)
+
+var (
+	// identify ble.sh by validating the existence of BLE_SESSION_ID
+	bashBLEsession bool
+)
+
+func getExecutablePath(env runtime.Environment) (string, error) {
+	executable, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+
+	_, msix := cache.PackageFamilyName()
+	if msix || env.Flags().Strict {
+		return path.Base(executable), nil
+	}
+
+	// On Windows, it fails when the executable is called in MSYS2 for example
+	// which uses unix style paths to resolve the executable's location.
+	// PowerShell knows how to resolve both, so we can swap this without any issue.
+	if env.GOOS() == runtime.WINDOWS {
+		executable = strings.ReplaceAll(executable, "\\", "/")
+	}
+
+	return executable, nil
+}
+
+func Init(env runtime.Environment, feats Features) string {
+	switch env.Flags().Shell {
+	case PWSH:
+		if !env.Flags().Eval {
+			return generateAndSourceScript(env, feats)
+		}
+
+		return recurseInitCommand(env)
+	case ELVISH:
+		return recurseInitCommand(env)
+	case NU:
+		return initNu(env, feats)
+	case ZSH, BASH, FISH, CMD, XONSH, YASH:
+		return generateAndSourceScript(env, feats)
+	default:
+		return fmt.Sprintf(`echo "%s is not supported by Oh My Posh"`, env.Flags().Shell)
+	}
+}
+
+// Used by the --print flag to output the script to stdout.
+func Script(env runtime.Environment, feats Features) string {
+	script := generateScript(env, feats)
+	return fmt.Sprintf("%s\n%s", sessionScript(env), script)
+}
+
+// Used by the --debug flag.
+func Debug(env runtime.Environment, feats Features, startTime *time.Time) string {
+	script := generateScript(env, feats)
+
+	log.Debug(script)
+
+	if _, err := writeScript(env, script); err != nil {
+		log.Error(err)
+	}
+
+	return printDebugInfo(env, startTime)
+}
+
+// Re-invokes oh-my-posh with --print; used by PWSH and Elvish, which eval the script.
+func recurseInitCommand(env runtime.Environment) string {
+	executable, err := getExecutablePath(env)
+	if err != nil {
+		return noExe
+	}
+
+	var additionalParams string
+
+	if env.Flags().Strict {
+		additionalParams += " --strict"
+	}
+
+	if env.Flags().Eval {
+		additionalParams += " --eval"
+	}
+
+	config := env.Flags().ConfigPath
+
+	var command string
+
+	switch env.Flags().Shell {
+	case PWSH:
+		command = "(@(& %s init %s --config=%s --print%s) -join \"`n\") | Invoke-Expression"
+		config = quotePwshStr(config)
+		executable = quotePwshStr(executable)
+	case ELVISH:
+		command = "eval ((external %s) init %s --config=%s --print%s | slurp)"
+		config = quoteElvishStr(config)
+		executable = quoteElvishStr(executable)
+	}
+
+	return fmt.Sprintf(command, executable, env.Flags().Shell, config, additionalParams)
+}
+
+func generateAndSourceScript(env runtime.Environment, feats Features) string {
+	async := feats&Async != 0
+
+	if scriptPath, ok := hasScript(env); ok {
+		return sourceCommand(env, scriptPath, async)
+	}
+
+	script := generateScript(env, feats)
+
+	log.Debug(script)
+
+	scriptPath, err := writeScript(env, script)
+	if err != nil {
+		return fmt.Sprintf("echo \"Failed to write init script: %s\"", err.Error())
+	}
+
+	return sourceCommand(env, scriptPath, async)
+}
+
+// Returns empty since Nu automatically loads scripts from the autoload directory.
+func initNu(env runtime.Environment, feats Features) string {
+	script := generateNuScript(env, feats)
+
+	scriptPath, err := writeScript(env, script)
+	if err != nil {
+		return fmt.Sprintf("echo \"Failed to write init script: %s\"", err.Error())
+	}
+
+	log.Debug("nu init script written to:", scriptPath)
+
+	return ""
+}
+
+func generateScript(env runtime.Environment, feats Features) string {
+	executable, err := getExecutablePath(env)
+	if err != nil {
+		return noExe
+	}
+
+	bashBLEsession = len(env.Getenv("BLE_SESSION_ID")) != 0
+
+	// Only nu consumes the ::CONFIG:: placeholder: it has no eval'd session
+	// script to export POSH_CONFIG from, so the value is baked into its init
+	// script instead. All other shells get it via sessionScript.
+	var config string
+
+	var script string
+
+	switch env.Flags().Shell {
+	case PWSH:
+		executable = quotePwshStr(executable)
+		script = pwshInit
+	case ZSH:
+		executable = QuotePosixStr(executable)
+		script = zshInit
+	case BASH:
+		executable = QuotePosixStr(executable)
+		script = bashInit
+	case FISH:
+		executable = quoteFishStr(executable)
+		script = fishInit
+	case CMD:
+		executable = escapeLuaStr(executable)
+		script = cmdInit
+	case NU:
+		executable = quoteNuStr(executable)
+		config = quoteNuStr(env.Flags().ConfigPath)
+		script = nuInit
+	case ELVISH:
+		executable = quoteElvishStr(executable)
+		script = elvishInit
+	case XONSH:
+		executable = quotePythonStr(executable)
+		script = xonshInit
+	case YASH:
+		executable = quoteYashStr(executable)
+		script = yashInit
+	default:
+		return fmt.Sprintf("echo \"No initialization script available for %s\"", env.Flags().Shell)
+	}
+
+	// Remove UTF-8 BOM if present, as it can cause issues in some shells.
+	script = strings.TrimPrefix(script, "\xef\xbb\xbf")
+
+	init := strings.NewReplacer(
+		"::OMP::", executable,
+		"::SESSION_ID::", cache.SessionID(),
+		"::CONFIG::", config,
+	).Replace(script)
+
+	return feats.Lines(env.Flags().Shell).String(init)
+}
+
+func generateNuScript(env runtime.Environment, feats Features) string {
+	executable, err := getExecutablePath(env)
+	if err != nil {
+		return noExe
+	}
+
+	executable = quoteNuStr(executable)
+
+	init := strings.NewReplacer(
+		"::OMP::", executable,
+		"::SESSION_ID::", cache.SessionID(),
+		"::CONFIG::", quoteNuStr(env.Flags().ConfigPath),
+	).Replace(nuInit)
+
+	return feats.Lines(NU).String(init)
+}
+
+func sourceCommand(env runtime.Environment, scriptPath string, async bool) string {
+	if env.IsCygwin() {
+		var err error
+		scriptPath, err = env.RunCommand("cygpath", "-u", scriptPath)
+		if err != nil {
+			log.Error(err)
+			return fmt.Sprintf("echo \"Failed to convert Cygwin path due to %s\"", err.Error())
+		}
+	}
+
+	script := sessionScript(env)
+
+	if async {
+		return script + sourceCommandAsync(env.Flags().Shell, scriptPath)
+	}
+
+	switch env.Flags().Shell {
+	case PWSH:
+		script += fmt.Sprintf("& %s", quotePwshStr(scriptPath))
+	case ZSH, BASH:
+		script += fmt.Sprintf("source %s", QuotePosixStr(scriptPath))
+	case XONSH:
+		script += fmt.Sprintf("source %s", quotePythonStr(scriptPath))
+	case FISH:
+		script += fmt.Sprintf("source %s", quoteFishStr(scriptPath))
+	case YASH:
+		// yash has no source builtin, use the dot command instead
+		script += fmt.Sprintf(". %s", quoteYashStr(scriptPath))
+	case ELVISH:
+		script += fmt.Sprintf("eval (slurp < %s)", quoteElvishStr(scriptPath))
+	case CMD:
+		// dofile closes the file handle when done, io.open would leak it
+		// until the Lua GC kicks in, blocking script updates on Windows
+		script += fmt.Sprintf(`dofile('%s')`, escapeLuaStr(scriptPath))
+	default:
+		return fmt.Sprintf("echo \"No source command available for %s\"", env.Flags().Shell)
+	}
+
+	return script
+}
+
+func sourceCommandAsync(shell, scriptPath string) string {
+	switch shell {
+	case PWSH:
+		// Get-Variable, not a bare $global: dereference, for the "has this
+		// ever run before" check - on the very first run nothing has set
+		// $global:_ompOriginalPromptFunction yet, and a bare read of an
+		// unset variable throws under Set-StrictMode. The whole block is
+		// gated on that same check so re-sourcing the profile after the
+		// trampoline is installed is a true no-op - otherwise it would wipe
+		// $global:_ompPromptFunction/_ompInitialized that the module's real
+		// init set, and the module-load guard at the top of the init script
+		// returns before those get set again, leaving prompt() a permanent
+		// no-op.
+		return fmt.Sprintf(
+			"if (-not (Get-Variable -Name _ompOriginalPromptFunction -Scope Global -ErrorAction Ignore -ValueOnly)) { "+
+				"$global:_ompOriginalPromptFunction = $Function:prompt; "+
+				"$global:_ompPromptFunction = $null; "+
+				"$global:_ompInitialized = $false; "+
+				"function prompt() { if (-not $global:_ompInitialized) { $global:_ompAsyncInit = $true; & %s; return }; if ($global:_ompPromptFunction) { & $global:_ompPromptFunction } } "+
+				"}",
+			quotePwshStr(scriptPath),
+		)
+	case ZSH:
+		return fmt.Sprintf("precmd() { source %s }", QuotePosixStr(scriptPath))
+	case BASH:
+		command := fmt.Sprintf("source %s", QuotePosixStr(scriptPath))
+		return fmt.Sprintf("PROMPT_COMMAND=%s", QuotePosixStr(command))
+	case FISH:
+		return fmt.Sprintf("function fish_prompt; source %s; end", quoteFishStr(scriptPath))
+	default:
+		return ""
+	}
+}
+
+func printDebugInfo(env runtime.Environment, startTime *time.Time) string {
+	builder := text.NewBuilder()
+
+	builder.WriteString(fmt.Sprintf("\n%s %s\n", log.Text("Init duration:").Green().Bold().Plain(), time.Since(*startTime)))
+
+	builder.WriteString(log.Text("\n\nLogs:\n\n").Green().Bold().Plain().String())
+	builder.WriteString(env.Logs())
+
+	return builder.String()
+}
+
+// sessionScript exports the session's environment variables: POSH_SESSION_ID
+// identifies the session cache, and POSH_CONFIG is pinned to the session's
+// resolved configuration source so it can be recovered when the session cache
+// is lost. A healthy session cache always wins, so POSH_CONFIG can not be used
+// to change the configuration mid-session.
+func sessionScript(env runtime.Environment) string {
+	sessionID := cache.SessionID()
+	config := env.Flags().ConfigPath
+
+	switch env.Flags().Shell {
+	case PWSH:
+		return fmt.Sprintf("$env:POSH_SESSION_ID = \"%s\"; $env:POSH_CONFIG = %s;", sessionID, quotePwshStr(config))
+	case ZSH, BASH:
+		return fmt.Sprintf("export POSH_SESSION_ID=\"%s\"; export POSH_CONFIG=%s;", sessionID, QuotePosixStr(config))
+	case YASH:
+		return fmt.Sprintf("export POSH_SESSION_ID=\"%s\"; export POSH_CONFIG=%s;", sessionID, quoteYashStr(config))
+	case XONSH:
+		return fmt.Sprintf("$POSH_SESSION_ID = \"%s\"; $POSH_CONFIG = %s;", sessionID, quotePythonStr(config))
+	case FISH:
+		return fmt.Sprintf("set --export --global POSH_SESSION_ID \"%s\"; set --export --global POSH_CONFIG %s;", sessionID, quoteFishStr(config))
+	case ELVISH:
+		return fmt.Sprintf("set-env POSH_SESSION_ID \"%s\"; set-env POSH_CONFIG %s;", sessionID, quoteElvishStr(config))
+	case CMD:
+		return fmt.Sprintf(`os.setenv('POSH_SESSION_ID', '%s'); os.setenv('POSH_CONFIG', '%s');`, sessionID, escapeLuaStr(config))
+	}
+	return ""
+}

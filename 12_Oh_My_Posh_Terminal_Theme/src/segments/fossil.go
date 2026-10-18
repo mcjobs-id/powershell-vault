@@ -1,0 +1,70 @@
+package segments
+
+import "strings"
+
+type FossilStatus struct {
+	ScmStatus
+}
+
+func (s *FossilStatus) add(code string) {
+	switch code {
+	case "CONFLICT":
+		s.Conflicted++
+	case "DELETED", "MISSING":
+		s.Deleted++
+	case "ADDED", "ADDED_BY_INTEGRATE", "ADDED_BY_MERGE":
+		s.Added++
+	case "EDITED", "UPDATED", "UPDATED_BY_INTEGRATE", "UPDATED_BY_MERGE", "CHANGED":
+		s.Modified++
+	case "RENAMED":
+		s.Moved++
+	}
+}
+
+const (
+	FOSSILCOMMAND = "fossil"
+)
+
+type Fossil struct {
+	Status *FossilStatus
+	Branch string
+	Scm
+}
+
+func (f *Fossil) Template() string {
+	return " \ue725 {{.Branch}} {{.Status.String}} "
+}
+
+// Enabled has no Activation gate (Base's Always applies): fossil detection
+// runs `fossil status` and lets the command decide, rather than searching
+// for a checkout marker (.fslckout/_FOSSIL_) - there is no exact upward
+// marker search to lift into a gate.
+func (f *Fossil) Enabled() bool {
+	if !f.hasCommand(FOSSILCOMMAND) {
+		return false
+	}
+
+	// run fossil command
+	output, err := f.env.RunCommand(f.command, "status")
+	if err != nil {
+		return false
+	}
+
+	f.Status = &FossilStatus{}
+	lines := strings.SplitSeq(output, "\n")
+
+	for line := range lines {
+		key, value, found := strings.Cut(line, " ")
+		if !found {
+			continue
+		}
+		switch key {
+		case "tags:":
+			f.Branch = strings.TrimSpace(value)
+		default:
+			f.Status.add(key)
+		}
+	}
+
+	return true
+}

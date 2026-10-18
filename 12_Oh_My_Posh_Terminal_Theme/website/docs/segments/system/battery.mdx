@@ -1,0 +1,70 @@
+---
+id: battery
+title: Battery
+sidebar_label: Battery
+---
+
+## What
+
+:::caution
+The segment is not supported and automatically disabled on Windows when WSL 1 is detected. Works fine with WSL 2.
+:::
+
+Battery displays the remaining power percentage for your battery.
+
+## Sample Configuration
+
+import Config from "@site/src/components/Config.js";
+
+<Config
+  data={{
+    type: "battery",
+    style: "powerline",
+    powerline_symbol: "\uE0B0",
+    foreground: "#193549",
+    background: "#ffeb3b",
+    background_templates: [
+      '{{if eq "Charging" .State.String}}#40c4ff{{end}}',
+      '{{if eq "Discharging" .State.String}}#ff5722{{end}}',
+      '{{if eq "Full" .State.String}}#4caf50{{end}}',
+    ],
+    template:
+      " {{ if not .Error }}{{ .Icon }}{{ .Percentage }}{{ end }}\uF295 ",
+    options: {
+      discharging_icon: "\uE231 ",
+      charging_icon: "\uE234 ",
+      charged_icon: "\uE22F ",
+    },
+  }}
+/>
+
+## Options
+
+| Name                |   Type    | Default | Description                                                             |
+| ------------------- | :-------: | :-----: | ----------------------------------------------------------------------- |
+| `display_error`     | `boolean` | `false` | show the error context when failing to retrieve the battery information |
+| `charging_icon`     | `string`  |         | icon to display when charging                                           |
+| `discharging_icon`  | `string`  |         | icon to display when discharging                                        |
+| `charged_icon`      | `string`  |         | icon to display when fully charged                                      |
+| `not_charging_icon` | `string`  |         | icon to display when on AC power                                        |
+
+## Template ([info][templates])
+
+:::note default template
+
+```template
+ {{ if not .Error }}{{ .Icon }}{{ .Percentage }}{{ end }}{{ .Error }}
+```
+
+:::
+
+### Properties
+
+| Name             | Type      | Description                                                                                                                                                                                                                           |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.State`         | `struct`  | the battery state, has a `.String` function                                                                                                                                                                                           |
+| `.Percentage`    | `float64` | the current battery percentage                                                                                                                                                                                                        |
+| `.Error`         | `string`  | the error in case fetching the battery information failed                                                                                                                                                                             |
+| `.Icon`          | `string`  | the icon based on the battery state                                                                                                                                                                                                   |
+
+[templates]: /docs/configuration/templates

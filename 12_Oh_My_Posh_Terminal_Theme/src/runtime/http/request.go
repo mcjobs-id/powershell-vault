@@ -1,0 +1,40 @@
+//revive:disable:var-naming // package intentionally mirrors standard name for compatibility across runtime
+package http
+
+import (
+	"encoding/json"
+	"io"
+	"net/http"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/log"
+)
+
+type RequestModifier func(request *http.Request)
+
+type Request struct {
+	Env         Environment
+	HTTPTimeout int
+}
+
+type Environment interface {
+	HTTPRequest(url string, body io.Reader, timeout int, requestModifiers ...RequestModifier) ([]byte, error)
+}
+
+func (r *Request) Do[T any](url string, body io.Reader, requestModifiers ...RequestModifier) (T, error) {
+	var data T
+	httpTimeout := r.HTTPTimeout // r.props.GetInt(options.HTTPTimeout, options.DefaultHTTPTimeout)
+
+	responseBody, err := r.Env.HTTPRequest(url, body, httpTimeout, requestModifiers...)
+	if err != nil {
+		log.Error(err)
+		return data, err
+	}
+
+	err = json.Unmarshal(responseBody, &data)
+	if err != nil {
+		log.Error(err)
+		return data, err
+	}
+
+	return data, nil
+}

@@ -1,0 +1,30 @@
+{
+  "workspace": [
+    "./shell-setup"
+  ],
+  "lint": {
+    "exclude": [
+      "./shell-setup/bundled.esm.js"
+    ],
+    "rules": {
+      "exclude": [
+        "no-slow-types"
+      ]
+    }
+  },
+  "tasks": {
+    "bundle": "cd shell-setup && deno task bundle"
+  },
+  "lock": { "path": "./shell-setup/deno.lock", "frozen": true },
+  "fmt": {
+    "exclude": [
+      "./shell-setup/bundled.esm.js",
+      ".github"
+    ]
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.8",
+    "@david/dax": "jsr:@david/dax@^0.44",
+    "@sigma/pty-ffi": "jsr:@sigma/pty-ffi@^0.26"
+  }
+}

@@ -1,0 +1,302 @@
+---
+id: claude
+title: Claude Code
+sidebar_label: Claude Code
+---
+
+## What
+
+Display Claude Code session information including the current AI model, token usage, costs, and workspace details.
+Shows a visual gauge of context window usage and formatted cost/token information for monitoring your Claude usage.
+
+This segment integrates with [Claude Code's statusline functionality][claude-docs]
+to provide real-time session data in your prompt.
+
+:::info Working directory
+
+`oh-my-posh claude` renders directory-aware segments — `path`, `git`, `project` and the language segments — and the
+`.PWD`, `.Folder` and `.AbsolutePWD` template values against the directory the payload reports in
+`workspace.current_dir`, falling back to `cwd`. When the payload reports neither, or reports a path that is not an
+existing absolute directory, the renderer's own working directory is used, as before.
+
+The renderer's working directory itself is not changed, so external commands — including version manager shims — and
+the `cmd`, `readFile` and `glob` template functions still resolve relative to the directory Claude Code started the
+renderer in, not to `workspace.current_dir`.
+
+:::
+
+## Sample Configuration
+
+import Config from "@site/src/components/Config.js";
+
+<Config
+  data={{
+    type: "claude",
+    style: "diamond",
+    leading_diamond: "\ue0b6",
+    trailing_diamond: "\ue0b4",
+    foreground: "#FFFFFF",
+    background: "#FF6B35",
+    template:
+      " \udb82\udfc9 {{ .Model.DisplayName }} \uf2d0 {{ .TokenGauge }} ",
+  }}
+/>
+
+## Template ([info][templates])
+
+:::note default template
+
+```template
+ \udb82\udfc9 {{ .Model.DisplayName }} \uf2d0 {{ .TokenGauge }}
+```
+
+:::
+
+## Options
+
+| Name                  | Type     | Default | Description                                              |
+| --------------------- | -------- | ------- | -------------------------------------------------------- |
+| `gauge_marked_char`   | `string` | `▰`     | Character used for filled blocks in gauge visualizations |
+| `gauge_unmarked_char` | `string` | `▱`     | Character used for empty blocks in gauge visualizations  |
+
+### Properties
+
+| Name                    | Type            | Description                                                                          |
+| ----------------------- | --------------- | ------------------------------------------------------------------------------------ |
+| `.CWD`                  | `string`        | Current working directory; same value as `.Workspace.CurrentDir`                     |
+| `.SessionID`            | `string`        | Unique identifier for the Claude session                                             |
+| `.SessionName`          | `string`        | Custom session name; empty when absent                                               |
+| `.PromptID`             | `string`        | User prompt identifier for event correlation; empty when absent                      |
+| `.TranscriptPath`       | `string`        | Path to the conversation transcript file                                             |
+| `.Model`                | `Model`         | AI model information                                                                 |
+| `.Workspace`            | `Workspace`     | Workspace directory information                                                      |
+| `.Version`              | `string`        | Claude Code version                                                                  |
+| `.OutputStyle`          | `OutputStyle`   | Current output style information; nil when absent                                   |
+| `.Effort`               | `Effort`        | Reasoning effort information; nil when absent or unsupported                         |
+| `.Thinking`             | `Thinking`      | Extended thinking state; nil when absent                                            |
+| `.Cost`                 | `Cost`          | Cost and duration information                                                        |
+| `.ContextWindow`        | `ContextWindow` | Token usage information                                                              |
+| `.Exceeds200KTokens`    | `bool`          | Whether the most recent API response exceeded 200K total tokens                      |
+| `.Vim`                  | `Vim`           | Vim mode information; nil when absent                                                |
+| `.Agent`                | `Agent`         | Agent information; nil when absent                                                   |
+| `.PR`                   | `PR`            | Pull request information for the current branch; nil when absent                     |
+| `.Worktree`             | `Worktree`      | Claude Code worktree information; nil when absent                                    |
+| `.FastMode`             | `bool`          | Whether fast mode is enabled; `false` when absent or unsupported                     |
+| `.TokenUsagePercent`    | `Percentage`    | Percentage of context window used (0-100)                                            |
+| `.TokenGauge`           | `string`        | Gauge showing remaining context capacity using configured characters (e.g., `▰▰▰▱▱`) |
+| `.TokenGaugeUsed`       | `string`        | Gauge showing used context capacity using configured characters (e.g., `▰▰▱▱▱`)      |
+| `.FiveHourGauge`        | `string`        | Gauge showing 5-hour rate limit usage using configured characters                    |
+| `.SevenDayGauge`        | `string`        | Gauge showing 7-day rate limit usage using configured characters                     |
+| `.FiveHourResetsAt`     | `time.Time`     | 5-hour rate limit window reset time                                                  |
+| `.SevenDayResetsAt`     | `time.Time`     | 7-day rate limit window reset time                                                   |
+| `.FiveHourResetsIn`     | `time.Duration` | time until 5-hour resets; 0=unavailable, neg=past                                    |
+| `.SevenDayResetsIn`     | `time.Duration` | time until 7-day resets; 0=unavailable, neg=past                                     |
+| `.FormattedCost`        | `string`        | Formatted cost string (e.g., "$0.15" or "$0.0012")                                   |
+| `.FormattedTokens`      | `string`        | Human-readable token count (e.g., "1.2K", "15.3M")                                   |
+| `.FormattedDuration`    | `string`        | Total session duration (e.g., "2m 5s")                                               |
+| `.FormattedAPIDuration` | `string`        | API wait time (e.g., "0m 45s")                                                       |
+| `.FiveHourUsage`        | `Percentage`    | 5-hour rolling rate limit usage (0-100)                                              |
+| `.SevenDayUsage`        | `Percentage`    | 7-day rate limit usage (0-100)                                                       |
+| `.PromptCache`          | `PromptCache`   | Prompt cache statistics; nil until the first API response (requires v2.1.251)        |
+| `.PromptCacheHitRatio`  | `Percentage`    | Prompt cache hit ratio (0-100); 0 when unavailable                                   |
+| `.PromptCacheGauge`     | `string`        | Gauge showing the prompt cache hit ratio using configured characters                  |
+| `.PromptCacheExpiresAt` | `time.Time`     | When the cached prefix goes cold; zero time when unavailable                         |
+| `.PromptCacheExpiresIn` | `time.Duration` | Time until the cache goes cold; 0=unavailable, neg=past                              |
+| `.FormattedCacheWriteTokens` | `string`   | Human-readable tokens written to the cache this session (e.g., "352.0K")             |
+| `.FormattedMissRecacheTokens` | `string`  | Human-readable tokens re-cached because of misses (e.g., "310.2K")                   |
+
+#### Model Properties
+
+| Name           | Type     | Description                                           |
+| -------------- | -------- | ----------------------------------------------------- |
+| `.ID`          | `string` | Technical model identifier                            |
+| `.DisplayName` | `string` | Human-readable model name (e.g., "Claude 3.5 Sonnet") |
+
+#### Workspace Properties
+
+| Name           | Type       | Description                                                                  |
+| -------------- | ---------- | ---------------------------------------------------------------------------- |
+| `.CurrentDir`  | `string`   | Current working directory; same value as `.CWD`                              |
+| `.ProjectDir`  | `string`   | Directory where Claude Code was launched; may differ from `.CurrentDir`      |
+| `.AddedDirs`   | `[]string` | Additional directories added via `/add-dir` or `--add-dir`                   |
+| `.GitWorktree` | `string`   | Path to the linked git worktree, empty when not inside a linked git worktree |
+| `.Repo`        | `Repo`     | Repository identity parsed from the `origin` remote; nil when absent         |
+
+#### Repo Properties
+
+| Name     | Type     | Description                                                  |
+| -------- | -------- | ------------------------------------------------------------ |
+| `.Host`  | `string` | Repository host, for example `github.com`; empty when absent |
+| `.Owner` | `string` | Repository owner or organization; empty when absent          |
+| `.Name`  | `string` | Repository name; empty when absent                           |
+
+:::tip nil pointer fields
+`.OutputStyle`, `.Effort`, `.Thinking`, `.Vim`, `.Agent`, `.PR`, `.Worktree`, `.PromptCache`, and `.Workspace.Repo`
+are all `nil` when the underlying data is absent. Guard direct field access with
+`{{if .Effort}}{{.Effort.Level}}{{end}}` to avoid template errors.
+:::
+
+#### OutputStyle Properties
+
+| Name    | Type     | Description                      |
+| ------- | -------- | -------------------------------- |
+| `.Name` | `string` | Name of the current output style |
+
+#### Effort Properties
+
+| Name     | Type     | Description                                                                                        |
+| -------- | -------- | -------------------------------------------------------------------------------------------------- |
+| `.Level` | `string` | Reasoning effort level (`low`, `medium`, `high`, `xhigh`, `max`); empty when absent or unsupported |
+
+#### Thinking Properties
+
+| Name       | Type   | Description                                               |
+| ---------- | ------ | --------------------------------------------------------- |
+| `.Enabled` | `bool` | Whether extended thinking is enabled; `false` when absent |
+
+#### Vim Properties
+
+| Name    | Type     | Description                                       |
+| ------- | -------- | ------------------------------------------------- |
+| `.Mode` | `string` | Current vim mode; empty when vim mode is disabled |
+
+#### Agent Properties
+
+| Name    | Type     | Description                               |
+| ------- | -------- | ----------------------------------------- |
+| `.Name` | `string` | Agent name; empty when no agent is active |
+
+#### PR Properties
+
+| Name           | Type          | Description                                                                                   |
+| -------------- | ------------- | --------------------------------------------------------------------------------------------- |
+| `.Number`      | `string`      | Open pull request number for the current branch; empty when absent                            |
+| `.URL`         | `string`      | Open pull request URL for the current branch; empty when absent                               |
+| `.ReviewState` | `string`      | Review status (`approved`, `pending`, `changes_requested`, or `draft`); empty when unavailable |
+
+#### Worktree Properties
+
+| Name              | Type     | Description                                                    |
+| ----------------- | -------- | -------------------------------------------------------------- |
+| `.Name`           | `string` | Name of the active Claude Code worktree                        |
+| `.Path`           | `string` | Absolute path to the worktree directory                        |
+| `.Branch`         | `string` | Git branch name for the worktree; empty when absent            |
+| `.OriginalCWD`    | `string` | Directory Claude Code was in before entering worktree          |
+| `.OriginalBranch` | `string` | Branch checked out before entering worktree; empty when absent |
+
+#### Cost Properties
+
+| Name                  | Type         | Description                                                 |
+| --------------------- | ------------ | ----------------------------------------------------------- |
+| `.TotalCostUSD`       | `float64`    | Total cost in USD                                           |
+| `.TotalDurationMS`    | `DurationMS` | Total session duration in milliseconds (formats as "Xm Ys") |
+| `.TotalAPIDurationMS` | `DurationMS` | Time spent waiting for API responses (formats as "Xm Ys")   |
+| `.TotalLinesAdded`    | `int`        | Lines of code added in the session                          |
+| `.TotalLinesRemoved`  | `int`        | Lines of code removed in the session                        |
+
+#### ContextWindow Properties
+
+| Name                 | Type           | Description                                  |
+| -------------------- | -------------- | -------------------------------------------- |
+| `.TotalInputTokens`  | `int`          | Total input tokens used in the session       |
+| `.TotalOutputTokens` | `int`          | Total output tokens generated in the session |
+| `.ContextWindowSize` | `int`          | Maximum context window size for the model    |
+| `.CurrentUsage`      | `CurrentUsage` | Current message token usage                  |
+
+#### CurrentUsage Properties
+
+| Name                        | Type  | Description                                                   |
+| --------------------------- | ----- | ------------------------------------------------------------- |
+| `.InputTokens`              | `int` | Input tokens for the current message                          |
+| `.OutputTokens`             | `int` | Output tokens for the current message                         |
+| `.CacheCreationInputTokens` | `int` | Tokens used to create the prompt cache in the current message |
+| `.CacheReadInputTokens`     | `int` | Tokens read from the prompt cache in the current message      |
+
+#### PromptCache Properties
+
+Statistics for the main conversation's [prompt cache][prompt-cache]. Access via `.PromptCache`.
+The object is `nil` until the first API response of the session and requires Claude Code v2.1.251 or later;
+fields marked v2.1.260 additionally require Claude Code v2.1.260 or later.
+Timestamps are Unix epoch seconds.
+
+| Name                    | Type                | Description                                                                                         |
+| ----------------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
+| `.Warm`                 | `bool`              | Whether the cached prefix is still within its TTL                                                   |
+| `.CachingObserved`      | `bool`              | Whether any response reported cache tokens; `false` means caching is off or not reported            |
+| `.TTL`                  | `string`            | Cache lifetime of the current cached prefix: `5m` or `1h`                                           |
+| `.ExpiresAt`            | `*int64`            | When the cached prefix goes cold; nil when the last response reported no cache tokens               |
+| `.Requests`             | `int`               | API requests recorded for the main conversation                                                     |
+| `.Misses`               | `int`               | Requests that re-processed content the cache already held                                           |
+| `.ExpectedRebuilds`     | `int`               | Cache rebuilds that followed a compaction or a clearing of old tool results                         |
+| `.HitRatio`             | `*float64`          | Cache read tokens as a fraction (0-1) of all input tokens; nil while no tokens were counted         |
+| `.CacheWriteTokens`     | `int`               | All tokens written to the cache this session                                                        |
+| `.MissRecacheTokens`    | `int`               | Tokens written to the cache by requests counted as misses                                           |
+| `.LastMissAt`           | `*int64`            | When the last miss happened; nil while there are no misses                                          |
+| `.LastMissCause`        | `LastMissCause`     | Likely cause of the last miss; nil when there is none or it is unknown (v2.1.260)                   |
+| `.MissCauses`           | `map[string]int`    | Number of diagnosed misses per cause (v2.1.260)                                                     |
+| `.RecacheTokensIfCold`  | `*int`              | Tokens the next request re-caches if the cache goes cold; nil right after a compaction              |
+
+#### LastMissCause Properties
+
+| Name               | Type       | Description                                                                                        |
+| ------------------ | ---------- | -------------------------------------------------------------------------------------------------- |
+| `.Causes`          | `[]string` | Cause names, such as `tools_changed`, `system_prompt_changed`, `ttl_expired_5m`, `likely_server_side` |
+| `.ToolsAdded`      | `int`      | Tools added to the request, reported with `tools_changed`                                          |
+| `.ToolsRemoved`    | `int`      | Tools removed from the request, reported with `tools_changed`                                      |
+| `.SystemCharDelta` | `int`      | Change in system prompt length in characters, reported with `system_prompt_changed`                |
+
+:::tip Prompt cache example
+Guard against the object being absent so older Claude Code versions keep working:
+
+```template
+{{ if .PromptCache }}{{ .PromptCacheGauge }} {{ .PromptCacheHitRatio }}%{{ if not .PromptCache.Warm }} cold{{ end }}{{ end }}
+```
+
+:::
+
+#### RateLimits Properties
+
+Available when Claude Code provides rate limit data (Pro/Max subscribers). Access via `.RateLimits`.
+
+| Name        | Type              | Description              |
+| ----------- | ----------------- | ------------------------ |
+| `.FiveHour` | `RateLimitWindow` | 5-hour rolling window    |
+| `.SevenDay` | `RateLimitWindow` | 7-day rolling window     |
+
+#### RateLimitWindow Properties
+
+| Name              | Type       | Description                              |
+| ----------------- | ---------- | ---------------------------------------- |
+| `.UsedPercentage` | `*float64` | Usage percentage (0-100), nil if unknown |
+| `.ResetsAt`       | `*int64`   | Unix epoch seconds when window resets    |
+
+### Percentage Methods
+
+The `Percentage` type (returned by `.TokenUsagePercent`, `.FiveHourUsage`, `.SevenDayUsage`)
+provides additional methods for direct use in templates:
+
+| Method       | Returns  | Description                                                        |
+| ------------ | -------- | ------------------------------------------------------------------ |
+| `.Gauge`     | `string` | Visual gauge showing remaining capacity using hardcoded `▰`/`▱` characters |
+| `.GaugeUsed` | `string` | Visual gauge showing used capacity using hardcoded `▰`/`▱` characters |
+| `.String`    | `string` | Numeric percentage value (e.g., "75" for use in templates)         |
+
+:::tip Custom gauge characters
+Use `.TokenGauge`, `.TokenGaugeUsed`, `.FiveHourGauge`, and `.SevenDayGauge` instead of the
+raw `.Percentage` methods above — they respect the `gauge_marked_char` and `gauge_unmarked_char` options.
+:::
+
+## How it works
+
+The segment reads session information from the `POSH_CLAUDE_STATUS` environment variable, which is automatically set when using the `oh-my-posh claude` command. The data includes:
+
+- Current AI model information
+- Token usage and context window utilization
+- Session costs and duration
+- Workspace directory information
+
+The segment only displays when Claude Code is actively providing session data.
+
+[claude-docs]: https://code.claude.com/docs/en/statusline
+[prompt-cache]: https://code.claude.com/docs/en/statusline#prompt-cache-fields
+[templates]: /docs/configuration/templates

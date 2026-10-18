@@ -1,0 +1,226 @@
+/* Extracted from Studio/styles.module.css - see that file's own .studio/.preview rules for the
+   pane this sits beside. Both consumers (the studio, each segment doc's editor - see index.js)
+   wrap this in their own layout; this module only styles the editor itself. */
+.pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--omp-space-1);
+  min-width: 0;
+}
+
+/* Format tabs flush left against the editor window below them, Copy/Add to Studio (a segment
+   doc only) pushed to the right by space-between. align-items is center rather than baseline:
+   the tabs carry Infima's 3px active underline and the action pills carry a border, so aligning
+   the two on their text baselines left them visibly off by the difference. */
+.paneHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--omp-space-2);
+}
+
+/* The format switch reuses Infima's own .tabs/.tabs__item/.tabs__item--active - the same classes
+   @theme/Tabs renders (node_modules/@docusaurus/theme-classic/lib/theme/Tabs/index.js) - so it is
+   pixel-identical to the underlined-active-tab look every segment doc already uses for its
+   json/yaml/toml code blocks, rather than an approximation. Only the identity of the *element*
+   differs (a plain <ul>/<li> here instead of Tabs' own TabsProvider/TabItem machinery, since
+   there is no separate panel per tab to show/hide - the one editor's content and language just
+   change). formatTabs trims Infima's default spacing, which assumes the tab strip owns the full
+   width of a content column; here it is one control among several in a header row. */
+.formatTabs {
+  margin: 0;
+  min-width: 0;
+  list-style: none;
+}
+
+/* The tab strip is a real <ul>/<li> inside a doc page, so `.markdown li + li { margin-top:
+   var(--ifm-list-item-margin) }` - the docs' own spacing between list items - applied to it,
+   pushing yaml and toml 4px below json, which is a first child and therefore exempt. Zeroed
+   here; the `ul` type selector is what wins the specificity tie against that rule. */
+ul.formatTabs li + li {
+  margin-top: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: baseline;
+  gap: var(--omp-space-1);
+}
+
+/* Visually hidden but still in the accessibility tree - CodeMirror's own editable surface (a
+   contenteditable div, not a <textarea>) can't take a plain aria-label prop, so a proper
+   associated <label> stands in for it instead - see index.js's EditorView.contentAttributes. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The window chrome around the editor: same border/radius recipe as the preview pane beside it
+   (both trace back to the shared --omp-card-* tokens in src/css/custom.css), so the two read as
+   one family instead of the preview looking "finished" and the editor looking like a bare
+   textarea. Overflow stays visible so completion popups can escape the editor frame. */
+.editorWindow {
+  border: 1px solid var(--omp-card-border-color);
+  border-radius: var(--omp-card-radius);
+  overflow: visible;
+  box-shadow: 4px 4px 0 var(--omp-frame-shadow);
+}
+
+.editorWindow:focus-within {
+  border-color: var(--ifm-color-primary);
+}
+
+/* Purely decorative title bar, styled after the traffic-light window controls of a native editor
+   window - it has nothing to click and nothing to announce, hence aria-hidden in index.js. */
+.editorChrome {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--omp-card-background);
+  border-bottom: 1px solid var(--omp-card-border-color);
+  border-radius: var(--omp-card-radius) var(--omp-card-radius) 0 0;
+}
+
+.chromeControl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.9rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--omp-text-secondary);
+  opacity: 0.9;
+}
+
+/* No position: relative needed here any more - CodeMirror's own gutter is a child of
+   .cm-editor/.editorHost below, not a sibling positioned against .editorBody the way the old
+   hand-rolled line-number gutter was. align-items: stretch still gives .editorHost the row's
+   full height. */
+.editorBody {
+  display: flex;
+  align-items: stretch;
+}
+
+/* The flex host CodeMirror mounts its own <div class="cm-editor"> into (see index.js's `new
+   EditorView({ parent: hostRef.current })`) - min-width: 0 lets it shrink below its content's
+   natural width instead of overflowing the pane, same as every other flex child in this file. */
+.editorHost {
+  flex: 1;
+  min-width: 0;
+}
+
+/* CodeMirror sizes .cm-editor to its own content by default (no min-height set here), matching
+   the old editor's behaviour: a short segment config - most are under ten lines - doesn't sit
+   above a wall of empty rows. font-size/line-height reproduce the old .editor's own values;
+   border-radius keeps the bottom corners matching .editorWindow's frame now that CodeMirror's
+   gutter+content pair replaces the old .gutter/.editor sibling pair sharing that frame. */
+.editorHost :global(.cm-editor) {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: var(--omp-text-body);
+  line-height: 1.5;
+  border-radius: 0 0 var(--omp-card-radius) var(--omp-card-radius);
+}
+
+.editorHost :global(.cm-editor.cm-focused) {
+  outline: none;
+}
+
+/* Long lines scroll horizontally instead of wrapping - EditorView.lineWrapping is deliberately
+   never added (see index.js), so this is the only place that behaviour needs stating; CodeMirror
+   would otherwise still let a scroller overflow silently without it. */
+.editorHost :global(.cm-scroller) {
+  overflow-x: auto;
+}
+
+/* Despite the name, this is no longer the editor's own completion/hover tooltip (CodeMirror
+   draws those itself now - see editorTheme.js's .cm-tooltip rule) - only ErrorIndicator.js's
+   warning-triangle bubble still uses it, kept under its original name rather than renamed, since
+   renaming would touch ErrorIndicator.js for no behavioural benefit. */
+.completionTooltip {
+  position: absolute;
+  z-index: 11;
+  width: 18rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--omp-card-border-color);
+  border-radius: var(--omp-card-radius);
+  background: var(--omp-card-background);
+  box-shadow: var(--ifm-global-shadow-md);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  /* Purely informational and mouse-driven - never steals focus/clicks from the popup
+     it floats next to. */
+  pointer-events: none;
+}
+
+.completionTooltipTitle {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--ifm-font-color-base);
+}
+
+.completionTooltipText {
+  color: var(--omp-text-secondary);
+}
+
+/* ErrorIndicator.js's warning triangle, rendered into ConfigEditor's actions slot alongside the
+   download/copy/add-to-studio buttons. position: relative so its own tooltip bubble (absolute)
+   anchors to the triangle itself rather than some further-up ancestor. */
+.errorIndicator {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  /* .actions aligns its children on their text baseline (see that rule's own comment) so the
+     bordered action pills all read as one row - a bare svg icon has no text baseline of its own
+     to line up on, and defaulted to sitting a couple pixels off-center against them. Not an
+     .actions-wide change: only this one non-text item needs the override. */
+  align-self: center;
+  color: var(--ifm-color-danger);
+  cursor: default;
+}
+
+.errorIndicatorIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Reuses .completionTooltip's card look (border/background/shadow), just anchored below the
+   triangle instead of following the mouse - pointer-events left enabled (unlike the hover-info
+   tooltip) so a touch/keyboard reader can't lose it by so much as brushing past it. */
+.errorIndicatorTooltip {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  pointer-events: auto;
+}
+
+.errorIndicatorTooltipLeft {
+  right: auto;
+  left: 0;
+}
+
+.errorIndicatorTooltipUp {
+  top: auto;
+  bottom: calc(100% + 0.5rem);
+}
+
+/* Left as a literal size rather than --omp-text-body: this is a mobile-only reduction on top of
+   the editor's own --omp-text-body, not one of the shared scale's steps. Only one rule needed
+   now (against .cm-editor) - CodeMirror's own gutter inherits font-size from it rather than
+   needing the separate --omp-gutter-width/.gutter overrides the old hand-rolled gutter did. */
+@media (max-width: 700px) {
+  .editorHost :global(.cm-editor) {
+    font-size: 0.75rem;
+  }
+}

@@ -1,0 +1,170 @@
+package segments
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/regex"
+	"github.com/jandedobbeleer/oh-my-posh/src/segments/options"
+	"github.com/jandedobbeleer/oh-my-posh/src/template"
+)
+
+type Node struct {
+	PackageManagerIcon template.Markup
+	PackageManagerName string
+
+	Language
+}
+
+const (
+	PnpmIcon            options.Option = "pnpm_icon"
+	YarnIcon            options.Option = "yarn_icon"
+	NPMIcon             options.Option = "npm_icon"
+	BunIcon             options.Option = "bun_icon"
+	FetchPackageManager options.Option = "fetch_package_manager"
+)
+
+func (n *Node) Template() string {
+	return " {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} "
+}
+
+func (n *Node) Enabled() bool {
+	n.loadSpec()
+
+	return n.Language.Enabled()
+}
+
+// Activation implements the activation gate; see Language.activation.
+func (n *Node) Activation() Activation {
+	n.loadSpec()
+
+	return n.activation()
+}
+
+func (n *Node) loadSpec() {
+	n.extensions = []string{"*.js", "*.ts", fileName, ".nvmrc", "pnpm-workspace.yaml", ".pnpmfile.cjs", ".vue"}
+	n.tooling = map[string]*cmd{
+		// node --version reports the resolved node binary's own build - true
+		// whether that binary comes straight from PATH or from an nvm/fnm/
+		// volta-style manager that swaps PATH per version (a different
+		// resolved path, not a shared shim).
+		nodeToolName: {
+			executable:       nodeToolName,
+			args:             []string{versionFlagArg},
+			regex:            `(?:v(?P<version>((?P<major>[0-9]+).(?P<minor>[0-9]+).(?P<patch>[0-9]+))))`,
+			versionCacheable: true,
+		},
+	}
+	n.defaultTooling = []string{nodeToolName}
+	n.versionURLTemplate = "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V{{ .Major }}.md#{{ .Full }}"
+	n.Language.matchesVersionFile = n.matchesVersionFile
+	n.Language.loadContext = n.loadContext
+}
+
+func (n *Node) loadContext() {
+	if !n.options.Bool(FetchPackageManager, false) {
+		return
+	}
+
+	packageManagerDefinitions := []struct {
+		fileName     string
+		name         string
+		iconProperty options.Option
+		defaultIcon  string
+	}{
+		{
+			fileName:     "pnpm-lock.yaml",
+			name:         pnpmToolName,
+			iconProperty: PnpmIcon,
+			defaultIcon:  "\ue865",
+		},
+		{
+			fileName:     "yarn.lock",
+			name:         yarnToolName,
+			iconProperty: YarnIcon,
+			defaultIcon:  "\ue6a7",
+		},
+		{
+			fileName:     "bun.lockb",
+			name:         bunToolName,
+			iconProperty: BunIcon,
+			defaultIcon:  "\ue76f",
+		},
+		{
+			fileName:     "bun.lock",
+			name:         bunToolName,
+			iconProperty: BunIcon,
+			defaultIcon:  "\ue76f",
+		},
+		{
+			fileName:     "package-lock.json",
+			name:         npmToolName,
+			iconProperty: NPMIcon,
+			defaultIcon:  "\uE71E",
+		},
+		{
+			fileName:     fileName,
+			name:         npmToolName,
+			iconProperty: NPMIcon,
+			defaultIcon:  "\uE71E",
+		},
+	}
+
+	for _, pm := range packageManagerDefinitions {
+		if n.env.HasFiles(pm.fileName) {
+			n.PackageManagerName = pm.name
+			n.PackageManagerIcon = n.options.Markup(pm.iconProperty, pm.defaultIcon)
+			break
+		}
+	}
+}
+
+func (n *Node) matchesVersionFile() (string, bool) {
+	fileVersion := n.env.FileContent(".nvmrc")
+	if fileVersion == "" {
+		return "", true
+	}
+
+	fileVersion = strings.TrimSpace(fileVersion)
+
+	if strings.HasPrefix(fileVersion, "lts/") {
+		fileVersion = strings.ToLower(fileVersion)
+		codeName := strings.TrimPrefix(fileVersion, "lts/")
+		switch codeName {
+		case "argon":
+			fileVersion = "4.9.1"
+		case "boron":
+			fileVersion = "6.17.1"
+		case "carbon":
+			fileVersion = "8.17.0"
+		case "dubnium":
+			fileVersion = "10.24.1"
+		case "erbium":
+			fileVersion = "12.22.12"
+		case "fermium":
+			fileVersion = "14.21.3"
+		case "gallium":
+			fileVersion = "16.20.2"
+		case "hydrogen":
+			fileVersion = "18.20.8"
+		case "iron":
+			fileVersion = "20.19.6"
+		case "jod":
+			fileVersion = "22.21.1"
+		case "krypton":
+			fileVersion = "24.12.0"
+		}
+	}
+
+	re := fmt.Sprintf(
+		`(?im)^v?%s(\.?%s)?(\.?%s)?$`,
+		n.Major,
+		n.Minor,
+		n.Patch,
+	)
+
+	version := strings.TrimSpace(fileVersion)
+	version = strings.TrimPrefix(version, "v")
+
+	return version, regex.MatchString(re, fileVersion)
+}

@@ -1,0 +1,504 @@
+package prompt
+
+import (
+	"errors"
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/jandedobbeleer/oh-my-posh/src/color"
+	"github.com/jandedobbeleer/oh-my-posh/src/config"
+	"github.com/jandedobbeleer/oh-my-posh/src/maps"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime"
+	"github.com/jandedobbeleer/oh-my-posh/src/runtime/mock"
+	"github.com/jandedobbeleer/oh-my-posh/src/shell"
+	"github.com/jandedobbeleer/oh-my-posh/src/template"
+	"github.com/jandedobbeleer/oh-my-posh/src/terminal"
+
+	"github.com/stretchr/testify/assert"
+	testifymock "github.com/stretchr/testify/mock"
+)
+
+func setupExtraPromptTest(t *testing.T, sh string, flags *runtime.Flags) *mock.Environment {
+	t.Helper()
+	// terminal.Plain is a package-level global; restore it for later tests.
+	t.Cleanup(func() { terminal.Plain = false })
+
+	env := new(mock.Environment)
+	env.On("Shell").Return(sh)
+	env.On("Flags").Return(flags)
+	// Mock accent color retrieval for both Windows and macOS. The mock
+	// forwards RunCommand as Called(command, args), so the expectation
+	// takes two arguments: the command and the args slice.
+	env.On("RunCommand", testifymock.Anything, testifymock.Anything).Return("4", nil)
+	env.On("WindowsRegistryKeyValue", testifymock.Anything).Return(&runtime.WindowsRegistryValue{ValueType: runtime.DWORD, DWord: 0xFF0078D7}, nil)
+
+	template.Cache = &cache.Template{
+		Segments: maps.NewConcurrent[any](),
+	}
+	template.Init(env, nil, nil)
+	terminal.Init(sh)
+	// These tests assert on uncolored output, so ask for it rather than
+	// inheriting whatever an earlier test left in this global.
+	terminal.Plain = true
+	terminal.Colors = color.MakeColors(nil, false, "", env)
+
+	return env
+}
+
+func TestExtraPromptTransientZSH(t *testing.T) {
+	cases := []struct {
+		TerminalErr   error
+		Case          string
+		Template      string
+		RightTemplate string
+		Filler        string
+		Expected      string
+		TerminalWidth int
+		Eval          bool
+	}{
+		{
+			Case:     "no right template, eval - byte identical to previous behavior",
+			Template: "L>",
+			Eval:     true,
+			Expected: fmt.Sprintf("PS1=%s\nRPROMPT=''", shell.QuotePosixStr("L>")),
+		},
+		{
+			Case:          "right template, eval",
+			Template:      "L>",
+			RightTemplate: "R>",
+			Eval:          true,
+			Expected:      fmt.Sprintf("PS1=%s\nRPROMPT=%s", shell.QuotePosixStr("L>"), shell.QuotePosixStr("R>")),
+		},
+		{
+			Case:          "right template with quote and backslash, eval",
+			Template:      "L>",
+			RightTemplate: `it's a \`,
+			Eval:          true,
+			Expected:      fmt.Sprintf("PS1=%s\nRPROMPT=%s", shell.QuotePosixStr("L>"), shell.QuotePosixStr(`it's a \`)),
+		},
+		{
+			Case:          "right template and filler, eval",
+			Template:      "L>",
+			RightTemplate: "R>",
+			Filler:        "-",
+			TerminalWidth: 20,
+			Eval:          true,
+			Expected:      fmt.Sprintf("PS1=%s\nRPROMPT=%s", shell.QuotePosixStr("L>"+strings.Repeat("-", 16)), shell.QuotePosixStr("R>")),
+		},
+		{
+			Case:          "right template and filler, unknown terminal width, eval",
+			Template:      "L>",
+			RightTemplate: "R>",
+			Filler:        "-",
+			TerminalErr:   errors.New("burp"),
+			Eval:          true,
+			Expected:      fmt.Sprintf("PS1=%s\nRPROMPT=%s", shell.QuotePosixStr("L>"), shell.QuotePosixStr("R>")),
+		},
+		{
+			Case:          "right template, no eval - raw string without RPROMPT",
+			Template:      "L>",
+			RightTemplate: "R>",
+			Expected:      "L>",
+		},
+	}
+
+	for _, tc := range cases {
+		env := setupExtraPromptTest(t, shell.ZSH, &runtime.Flags{Eval: tc.Eval})
+		env.On("TerminalWidth").Return(tc.TerminalWidth, tc.TerminalErr)
+
+		engine := &Engine{
+			Config: &config.Config{
+				TransientPrompt: &config.Segment{
+					Template:      tc.Template,
+					RightTemplate: tc.RightTemplate,
+					Filler:        tc.Filler,
+				},
+			},
+			Env: env,
+		}
+
+		got := engine.ExtraPrompt(Transient)
+		assert.Equal(t, tc.Expected, got, tc.Case)
+	}
+}
+
+func TestExtraPromptTransientPWSH(t *testing.T) {
+	// initialize the terminal for pwsh before resolving the expected sequences.
+	// Plain has to match what setupExtraPromptTest uses, otherwise the expected
+	// sequences are resolved under a different mode than the ones under test.
+	t.Cleanup(func() { terminal.Plain = false })
+	terminal.Plain = true
+	terminal.Init(shell.PWSH)
+	saveCursor := terminal.SaveCursorPosition()
+	restoreCursor := terminal.RestoreCursorPosition()
+	clearAfter := terminal.ClearAfter()
+	// the rprompt returns the cursor to the left part, so every case stays on row 0
+	marker := terminal.CursorRowMarker(0)
+
+	cases := []struct {
+		TerminalErr   error
+		Case          string
+		Template      string
+		RightTemplate string
+		Filler        string
+		Expected      string
+		TerminalWidth int
+	}{
+		{
+			Case:     "no right template - byte identical to previous behavior",
+			Template: "L>",
+			Expected: marker + "L>" + clearAfter,
+		},
+		{
+			Case:          "no right template with filler - byte identical to previous behavior",
+			Template:      "L>",
+			Filler:        "-",
+			TerminalWidth: 20,
+			Expected:      marker + "L>" + strings.Repeat("-", 18) + clearAfter,
+		},
+		{
+			Case:          "right template",
+			Template:      "L>",
+			RightTemplate: "R>",
+			TerminalWidth: 20,
+			Expected:      marker + "L>" + clearAfter + saveCursor + strings.Repeat(" ", 16) + "R>" + restoreCursor,
+		},
+		{
+			Case:          "right template with filler - padding inside cursor save/restore",
+			Template:      "L>",
+			RightTemplate: "R>",
+			Filler:        "-",
+			TerminalWidth: 20,
+			Expected:      marker + "L>" + clearAfter + saveCursor + strings.Repeat("-", 16) + "R>" + restoreCursor,
+		},
+		{
+			Case:          "right template, exact fit",
+			Template:      "L>",
+			RightTemplate: "R>",
+			TerminalWidth: 4,
+			Expected:      marker + "L>" + clearAfter + saveCursor + "R>" + restoreCursor,
+		},
+		{
+			Case:          "right template, insufficient width - right side omitted",
+			Template:      "L>",
+			RightTemplate: "R>",
+			TerminalWidth: 3,
+			Expected:      marker + "L>" + clearAfter,
+		},
+		{
+			Case:          "right template, unknown terminal width - right side omitted",
+			Template:      "L>",
+			RightTemplate: "R>",
+			TerminalErr:   errors.New("burp"),
+			Expected:      marker + "L>" + clearAfter,
+		},
+	}
+
+	for _, tc := range cases {
+		env := setupExtraPromptTest(t, shell.PWSH, &runtime.Flags{})
+		env.On("TerminalWidth").Return(tc.TerminalWidth, tc.TerminalErr)
+
+		engine := &Engine{
+			Config: &config.Config{
+				TransientPrompt: &config.Segment{
+					Template:      tc.Template,
+					RightTemplate: tc.RightTemplate,
+					Filler:        tc.Filler,
+				},
+			},
+			Env: env,
+		}
+
+		got := engine.ExtraPrompt(Transient)
+		assert.Equal(t, tc.Expected, got, tc.Case)
+	}
+}
+
+func TestExtraPromptTransientPWSHNewline(t *testing.T) {
+	env := setupExtraPromptTest(t, shell.PWSH, &runtime.Flags{PromptCount: 2})
+	env.On("TerminalWidth").Return(20, nil)
+	env.On("CursorPosition").Return(2, 1)
+
+	engine := &Engine{
+		Config: &config.Config{
+			TransientPrompt: &config.Segment{
+				Template:      "L>",
+				RightTemplate: "R>",
+				Newline:       true,
+			},
+		},
+		Env: env,
+	}
+
+	got := engine.ExtraPrompt(Transient)
+	// the leading newline has no width and must not shift the right side
+	expected := terminal.CursorRowMarker(1) + "\nL>" + terminal.ClearAfter() + terminal.SaveCursorPosition() + strings.Repeat(" ", 16) + "R>" + terminal.RestoreCursorPosition()
+	assert.Equal(t, expected, got)
+}
+
+func TestExtraPromptTransientFish(t *testing.T) {
+	cases := []struct {
+		TerminalErr   error
+		Case          string
+		RightTemplate string
+		Filler        string
+		ExpectedLeft  string
+		ExpectedRight string
+		TerminalWidth int
+	}{
+		{
+			Case:         "no right template - byte identical to previous behavior",
+			ExpectedLeft: "L>",
+		},
+		{
+			Case:          "right template is returned separately",
+			RightTemplate: "R>",
+			ExpectedLeft:  "L>",
+			ExpectedRight: "R>",
+		},
+		{
+			Case:          "right template and filler",
+			RightTemplate: "R>",
+			Filler:        "-",
+			TerminalWidth: 20,
+			ExpectedLeft:  "L>" + strings.Repeat("-", 16),
+			ExpectedRight: "R>",
+		},
+		{
+			Case:          "right template and filler with unknown terminal width",
+			RightTemplate: "R>",
+			Filler:        "-",
+			TerminalErr:   errors.New("burp"),
+			ExpectedLeft:  "L>",
+			ExpectedRight: "R>",
+		},
+		{
+			Case:          "right template and filler with insufficient width",
+			RightTemplate: "R>",
+			Filler:        "-",
+			TerminalWidth: 3,
+			ExpectedLeft:  "L>",
+			ExpectedRight: "R>",
+		},
+	}
+
+	for _, tc := range cases {
+		env := setupExtraPromptTest(t, shell.FISH, &runtime.Flags{})
+		env.On("TerminalWidth").Return(tc.TerminalWidth, tc.TerminalErr)
+
+		engine := &Engine{
+			Config: &config.Config{
+				TransientPrompt: &config.Segment{
+					Template:      "L>",
+					RightTemplate: tc.RightTemplate,
+					Filler:        tc.Filler,
+				},
+			},
+			Env: env,
+		}
+
+		assert.Equal(t, tc.ExpectedLeft, engine.ExtraPrompt(Transient), tc.Case)
+		assert.Equal(t, tc.ExpectedRight, engine.TransientRPrompt(), tc.Case)
+	}
+}
+
+func TestExtraPromptTransientShellIntegration(t *testing.T) {
+	cases := []struct {
+		Case  string
+		Shell string
+		Eval  bool
+	}{
+		{Case: "pwsh", Shell: shell.PWSH},
+		{Case: "zsh, eval", Shell: shell.ZSH, Eval: true},
+		{Case: "zsh, no eval", Shell: shell.ZSH},
+		{Case: "fish", Shell: shell.FISH},
+	}
+
+	for _, tc := range cases {
+		env := setupExtraPromptTest(t, tc.Shell, &runtime.Flags{Eval: tc.Eval})
+		env.On("TerminalWidth").Return(0, nil)
+		env.On("StatusCodes").Return(3, "3")
+
+		engine := &Engine{
+			Config: &config.Config{
+				ShellIntegration: true,
+				TransientPrompt: &config.Segment{
+					Template: "L>",
+				},
+			},
+			Env: env,
+		}
+
+		got := engine.ExtraPrompt(Transient)
+		if tc.Shell == shell.PWSH {
+			got = strings.TrimPrefix(got, terminal.CursorRowMarker(0))
+		}
+
+		start := terminal.CommandFinished(3, false) + terminal.PromptStart()
+		end := terminal.CommandStart()
+
+		// zsh in eval mode wraps the marked-up string in a PS1=$'...' assignment
+		// instead of returning it as-is; unwrap that before checking the marks.
+		if tc.Shell == shell.ZSH && tc.Eval {
+			body, ok := strings.CutPrefix(got, "PS1=$'")
+			assert.True(t, ok, "%s: expected PS1=$'...' prefix, got %q", tc.Case, got)
+			got, ok = strings.CutSuffix(body, "'\nRPROMPT=''")
+			assert.True(t, ok, "%s: expected \\nRPROMPT='' suffix, got %q", tc.Case, body)
+		}
+
+		assert.True(t, strings.HasPrefix(got, start), "%s: expected prefix %q, got %q", tc.Case, start, got)
+		assert.True(t, strings.HasSuffix(got, end), "%s: expected suffix %q, got %q", tc.Case, end, got)
+
+		// the rendered template text must still be present, untouched, between the marks
+		middle := strings.TrimSuffix(strings.TrimPrefix(got, start), end)
+		assert.Contains(t, middle, "L>", tc.Case)
+	}
+}
+
+func TestTransientRPromptTemplateError(t *testing.T) {
+	env := setupExtraPromptTest(t, shell.FISH, &runtime.Flags{})
+	engine := &Engine{
+		Config: &config.Config{
+			TransientPrompt: &config.Segment{RightTemplate: "{{"},
+		},
+		Env: env,
+	}
+
+	assert.NotEmpty(t, engine.TransientRPrompt())
+}
+
+func TestExtraPromptRightTemplateUnsupportedShell(t *testing.T) {
+	env := setupExtraPromptTest(t, shell.BASH, &runtime.Flags{})
+
+	engine := &Engine{
+		Config: &config.Config{
+			TransientPrompt: &config.Segment{
+				Template:      "L>",
+				RightTemplate: "R>",
+			},
+		},
+		Env: env,
+	}
+
+	got := engine.ExtraPrompt(Transient)
+	assert.Equal(t, "L>", got)
+}
+
+func TestShouldFillNegativePadLength(t *testing.T) {
+	engine := &Engine{}
+
+	// must not panic on a negative padding length
+	got, _, OK := engine.shouldFill("-", -5)
+	assert.False(t, OK)
+	assert.Empty(t, got)
+}
+
+func setupExtraStreamingTestEnv(t *testing.T, sh string) *mock.Environment {
+	t.Helper()
+	// terminal.Plain is a package-level global; restore it for later tests.
+	t.Cleanup(func() { terminal.Plain = false })
+
+	env := new(mock.Environment)
+	env.On("Pwd").Return("/test")
+	env.On("Home").Return("/home")
+	env.On("Shell").Return(sh)
+	env.On("Flags").Return(&runtime.Flags{Streaming: true})
+	env.On("CursorPosition").Return(1, 1)
+	env.On("StatusCodes").Return(0, "0")
+	env.On("TerminalWidth").Return(120, nil)
+	env.On("DirMatchesOneOf", testifymock.Anything, testifymock.Anything).Return(false)
+	env.On("RunCommand", testifymock.Anything, testifymock.Anything).Return("4", nil)
+	env.On("WindowsRegistryKeyValue", testifymock.Anything).Return(&runtime.WindowsRegistryValue{ValueType: runtime.DWORD, DWord: 0xFF0078D7}, nil)
+
+	template.Cache = &cache.Template{
+		Segments: maps.NewConcurrent[any](),
+	}
+	template.Init(env, nil, nil)
+	terminal.Init(sh)
+	// These tests assert on uncolored output, so ask for it rather than
+	// inheriting whatever an earlier test left in this global.
+	terminal.Plain = true
+	terminal.Colors = color.MakeColors(nil, false, "", env)
+
+	return env
+}
+
+func TestStreamPrimary_TransientRecordSkippedForZSHRightTemplate(t *testing.T) {
+	env := setupExtraStreamingTestEnv(t, shell.ZSH)
+
+	engine := &Engine{
+		Config: &config.Config{
+			Blocks: []*config.Block{},
+			TransientPrompt: &config.Segment{
+				Template:      "L>",
+				RightTemplate: "R>",
+			},
+		},
+		Env: env,
+	}
+
+	out := engine.StreamPrimary()
+	prompts := collectChannelOutput(out, 100*time.Millisecond)
+
+	for _, prompt := range prompts {
+		assert.False(t, strings.HasPrefix(prompt, TransientMarker), "no transient record should be streamed for zsh with a right template")
+	}
+}
+
+func TestStreamPrimary_TransientRecordSentForZSHWithoutRightTemplate(t *testing.T) {
+	env := setupExtraStreamingTestEnv(t, shell.ZSH)
+
+	engine := &Engine{
+		Config: &config.Config{
+			Blocks: []*config.Block{},
+			TransientPrompt: &config.Segment{
+				Template: "L>",
+			},
+		},
+		Env: env,
+	}
+
+	out := engine.StreamPrimary()
+	prompts := collectChannelOutput(out, 100*time.Millisecond)
+
+	transientRecords := 0
+	for _, prompt := range prompts {
+		if strings.HasPrefix(prompt, TransientMarker) {
+			transientRecords++
+		}
+	}
+
+	assert.Equal(t, 1, transientRecords, "the transient record should still be streamed for zsh without a right template")
+}
+
+func TestStreamPrimary_TransientRecordContainsRightTemplateForPWSH(t *testing.T) {
+	env := setupExtraStreamingTestEnv(t, shell.PWSH)
+
+	engine := &Engine{
+		Config: &config.Config{
+			Blocks: []*config.Block{},
+			TransientPrompt: &config.Segment{
+				Template:      "L>",
+				RightTemplate: "R>",
+			},
+		},
+		Env: env,
+	}
+
+	out := engine.StreamPrimary()
+	prompts := collectChannelOutput(out, 100*time.Millisecond)
+
+	var transient string
+	for _, prompt := range prompts {
+		if after, OK := strings.CutPrefix(prompt, TransientMarker); OK {
+			transient = after
+		}
+	}
+
+	assert.NotEmpty(t, transient, "the transient record should be streamed for pwsh")
+	assert.Contains(t, transient, terminal.SaveCursorPosition(), "the streamed transient record should carry the right-aligned template")
+	assert.Contains(t, transient, "R>", "the streamed transient record should carry the right-aligned template")
+}

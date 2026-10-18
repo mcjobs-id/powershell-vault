@@ -1,0 +1,33 @@
+package shell
+
+import (
+	_ "embed"
+)
+
+//go:embed scripts/omp.zsh
+var zshInit string
+
+func (f Features) Zsh() Code {
+	switch f {
+	case CursorPositioning:
+		return unixCursorPositioning
+	case Tooltips:
+		return "enable_poshtooltips"
+	case Transient:
+		return "_omp_create_widget zle-line-init _omp_zle-line-init"
+	case FTCSMarks:
+		return unixFTCSMarks
+	case Upgrade:
+		return unixUpgrade
+	case Notice:
+		return unixNotice
+	case Streaming:
+		return "if [[ ! -v POSH_DISABLE_STREAMING ]]; then _omp_enable_streaming=1; fi"
+	case VIMode:
+		return "_omp_enable_vimode"
+	case PromptMark, RPrompt, PoshGit, Azure, LineError, Jobs, Async, KeyHandlers:
+		fallthrough
+	default:
+		return ""
+	}
+}

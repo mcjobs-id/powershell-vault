@@ -1,0 +1,462 @@
+---
+id: colors
+title: Colors
+sidebar_label: Colors
+---
+
+import Config from "@site/src/components/Config.js";
+
+## Standard colors
+
+Oh My Posh supports multiple different color references, being:
+
+- True color using [hex colors][hexcolors] (for example `#CB4B16`).
+- 16 [ANSI color names][ansicolors].
+  These include 8 basic ANSI colors and `default`
+
+  `black` `red` `green` `yellow` `blue` `magenta` `cyan` `white` `default`
+
+  as well as 8 extended ANSI colors:
+
+  `darkGray` `lightRed` `lightGreen` `lightYellow` `lightBlue` `lightMagenta` `lightCyan` `lightWhite`
+
+- 256 color palette using their number representation.
+  For example `0` is black, `1` is red, `2` is green, etc.
+- The `transparent` keyword which can be used to create either a transparent foreground override
+  or transparent background color using the segment's foreground property.
+- The `foreground` keyword which can be used to reference the current segment's foreground color.
+- The `background` keyword which can be used to reference the current segment's background color.
+- The `parentForeground` keyword which can be used to inherit the previous active segment's foreground color.
+- The `parentBackground` keyword which can be used to inherit the previous active segment's background color.
+- The `accent` keyword which references the OS accent color (Windows and macOS only).
+
+## Gradients
+
+Anywhere a **Standard color** is expected, you can instead use a `linear-gradient` with two or
+more comma-separated stops:
+
+<Config
+  data={{
+    type: "text",
+    style: "plain",
+    foreground: "linear-gradient(#FF0000, #0000FF)",
+  }}
+/>
+
+The stops are spread evenly across the segment's visible text and interpolated per character cell.
+Each stop can be a hex color or a [Palette reference][palette] (`p:name`), so gradients work with
+`palette` and `palettes` the same way **Standard colors** do. This applies to `foreground`,
+`background`, `foreground_templates`, `background_templates`, Palette entries, and `cycle` colors.
+
+Powerline separators, diamond caps, and the `parentBackground`/`parentForeground` keywords
+automatically pick up the matching edge of the gradient, so a segment next to a gradient still
+connects with the right color.
+
+### Auto-shade from a single color
+
+`dark-gradient(#3465A4)` and `light-gradient(#3465A4)` take a single color and run from that
+exact color to a darker or lighter shade of it, letting one configured color produce a gradient
+effect on a segment too narrow for a real two-stop gradient to render as anything but a solid
+color, see [Stops and segment width](#stops-and-segment-width).
+
+<Config
+  data={{
+    type: "text",
+    style: "plain",
+    background: "dark-gradient(#3465A4)",
+  }}
+/>
+
+The first cell always renders the exact configured color; the last renders the shade. Everything
+in between interpolates the same way a two-stop gradient does, so a wide segment shows a gentler
+ramp and a narrow one a coarser one. A single-cell segment renders the configured color unmodified.
+Each takes exactly one color; `dark-gradient`/`light-gradient` with more than one stop is invalid,
+same as a `linear-gradient` with fewer than two.
+
+### Supported stops
+
+A stop must resolve to a hex color before it can be interpolated:
+
+| Stop                                                               | Supported |
+| ------------------------------------------------------------------ | --------- |
+| Hex color (`#CB4B16`, `#F0A`)                                      | yes       |
+| [Palette reference][palette] to a hex color (`p:blue`)             | yes       |
+| `parentBackground`, `parentForeground`, `background`, `foreground` | yes       |
+| `accent` (Windows and macOS only)                                  | yes       |
+| ANSI color name (`red`, `lightBlue`)                               | no        |
+| 256 color palette number (`146`)                                   | no        |
+| `transparent`                                                      | no        |
+
+Keyword stops resolve against the surrounding segments at render time and must land on a hex
+color; when the previous segment uses a gradient itself, `parentBackground` picks up its last
+stop, so `linear-gradient(parentBackground, p:yellow)` connects seamlessly to it. On platforms
+where the OS accent color is unavailable, an `accent` stop is invalid and the gradient falls
+back like any other invalid stop.
+
+A `background` or `foreground` keyword in a [color override](#color-overrides) inside a gradient
+segment resolves to the gradient's color at that position in the text: a leading
+`<background,transparent>` cap picks up the first stop, a trailing one the color where the
+gradient ends, so template caps stay seamless without hardcoding edge colors.
+
+A `linear-gradient` that resolves to fewer than two supported colors — including a `linear-gradient`
+written with only one stop — renders as a solid color: the last stop goes through the regular color
+pipeline, so `linear-gradient(red, blue)` renders solid blue rather than failing, and
+`linear-gradient(#3465A4)` renders solid `#3465A4` rather than shading — matching the color its
+separators and width-collapsed form already use. Rejected stops are reported in `oh-my-posh debug`
+output. Use [`dark-gradient`/`light-gradient`](#auto-shade-from-a-single-color) for a one-color
+gradient effect instead.
+
+### Stops and segment width
+
+The gradient always starts and ends exactly on the configured colors: the first stop lands on the
+first visible cell, the last stop on the last. Everything in between is interpolated, so a narrow
+segment simply shows a coarser gradient. A gradient needs at least two visible cells per stop to
+render per cell; narrower segments render the last stop as a solid color across the whole segment,
+including its caps and separators, rather than a coarse blend. Streaming placeholders are
+exempt: a pending segment's `...` placeholder previews the gradient per cell regardless of its
+width. Rendering cost is negligible; the
+only overhead is the per-cell color escape, which grows the prompt string by a few bytes per
+character.
+
+:::caution
+
+- Gradients aren't supported on segments with `interactive: true`; shell-expanded text throws off
+  the cell count the gradient interpolates across.
+- A gradient can't span multiple segments; each segment's gradient is self-contained.
+- Only the stop-list syntax is supported. Angle or direction keywords (for example `to right`) are
+  reserved but not implemented.
+- Terminals without truecolor support fall back to a banded 256-color approximation.
+
+:::
+
+## Shades
+
+Anywhere a **Standard color** is expected, you can instead use `darken(color, percent)` or
+`lighten(color, percent)` to shift a single color's lightness toward black or white:
+
+<Config
+  data={{
+    type: "text",
+    style: "plain",
+    foreground: "#3465A4",
+    background: "darken(#3465A4, 20)",
+  }}
+/>
+
+`percent` runs from `0` to `100` and sets how far to travel toward black or white. `0` leaves the
+color unchanged, `100` reaches near-black or near-white. The shift happens in the same HCL color
+space `dark-gradient` and `light-gradient` use, which holds the hue exact instead of muddying it.
+
+The color argument must resolve to a hex color, either a literal value (`darken(#3465A4, 20)`) or a
+[Palette reference][palette] to one (`darken(p:accent, 20)`). **ANSI color names** (`green`,
+`lightBlue`), **256 color palette numbers** and keywords such as `foreground` and `accent` render no
+color. Run `oh-my-posh debug` to see the reason.
+
+Those names carry no fixed RGB value. Your terminal's color scheme decides what `green` looks like,
+and Oh My Posh cannot ask the terminal for that value fast enough to do it on every render. To shade
+one of them, write its hex value into your [Palette][palette] once and shade the palette entry:
+
+<Config
+  data={{
+    palette: {
+      accent: "#3465A4",
+    },
+    type: "text",
+    style: "plain",
+    foreground: "p:accent",
+    background: "darken(p:accent, 20)",
+  }}
+/>
+
+A `darken` or `lighten` call takes a color, nothing more. You cannot nest one inside another, place
+one inside a `linear-gradient`, `dark-gradient` or `light-gradient`, or pass it gradient stops or
+segment keywords such as `parentBackground`.
+
+## Color templates
+
+Array of string [templates][templates] to define the color based on the current context.
+Under the hood this uses go's [text/template][go-text-template] feature extended with [sprig][sprig] and
+offers a few standard properties to work with. For segments, you can look at the **Template Properties**
+section in the documentation. The general template properties are listed [here][template-properties].
+
+The following sample is based on the [AWS Segment][aws].
+
+<Config
+  data={{
+    type: "aws",
+    style: "powerline",
+    powerline_symbol: "\uE0B0",
+    foreground: "#ffffff",
+    background: "#111111",
+    foreground_templates: [
+      '{{if contains "default" .Profile}}#FFA400{{end}}',
+      '{{if contains "jan" .Profile}}#f1184c{{end}}',
+    ],
+  }}
+/>
+
+The logic is as follows: when `foreground_templates` contains an array, we will check every template line until there's
+one that returns a non-empty string. So, when the contents of `.Profile` contain the word `default`, the first template
+returns `#FFA400` and that's the color that will be used. If it contains `jan`, it returns `#f1184c`. When none of the
+templates returns a value, the foreground value `#ffffff` is used as a fallback value.
+
+## Color overrides
+
+You have the ability to override the foreground and/or background color for text in any property that accepts it.
+The syntax is custom but should be rather straight-forward: `<foreground,background>text</>`. For example,
+`<#ffffff,#000000>this is white with black background</> <#FF479C>but this is pink</>`.
+Anything between the color start `<#FF479C>` and end `</>` will be colored accordingly.
+
+If you want to print a colored bracket that isn't the same as the segment's `foreground`, you can
+do so like this:
+
+<Config
+  data={{
+    template: "<#CB4B16>┏[</>",
+  }}
+/>
+
+If you also wanted to change the background color in the previous command, you would do so like this:
+
+<Config
+  data={{
+    template: "<#CB4B16,#FFFFFF>┏[</>",
+  }}
+/>
+
+To change _only_ the background color, just omit the first color from the above string:
+
+<Config
+  data={{
+    template: "<,#FFFFFF>┏[</>",
+  }}
+/>
+
+## Palette
+
+If your configuration defined the Palette, you can use the _Palette reference_ `p:<palette key>` in places where the
+**Standard color** is expected.
+
+### Defining a Palette
+
+Palette is a set of named **Standard colors**. To use a Palette, define a `"palette"` object
+at the top level of your configuration:
+
+<Config
+  data={{
+    palette: {
+      "git-foreground": "#193549",
+      git: "#FFFB38",
+      "git-modified": "#FF9248",
+      "git-diverged": "#FF4500",
+      "git-ahead": "#B388FF",
+      "git-behind": "#B388FF",
+      red: "#FF0000",
+      green: "#00FF00",
+      blue: "#0000FF",
+      white: "#FFFFFF",
+      black: "#111111",
+    },
+  }}
+/>
+
+Color names (palette keys) can have any string value, so be creative.
+Color values, on the other hand, should adhere to the **Standard color** format, including `transparent`.
+
+Alternatively, a palette value can be a [template][templates] that resolves to any valid color value, including
+a _Palette reference_. The template is rendered every time the color is resolved, so it can use any of the
+[global template properties][template-properties] to switch colors based on context. For example, to use a
+different color when a `Git` segment is active in the prompt:
+
+<Config
+  data={{
+    palette: {
+      "separator-git": '{{ if .Segments.Contains "Git" }}p:bg0{{ else }}p:green{{ end }}',
+    },
+  }}
+/>
+
+### Using a Palette
+
+You can now use _Palette references_ in any [Segment's][segment] `foreground`, `foreground_templates`,
+`background`, `background_templates` properties, and other config properties that expect **Standard color** value.
+_Palette reference_ format is `p:<palette key>`. Take a look at the [Git][git] segment using _Palette references_:
+
+<Config
+  data={{
+    type: "git",
+    style: "powerline",
+    powerline_symbol: "\uE0B0",
+    foreground: "p:git-foreground",
+    background: "p:git",
+    background_templates: [
+      "{{ if or (.Working.Changed) (.Staging.Changed) }}p:git-modified{{ end }}",
+      "{{ if and (gt .Ahead 0) (gt .Behind 0) }}p:git-diverged{{ end }}",
+      "{{ if gt .Ahead 0 }}p:git-ahead{{ end }}",
+      "{{ if gt .Behind 0 }}p:git-behind{{ end }}",
+    ],
+  }}
+/>
+
+Having all of the colors defined in one place allows you to import existing color configurations (usually with slight
+tweaking to adhere to the format), easily change colors of multiple segments at once, and have a more
+organized configuration overall. Be creative!
+
+### _Palette references_ and **Standard colors**
+
+Using Palette does not interfere with using **Standard colors** in your configuration. You can still use **Standard colors**
+everywhere. This can be useful if you want to use a specific color for a single segment element, or in a
+_Color override_ ([Battery segment][battery]):
+
+<Config
+  data={{
+    type: "battery",
+    style: "powerline",
+    invert_powerline: true,
+    powerline_symbol: "\uE0B2",
+    foreground: "p:white",
+    background: "p:black",
+    options: {
+      discharging_icon: "<#ffa500>-</> ",
+      charging_icon: "+ ",
+      charged_icon: "* ",
+    },
+  }}
+/>
+
+### Handling of invalid references
+
+Should you use an invalid _Palette reference_ as a color (for example typo `p:bleu` instead of `p:blue`),
+the Palette engine will use the Transparent keyword as a fallback value. So if you see your prompt segments
+rendered with incorrect colors, and you are using a Palette, be sure to check the correctness of your references.
+
+### Recursive resolution
+
+Palette allows for recursive _Palette reference_ resolution, up to 3 levels deep. You can use a _Palette
+reference_ as a color value in Palette. This allows you to define named colors, and use references to those
+colors as Palette values. A template value that resolves to a _Palette reference_ follows the same rules,
+and the referenced value can itself be a template.
+For example, `p:foreground` and `p:background` will be correctly set to "#CAF0F80" and "#023E8A":
+
+<Config
+  data={{
+    palette: {
+      "light-blue": "#CAF0F8",
+      "dark-blue": "#023E8A",
+      foreground: "p:light-blue",
+      background: "p:dark-blue",
+    },
+  }}
+/>
+
+## Palettes
+
+If you want to use a `palette` conditionally, for example for **light or dark mode**, you can define multiple
+`palettes` and a [template][templates] that resolves to the `palette` key. The `template` is evaluated at
+runtime so your prompt can change at any time based on the outcome of the `template`.
+
+Take the following configuration:
+
+<Config
+  data={{
+    palettes: {
+      template: '{{ if eq .Shell "pwsh" }}latte{{ else }}frappe{{ end }}',
+      list: {
+        latte: {
+          black: "#262B44",
+          green: "#59C9A5",
+          orange: "#F07623",
+          red: "#e64553",
+          white: "#E0DEF4",
+          yellow: "#df8e1d",
+          blue: "#7287fd",
+        },
+        frappe: {
+          black: "#262B44",
+          green: "#59C9A5",
+          orange: "#F07623",
+          red: "#D81E5B",
+          white: "#E0DEF4",
+          yellow: "#F3AE35",
+          blue: "#4B95E9",
+        },
+      },
+    },
+  }}
+/>
+
+In this case, when the shell is `pwsh`, the `latte` palette will be used, otherwise it uses the `frappe` palette. If you want,
+you could also add `frappe` as the default `palette`, given that one is used as a fallback when not match can be found based on what
+the `template` resolves to. In case no match is available and no `palette` is defined, it will also fallback to `transparent`
+for any palette color reference in templates/colors.
+
+If you want to avoid color duplication, you can use palettes in combination with the `palette` property. This way you can define
+a color once and reuse it in multiple palettes. For example:
+
+<Config
+  data={{
+    palette: {
+      black: "#262B44",
+      green: "#59C9A5",
+      orange: "#F07623",
+    },
+    palettes: {
+      template: '{{ if eq .Shell "pwsh" }}latte{{ else }}frappe{{ end }}',
+      list: {
+        latte: {
+          red: "#e64553",
+          white: "#E0DEF4",
+          yellow: "#df8e1d",
+          blue: "#7287fd",
+        },
+        frappe: {
+          red: "#D81E5B",
+          white: "#E0DEF4",
+          yellow: "#F3AE35",
+          blue: "#4B95E9",
+        },
+      },
+    },
+  }}
+/>
+
+:::info
+If a color is defined in both palette and palettes, the palettes' resolved color will take precedence.
+:::
+
+## Cycle
+
+When you want to display the same **sequence of colors** (background and foreground) regardless of which segments are active, you can
+make use of the cycle property. This property is a list of colors which are used one after the other in a continuous loop. A defined
+cycle always gets precedence over everything else.
+
+<Config
+  data={{
+    cycle: [
+      {
+        background: "p:blue",
+        foreground: "p:white",
+      },
+      {
+        background: "p:green",
+        foreground: "p:black",
+      },
+      {
+        background: "p:orange",
+        foreground: "p:white",
+      },
+    ],
+  }}
+/>
+
+[hexcolors]: https://htmlcolorcodes.com/color-chart/material-design-color-chart/
+[ansicolors]: https://htmlcolorcodes.com/color-chart/material-design-color-chart/
+[git]: /docs/segments/scm/git
+[battery]: /docs/segments/system/battery
+[template-properties]: /docs/configuration/templates#global-properties
+[aws]: /docs/segments/cloud/aws
+[go-text-template]: https://golang.org/pkg/text/template/
+[segment]: /docs/configuration/segment
+[sprig]: https://masterminds.github.io/sprig/
+[templates]: templates.mdx
+[palette]: #palette

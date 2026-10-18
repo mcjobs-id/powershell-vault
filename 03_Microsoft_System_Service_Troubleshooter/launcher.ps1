@@ -46,29 +46,32 @@ function Show-Header {
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  PILIHAN MENU TINDAKAN:" -ForegroundColor White
     Write-Host ""
-    Write-Host "      [1] Jalankan Pemulihan Otomatis (Rekomendasi 1-Klik)" -ForegroundColor Green
-    Write-Host "          Word, Excel, & PPT normal seketika bebas banner lisensi." -ForegroundColor Gray
+    Write-Host "      [1] Pasang / Aktifkan Lisensi Otomatis (Rekomendasi 1-Klik)" -ForegroundColor Green
+    Write-Host "          Aktivasi permanen bebas banner notifikasi lisensi." -ForegroundColor Gray
     Write-Host ""
-    Write-Host "      [2] Diagnostik Status Lisensi Sistem Saat Ini" -ForegroundColor White
-    Write-Host "          Memeriksa partial key dan masa aktif lisensi terpasang." -ForegroundColor Gray
+    Write-Host "      [2] Cek / Diagnostik Status Lisensi Saat Ini" -ForegroundColor White
+    Write-Host "          Memeriksa masa aktif lisensi dan partial key terpasang." -ForegroundColor Gray
     Write-Host ""
-    Write-Host "      [3] Kunjungi Ekosistem & Solusi Digital FokusKonten (Buka Web)" -ForegroundColor Cyan
+    Write-Host "      [3] Copot / Batalkan Lisensi (Kembalikan ke Default)" -ForegroundColor Yellow
+    Write-Host "          Mencabut hook lisensi dan mengembalikan Office/Windows ke semula." -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "      [4] Kunjungi Ekosistem & Solusi Digital FokusKonten (Buka Web)" -ForegroundColor Cyan
     Write-Host "          Jelajahi ribuan software kasir, aplikasi bisnis, & template." -ForegroundColor Gray
     Write-Host ""
-    Write-Host "      [0] Batal / Keluar" -ForegroundColor Yellow
+    Write-Host "      [0] Batal / Keluar" -ForegroundColor DarkGray
     Write-Host "==================================================================" -ForegroundColor Green
     Write-Host ""
 }
 
 function Get-UserChoice {
     if ($isISE) {
-        $c = Read-Host "  Pilihan Anda [1, 2, 3, 0] (Tekan Enter untuk [1])"
+        $c = Read-Host "  Pilihan Anda [1, 2, 3, 4, 0] (Tekan Enter untuk [1])"
         if ([string]::IsNullOrWhiteSpace($c)) { return "1" }
         return $c.Trim()
     }
 
     try {
-        Write-Host -NoNewline "  Pilihan Anda [1, 2, 3, 0] (Tekan Enter untuk [1]) : " -ForegroundColor Green
+        Write-Host -NoNewline "  Pilihan Anda [1, 2, 3, 4, 0] (Tekan Enter untuk [1]) : " -ForegroundColor Green
         while ($true) {
             $k = [Console]::ReadKey($true)
             if ($k.Key -eq [ConsoleKey]::Enter) {
@@ -76,13 +79,13 @@ function Get-UserChoice {
                 return "1"
             }
             $c = $k.KeyChar.ToString()
-            if ($c -in @('1','2','3','0')) {
+            if ($c -in @('1','2','3','4','0')) {
                 Write-Host $c -ForegroundColor Green
                 return $c
             }
         }
     } catch {
-        $c = Read-Host "  Pilihan Anda [1, 2, 3, 0] (Tekan Enter untuk [1])"
+        $c = Read-Host "  Pilihan Anda [1, 2, 3, 4, 0] (Tekan Enter untuk [1])"
         if ([string]::IsNullOrWhiteSpace($c)) { return "1" }
         return $c.Trim()
     }

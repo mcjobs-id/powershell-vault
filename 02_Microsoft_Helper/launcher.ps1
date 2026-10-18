@@ -122,8 +122,10 @@ function Get-EnginePath {
     $primaryUrl = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/02_Microsoft_Helper/MAS_AIO.cmd"
     try {
         $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($primaryUrl, $cached)
-        if ((Test-Path $cached) -and ((Get-Item $cached).Length -gt 50000)) {
+        $rawText = $wc.DownloadString($primaryUrl)
+        if ($rawText.Length -gt 50000) {
+            $crlfText = $rawText -replace "(?<!`r)`n", "`r`n"
+            [System.IO.File]::WriteAllText($cached, $crlfText, [System.Text.Encoding]::ASCII)
             Write-Host "     [================] 100% [KOMPONEN SIAP]" -ForegroundColor Green
             return $cached
         }
@@ -155,10 +157,18 @@ switch ($choice) {
     "1" { Invoke-Action }
     "2" {
         Check-ElevationPrompt
-        $engine = Get-EnginePath
         Write-Host ""
-        Write-Host "  SEDANG MEMERIKSA STATUS LISENSI SISTEM..." -ForegroundColor Cyan
-        & cmd.exe /c "`"$engine`" /status"
+        Write-Host "  ================================================================" -ForegroundColor Green
+        Write-Host "  DIAGNOSTIK LISENSI SISTEM (OFFICIAL ENGINE)" -ForegroundColor Green
+        Write-Host "  ================================================================" -ForegroundColor Green
+        Write-Host ""
+        $ospp = Get-ChildItem "C:Program FilesMicrosoft Office", "C:Program Files (x86)Microsoft Office" -Filter "ospp.vbs" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($ospp) {
+            cscript.exe //nologo $ospp.FullName /dstatus
+        } else {
+            $engine = Get-EnginePath
+            & cmd.exe /c "`"$engine`" /status"
+        }
     }
     "3" {
         Check-ElevationPrompt

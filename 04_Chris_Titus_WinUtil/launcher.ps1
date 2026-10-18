@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 04: CHRIS TITUS WINUTIL - WINDOWS UTILITY SUITE
 # Engine  : WPF Runspaces, System Tweaks, Winget Installer & AppX Debloat

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 38: VMWARE AUTO UNLOCKER - HYPERVISOR MACOS ENABLER
 # Engine  : Binary Pattern Scanner & SMC Hypervisor Hooking Engine

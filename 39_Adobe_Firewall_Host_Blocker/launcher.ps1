@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 39: ADOBE TELEMETRY & GENUINE POPUP BLOCKER
 # Engine  : Hosts 0.0.0.0 Routing & Windows Firewall Outbound Rule

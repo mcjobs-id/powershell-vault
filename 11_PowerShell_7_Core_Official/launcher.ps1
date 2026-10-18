@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 11: POWERSHELL 7 CORE - MODERN CROSS-PLATFORM SHELL
 # Engine  : Microsoft Modern PowerShell 7 MSI Silent Bootstrapper

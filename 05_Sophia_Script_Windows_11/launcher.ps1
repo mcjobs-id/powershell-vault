@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 05: SOPHIA SCRIPT - PRIVACY & TELEMETRY FINE-TUNING
 # Engine  : System Restore Point, DiagTrack Disable & Windows 11 Optimization

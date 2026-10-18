@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 46: WINDOWS FONT MASS REGISTRY INSTALLER
 # Engine  : Automated TTF/OTF Font Registry Registration & Font Table Flush

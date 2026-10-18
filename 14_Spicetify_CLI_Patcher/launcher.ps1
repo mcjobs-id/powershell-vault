@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 14: SPICETIFY CLI - KUSTOMISASI TEMA & EKSTENSI SPOTIFY
 # Engine  : Client Injector & JavaScript Extension Engine

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 15: VENTOY BOOTLOADER - MULTI-ISO FLASH DISK ENGINE
 # Engine  : Direct ISO/WIM/IMG/VHD Booting Without Re-Formatting

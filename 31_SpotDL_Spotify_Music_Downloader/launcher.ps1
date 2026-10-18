@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 31: SPOTDL - PENGUNDUH AUDIO SPOTIFY & ID3V2 TAGGER
 # Engine  : High-Bitrate Audio Stream Matching & Metadata Embedding

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 18: DISM++ COMPONENT STORE - PEMELIHARAAN SISTEM MURNI
 # Engine  : WinSxS Component Cleanup, Driver Injection & Image Service

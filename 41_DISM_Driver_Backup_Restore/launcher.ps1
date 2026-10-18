@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 41: DISM DRIVER BACKUP & RESTORE UTILITY
 # Engine  : Hardware Driver Extraction & System Re-Injection Tool

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 42: CHNTPW - OFFLINE SAM REGISTRY PASSWORD RESET
 # Engine  : Direct Hive Modification for Windows Local Account Recovery

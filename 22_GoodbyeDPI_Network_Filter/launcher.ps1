@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 22: GOODBYEDPI - BYPASS BLOKIR & SENSOR INTERNET ISP
 # Engine  : TCP/IP Packet Fragmentation via WinDivert Driver Without VPN

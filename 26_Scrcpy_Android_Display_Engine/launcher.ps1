@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 26: SCRCPY - SCREEN MIRRORING ANDROID TINGKAT TINGGI
 # Engine  : Low-Latency 60-120 FPS Video Streaming Pipeline via ADB

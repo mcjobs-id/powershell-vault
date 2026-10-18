@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 33: BAILEYS - WHATSAPP WEB MULTI-DEVICE HEADLESS
 # Engine  : Full WebSocket Protocol Without Chromium Memory Overhead

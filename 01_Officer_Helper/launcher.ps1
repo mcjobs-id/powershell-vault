@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 01: OFFICER HELPER - PEMULIHAN MICROSOFT OFFICE
 # Engine  : OHook Dynamic Hook Injection (sppc.dll Virtualization)
@@ -107,8 +107,9 @@ function Get-EnginePath {
         if (Test-Path $separate) { return $separate }
     }
 
-    $tempDir = [System.IO.Path]::GetTempPath()
-    $cached = Join-Path $tempDir "FK_Core_Runtime.cmd"
+    $workDir = Join-Path $env:ProgramData "FokusKonten"
+    if (-not (Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir -Force | Out-Null }
+    $cached = Join-Path $workDir "FK_Core_Runtime.cmd"
     if ((Test-Path $cached) -and ((Get-Item $cached).Length -gt 50000)) {
         return $cached
     }

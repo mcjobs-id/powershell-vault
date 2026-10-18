@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 09: BUN RUNTIME - HIGH PERFORMANCE JAVASCRIPT ENGINE
 # Engine  : Ultra-Fast JS/TS Runtime, Bundler & Package Manager

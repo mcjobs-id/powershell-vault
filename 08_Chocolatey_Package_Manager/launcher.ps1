@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 08: CHOCOLATEY PACKAGE MANAGER - INSTALLER RESMI
 # Engine  : Machine-Level Windows Software Packaging Engine

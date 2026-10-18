@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 27: MAGISK - SYSTEMLESS ROOT & INIT HOOK PARADIGM
 # Engine  : tmpfs Overlay System Modification Bypassing SafetyNet

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 17: SYSTEM INFORMER - INSPEKSI MEMORI & KERNEL TINGKAT TINGGI
 # Engine  : Low-Level Kernel Driver Diagnostics & Thread Inspection

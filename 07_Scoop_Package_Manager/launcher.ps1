@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 07: SCOOP PACKAGE MANAGER - INSTALLER OTOMATIS
 # Engine  : Portable Shims Architecture & User-Level Package Management

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 48: WINRAR CORPORATE LICENSE INJECTOR
 # Engine  : Official rarreg.key Installation for Unlimited Lifetime License

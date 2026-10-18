@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 49: QPDF - PENGHAPUS RESTRIKSI & PASSWORD FILE PDF
 # Engine  : Lossless Linearization & Permission Flag Decryptor

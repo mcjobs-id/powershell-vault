@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 30: DBVM - BARE-METAL TYPE-1 KERNEL HYPERVISOR
 # Engine  : Intel VT-x / AMD-V Hardware Virtualization Subsystem

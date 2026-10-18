@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 25: CLOUDSTREAM ENGINE - ARSITEKTUR STREAMING MODULAR
 # Engine  : Multi-Source Scraper & Media Decoupled Player Architecture

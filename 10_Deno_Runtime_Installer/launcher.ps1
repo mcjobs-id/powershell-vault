@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 10: DENO RUNTIME - SECURE TYPESCRIPT/JAVASCRIPT ENGINE
 # Engine  : Modern Runtime with Secure Permissions & Native Web Standards

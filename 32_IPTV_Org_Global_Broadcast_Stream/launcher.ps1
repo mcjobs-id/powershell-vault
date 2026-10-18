@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 32: IPTV-ORG - AGREGATOR SIARAN TELEVISI DUNIA RESMI
 # Engine  : Public Domain Legal HLS/M3U8 Global Broadcast Streaming

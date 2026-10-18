@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 35: ULTIMATE ASI LOADER - DLL SEARCH-ORDER PROXY
 # Engine  : Transparent DLL Redirection (version.dll / winmm.dll)

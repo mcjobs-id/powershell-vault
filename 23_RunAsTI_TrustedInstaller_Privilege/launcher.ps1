@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 23: RUNASTI - ELEVASI MUTLAK TRUSTEDINSTALLER
 # Engine  : Bypass Administrator Locks via System Token Hijacking

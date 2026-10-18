@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 34: MINHOOK - INLINE X86/X64 API HOOKING LIBRARY
 # Engine  : Minimalist Trampoline & Instruction Boundary Disassembler

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 12: OH MY POSH - PROMPT THEME ENGINE UNTUK TERMINAL
 # Engine  : Dynamic Segmented Prompt Styling for PowerShell

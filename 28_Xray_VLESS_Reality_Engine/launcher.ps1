@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 28: XRAY VLESS REALITY - PROTOKOL ANTI-SENSOR KELAS DUNIA
 # Engine  : TLS 1.3 Handshake Camouflage & Zero-SNI Censorship Circumvention

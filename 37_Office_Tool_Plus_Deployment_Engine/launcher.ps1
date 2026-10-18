@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 37: OFFICE TOOL PLUS - PENGELOLA & DEPLOYMENT OFFICE
 # Engine  : ODT XML Configuration Generator & GVLK License Manager

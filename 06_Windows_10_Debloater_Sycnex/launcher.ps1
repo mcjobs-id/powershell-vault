@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 06: WINDOWS 10 DEBLOATER - PEMBERSIH APPX & CORTANA
 # Engine  : Safe AppX Package Removal & Privacy Telemetry Protection

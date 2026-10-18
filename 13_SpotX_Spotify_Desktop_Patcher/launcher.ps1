@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 13: SPOTX - PEMBLOKIR IKLAN SPOTIFY DESKTOP
 # Engine  : In-Memory SPA Patching & Audio Banner Ad Blocking

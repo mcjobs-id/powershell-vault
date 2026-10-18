@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 16: SANDBOXIE PLUS - ISOLASI KERNEL & APLIKASI AMAN
 # Engine  : Safe File & Registry Virtualization Sandbox Environment

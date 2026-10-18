@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 29: KDU - KERNEL DRIVER UTILITY (RING 0 EXPLORER)
 # Engine  : Driver Signature Enforcement (DSE) Bypass via BYOVD

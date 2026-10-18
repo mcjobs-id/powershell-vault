@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 45: SCRIBD DOCUMENT EXTRACTOR & VIEWER
 # Engine  : Direct PDF Page Stitching & High-Resolution Asset Downloader

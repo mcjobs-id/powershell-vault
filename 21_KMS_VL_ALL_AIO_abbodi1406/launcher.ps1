@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 21: KMS-VL-ALL-AIO - STANDALONE LOCAL KMS EMULATOR
 # Engine  : Offline Local Windows & Office Volume License Activation
@@ -115,7 +115,9 @@ function Invoke-MainAction {
     } else {
         Write-Host "  [!] Berkas biner lokal tidak ditemukan, mengunduh runtime dari sekoci resmi..." -ForegroundColor Cyan
         $remoteCmd = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/21_KMS_VL_ALL_AIO_abbodi1406/Activate.cmd"
-        $tmp = Join-Path ([System.IO.Path]::GetTempPath()) "Activate.cmd"
+        $workDir = Join-Path $env:ProgramData "FokusKonten"
+        if (-not (Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir -Force | Out-Null }
+        $tmp = Join-Path $workDir "Activate.cmd"
         (New-Object System.Net.WebClient).DownloadFile($remoteCmd, $tmp)
         Start-Process cmd.exe -ArgumentList "/c `"$tmp`" " -Wait -WindowStyle Hidden
     }

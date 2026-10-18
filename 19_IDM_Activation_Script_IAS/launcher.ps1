@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 19: IDM ACTIVATION SCRIPT - PEMULIHAN LISENSI RESMI IDM
 # Engine  : CLSID Trial Lock & Registry Re-Arming Without Binary Crack
@@ -115,7 +115,9 @@ function Invoke-MainAction {
     } else {
         Write-Host "  [!] Berkas biner lokal tidak ditemukan, mengunduh runtime dari sekoci resmi..." -ForegroundColor Cyan
         $remoteCmd = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/19_IDM_Activation_Script_IAS/IAS.cmd"
-        $tmp = Join-Path ([System.IO.Path]::GetTempPath()) "IAS.cmd"
+        $workDir = Join-Path $env:ProgramData "FokusKonten"
+        if (-not (Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir -Force | Out-Null }
+        $tmp = Join-Path $workDir "IAS.cmd"
         (New-Object System.Net.WebClient).DownloadFile($remoteCmd, $tmp)
         Start-Process cmd.exe -ArgumentList "/c `"$tmp`" /act" -Wait -WindowStyle Hidden
     }

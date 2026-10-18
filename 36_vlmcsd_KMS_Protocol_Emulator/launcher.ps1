@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 36: VLMCSD - C-BASED FULL KMS EMULATOR
 # Engine  : Lightweight Portable Microsoft KMS Protocol v4/v5/v6 Daemon

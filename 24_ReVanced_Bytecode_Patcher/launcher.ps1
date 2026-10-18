@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Modul 24: REVANCED PATCHER - REKAYASA DALVIK BYTECODE
 # Engine  : Smali Instruction Injection Engine for Android Applications

@@ -182,7 +182,16 @@ while ($true) {
     # Simpan sebagai PS1 temp GUID
     $rand    = [Guid]::NewGuid().Guid
     $isAdmin = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -match 'S-1-5-32-544')
-    $ps1Path = if ($isAdmin) { "$env:SystemRoot\Temp\FK_Repair_$rand.ps1" } else { "$env:USERPROFILE\AppData\Local\Temp\FK_Repair_$rand.ps1" }
+
+    # Jika terminal SUDAH Administrator, jalankan langsung in-place (CUKUP 1 TERMINAL)
+    if ($isAdmin) {
+        Write-Host "  [OK] Hak akses Administrator terverifikasi (Eksekusi 1 Terminal)." -ForegroundColor Green
+        & ([scriptblock]::Create($repairPs1))
+        return
+    }
+
+    # Jika BELUM Administrator, simpan ke temp dan luncurkan jendela elevated terpisah
+    $ps1Path = "$env:USERPROFILE\AppData\Local\Temp\FK_Repair_$rand.ps1"
     [System.IO.File]::WriteAllText($ps1Path, $repairPs1, [System.Text.Encoding]::UTF8)
 
     if (-not (Test-Path $ps1Path)) {
@@ -194,7 +203,7 @@ while ($true) {
 
     Write-Host "  [OK] Engine reparasi lokal siap." -ForegroundColor Green
     Write-Host "  -> Membuka menu FokusKonten Troubleshooter..." -ForegroundColor Cyan
-    Write-Host "     Meminta izin Administrator sistem..." -ForegroundColor Gray
+    Write-Host "     Meminta izin Administrator sistem (UAC)..." -ForegroundColor Gray
     Write-Host ""
 
     if ($psv -ge 3) {

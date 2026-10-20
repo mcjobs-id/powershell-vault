@@ -19,7 +19,7 @@
     $pasmDll   = "$pasmDir\PASMUTILITY.dll"
     $pasmBak   = "$pasmDir\PASMUTILITY.dll.BAK"
     $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
-    $cdnDllUrl = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/40_CorelDraw_Firewall_Telemetry_Blocker/PASMUTILITY.dll"
+    $cdnDllUrl = "https://github.com/mcjobs-id/powershell-vault/releases/download/v1.0.0/PASMUTILITY.dll"
     $patchedHash = "1036532E7981853535E3B40F5CACCDF8C59BBC3574CCE858EDA3918DC682552C"
 
     $domains = @(

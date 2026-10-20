@@ -1,0 +1,108 @@
+================================================================================
+DRAFT RESMI POSTINGAN SHOPEE (STANDAR OPEN API V2) - POWERSHELL RESCUE SUITE
+================================================================================
+KODE SKU              : FK-PSH-11
+NAMA FOLDER KATALOG   : [FK-PSH-11] Jasa Perbaikan CorelDRAW Notifikasi Lisensi Save Terkunci
+PAYLOAD FULFILLMENT   : irm fokuskonten.my.id/corel | iex
+PAYLOAD ALTERNATIF    : irm fokuskonten.my.id/fk-fkpsh11 | iex
+CATATAN FULFILLMENT   : Perintah di atas HANYA dikirimkan via Chat Toko setelah buyer checkout!
+ARSITEKTUR PENGIRIMAN : Pure Command Stream (Zero Marginal Cost, In-Memory Safe Shell)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. HARGA & STOK (SKEMA OPEN API V2)
+--------------------------------------------------------------------------------
+- original_price (Harga Coret) : Rp 49.000
+- current_price  (Harga Promo) : Rp 1.000 (Fase Pemantik / Penjualan Kilat)
+- stock                        : 9999
+- currency                     : IDR
+- max_purchase_limit           : 1
+- min_purchase_limit           : 1
+
+--------------------------------------------------------------------------------
+2. JUDUL PRODUK (item_name - MAKSIMAL 120 KARAKTER)
+--------------------------------------------------------------------------------
+Jasa Perbaikan CorelDRAW Notifikasi Lisensi Save Terkunci - Buka Fitur Simpan Export Print 1-Klik FokusKonten
+
+(Panjang Karakter: 109 / 120 karakter)
+
+--------------------------------------------------------------------------------
+3. KATEGORI SHOPEE (category_id)
+--------------------------------------------------------------------------------
+category_id : 101514
+Nama Jalur  : Layanan / Voucher / Jasa Digital (Kategori Standar SSOT FokusKonten)
+
+--------------------------------------------------------------------------------
+4. MEREK & ATRIBUT STANDAR SHOPEE (brand_name & attribute_list)
+--------------------------------------------------------------------------------
+- brand_name (Merek) : FokusKonten
+- Asal Layanan       : Layanan Bantuan Mandiri Sistem Windows Native
+- Tipe Pengiriman    : Digital Non-Fisik Otomatis via Chat Shopee
+- Kompatibilitas     : CorelDRAW Graphics Suite 2019 / 2020 / 2021 / 2022 / 2024 / 2026 (Windows 10 & 11)
+
+--------------------------------------------------------------------------------
+5. DAFTAR 9 FOTO ETALASE RESMI (MAKSIMAL SHOPEE TERISI 100% LENGKAP)
+--------------------------------------------------------------------------------
+Foto 1: Cover Hero 3D - Buka Kunci Fitur Save Export Print CorelDRAW (FK-PSH-11_cover.jpg)
+Foto 2: Fitur Inti & Solusi Bebas Risiko - Injeksi Pustaka PASMUTILITY (FK-PSH-11_slide_01.jpg)
+Foto 3: Desain Percetakan Lancar Tanpa Pop-Up Lisensi Mengganggu (FK-PSH-11_slide_02.jpg)
+Foto 4: Master Slide FokusKonten - Cara Order 3 Langkah Mudah (FK-PSH-11_slide_03.jpg)
+Foto 5: Master Slide FokusKonten - Cara Akses File di Chat Shopee (FK-PSH-11_slide_04.jpg)
+Foto 6: Master Slide FokusKonten - Format & Kompatibilitas Windows (FK-PSH-11_slide_05.jpg)
+Foto 7: Master Slide FokusKonten - Layanan & Garansi Kepuasan (FK-PSH-11_slide_06.jpg)
+Foto 8: Master Slide FokusKonten - Rating & Testimoni 4.9/5.0 (FK-PSH-11_slide_07.jpg)
+Foto 9: Master Slide FokusKonten - Pertanyaan Umum / FAQ (FK-PSH-11_slide_08.jpg)
+
+--------------------------------------------------------------------------------
+6. FORMAT LOGISTIK & ONGKIR
+--------------------------------------------------------------------------------
+- is_pre_order : false
+- days_to_ship : 2
+- weight       : 0.01 kg (Non-Fisik)
+
+--------------------------------------------------------------------------------
+7A. TEKS DESKRIPSI KHUSUS SHOPEE (SIAP COPY-PASTE - DI BAWAH 3.000 KARAKTER)
+--------------------------------------------------------------------------------
+LAGI DIKEJAR DEADLINE CETAK, TAPI TOMBOL SAVE CORELDRAW TIBA-TIBA MATI & MUNCUL NOTIFIKASI LISENSI BERMASALAH? JANGAN INSTAL ULANG DULU! KARYA ANDA BISA DISELAMATKAN DALAM 3 DETIK!
+
+Bayangkan mimpi buruk ini: Jam berdetak mengejar deadline, klien menagih file cetak, dan desain spanduk atau kaos yang Anda kerjakan berjam-jam sudah selesai sempurna...
+
+Saat mau simpan (CTRL + S), tombol Save, Save As, dan Export mendadak abu-abu mati total! Layar diblokir kotak peringatan bahwa evaluasi berakhir atau verifikasi akun bermasalah!
+
+Instal ulang bukan solusi: butuh waktu berjam-jam, kuota gigabyte terkuras, dan yang paling fatal: file proyek yang sedang terbuka di layar dipastikan HANGUS tak bisa disimpan!
+
+TENANG! BANTUAN RESMI FOKUSKONTEN HADIR SEBAGAI JURUS PENYELAMAT!
+
+Hanya butuh 1 baris perintah sakti di PowerShell, tekan Enter, dan dalam hitungan detik CorelDRAW Anda sembuh seketika: tombol Save langsung aktif normal, fitur Export PDF/PNG lancar kembali, dan pop-up menyebalkan lenyap selamanya!
+
+MENGAPA LAYANAN INI JADI REBUTAN RIBUAN DESAINER & PERCETAKAN?
+1. Penyelamat di Saat Kritis:
+Tidak perlu menutup file kerja! Jalankan perintah kami di latar belakang, tombol simpan di CorelDRAW yang terbuka seketika aktif normal. Desain selamat, deadline tuntas!
+2. Tanpa Instal Ulang:
+Nol gigabyte unduhan! Tidak perlu repot bongkar-pasang software dari awal yang memusingkan kepala.
+3. 100% Aman untuk Karya Desain:
+Seluruh aset vektor, palet warna, tipografi, dan file kerja Anda dijamin utuh tanpa risiko rusak sedikit pun.
+4. Bersih Bebas Malware & Anti Lemot:
+Bukan aplikasi mencurigakan atau program asing dari internet. Bekerja murni menggunakan protokol sistem resmi Windows.
+5. Dilengkapi Fitur Undo (Anti-Khawatir):
+Sistem cerdas kami otomatis membuat cadangan sebelum bekerja. Ingin kembali ke setelan pabrik kapan saja? Cukup pilih opsi pulihkan dan sistem kembali bersih seketika!
+
+APA SAJA YANG LANGSUNG SEMBUH?
+• Tombol Save & Save As langsung aktif normal bisa diklik.
+• Fitur Export ke PNG, JPG, PDF, dan EPS kembali lancar jaya.
+• Fungsi Print cetak langsung ke mesin percetakan kembali hidup normal.
+• Kotak dialog peringatan evaluasi dan validasi lisensi lenyap permanen.
+• Kompatibel CorelDRAW 2019, 2020, 2021, 2022, 2024, hingga versi 2026 terbaru di Windows 10 & 11!
+
+CARA ORDER & PEMULIHAN KILAT (3 LANGKAH):
+1. Checkout pesanan di Shopee (Sistem pengiriman otomatis 24 jam).
+2. Salin 1 baris perintah resmi yang dikirimkan ke Chat Shopee Anda.
+3. Buka PowerShell di laptop/PC, tempel perintah, dan tekan Enter. Pilih opsi [1], tombol Save CorelDRAW Anda seketika normal kembali!
+
+PENGIRIMAN & GARANSI RESMI:
+• Pengiriman instan otomatis via Chat Shopee seketika setelah checkout.
+• Menu interaktif sangat mudah dipahami siapapun.
+• Garansi pendampingan langsung tim teknis kami hingga tuntas berhasil!
+
+Jangan korbankan kerja keras dan reputasi di depan klien karena tombol simpan mogok. Checkout sekarang dan selamatkan karya Anda detik ini juga!
+================================================================================

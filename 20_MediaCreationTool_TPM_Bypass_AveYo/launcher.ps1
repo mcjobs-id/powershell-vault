@@ -68,6 +68,59 @@ function Get-SystemHardwareInfo {
     return @{ CPU = $cpu; OS = $os }
 }
 
+function Test-IsCpuSupported($name) {
+    if ($name -match 'i[3579]-(?:[89]\d{3}|[1-9]\d{4})|Core\s+Ultra|Xeon.*(?:v[6-9]|\b[4-9]\d{3})') {
+        return $true
+    }
+    if ($name -match 'Ryzen.*[3579].*(?:[2-9]\d{3}|[1-9]\d{4})|EPYC|Threadripper.*(?:2\d{3}|3\d{3}|5\d{3}|7\d{3})') {
+        return $true
+    }
+    return $false
+}
+
+function Get-AccurateTpmInfo {
+    # 1. PnpDevice (Bisa dibaca user biasa / non-admin)
+    $pnp = Get-PnpDevice -Class 'SecurityDevices' -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match 'TPM|Trusted Platform' } | Select-Object -First 1
+    if ($pnp) {
+        $ver = if ($pnp.FriendlyName -match '2\.0') { '2.0' } else { '1.2' }
+        return @{
+            Present = $true
+            Name    = $pnp.FriendlyName
+            Status  = $pnp.Status
+            Version = $ver
+        }
+    }
+
+    # 2. Registri TPM WMI (Bisa dibaca user biasa / non-admin)
+    $reg = Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\TPM\WMI' -ErrorAction SilentlyContinue
+    if ($reg -and $reg.TpmBackedDeviceID) {
+        return @{
+            Present = $true
+            Name    = "Trusted Platform Module"
+            Status  = "OK"
+            Version = "2.0"
+        }
+    }
+
+    # 3. Cmdlet Get-Tpm (Jika dijalankan dengan hak Administrator)
+    $tpm = Get-Tpm -ErrorAction SilentlyContinue
+    if ($tpm -and $tpm.TpmPresent) {
+        return @{
+            Present = $true
+            Name    = "Trusted Platform Module"
+            Status  = if ($tpm.TpmReady) { "OK" } else { "NotReady" }
+            Version = "2.0"
+        }
+    }
+
+    return @{
+        Present = $false
+        Name    = "Tidak Terdeteksi"
+        Status  = "None"
+        Version = "None"
+    }
+}
+
 function Show-CompactHeader {
     Clear-Host
     $bStatus = Get-BypassStatus
@@ -83,9 +136,13 @@ function Show-CompactHeader {
     Write-Host "  PROSESOR : [ $($hw.CPU) ]" -ForegroundColor Gray
 
     if ($bStatus -eq "INSTALLED") {
-        Write-Host "  BYPASS   : [ TERPASANG / AKTIF ] (PC Bebas Syarat TPM & CPU)" -ForegroundColor Green
+        Write-Host "  BYPASS   : [ TERPASANG / AKTIF ] (Bypass IFEO SetupHost Aktif)" -ForegroundColor Green
     } else {
-        Write-Host "  BYPASS   : [ BELUM AKTIF / STANDAR ] (Windows 11 Terhalang Syarat)" -ForegroundColor Yellow
+        if ($hw.OS -match "Windows 11") {
+            Write-Host "  BYPASS   : [ STANDAR SISTEM ] (Windows 11 Berjalan Asli)" -ForegroundColor Green
+        } else {
+            Write-Host "  BYPASS   : [ BELUM TERPASANG ] (Siap Dipasang Untuk Upgrade)" -ForegroundColor Yellow
+        }
     }
 
     Write-Host "  DOKUMEN  : [ AMAN 100% ] (Upgrade Langsung Tanpa Format Ulang)" -ForegroundColor Green
@@ -227,44 +284,59 @@ function Check-DiagnosticStatus {
     Write-Host "  * Sistem Operasi     : $($hw.OS)" -ForegroundColor White
     Write-Host "  * Prosesor Terpasang : $($hw.CPU)" -ForegroundColor White
 
-    # 1. Cek TPM
-    Write-Host "  * Modul TPM Hardware : " -ForegroundColor White -NoNewline
-    $tpm = Get-Tpm -ErrorAction SilentlyContinue
-    if ($tpm -and $tpm.TpmPresent) {
-        Write-Host "TERDETEKSI [AKTIF]" -ForegroundColor Green
+    # 1. Kesesuaian CPU
+    $cpuSup = Test-IsCpuSupported $hw.CPU
+    Write-Host "  * Kesesuaian CPU     : " -ForegroundColor White -NoNewline
+    if ($cpuSup) {
+        Write-Host "DIDUKUNG RESMI [GEN 8+ / RYZEN 2+]" -ForegroundColor Green
     } else {
-        Write-Host "TIDAK TERDETEKSI / LAWAS [PERLU BYPASS]" -ForegroundColor Yellow
+        Write-Host "GENERASI LAWAS [DIBYPASS OLEH SUITE INI]" -ForegroundColor Yellow
     }
 
-    # 2. Cek Secure Boot
-    Write-Host "  * UEFI Secure Boot   : " -ForegroundColor White -NoNewline
-    try {
-        $sb = Confirm-SecureBootUEFI -ErrorAction Stop
-        if ($sb) {
-            Write-Host "AKTIF [UEFI]" -ForegroundColor Green
+    # 2. Cek TPM (Non-Admin Resilient)
+    Write-Host "  * Modul TPM Hardware : " -ForegroundColor White -NoNewline
+    $tpm = Get-AccurateTpmInfo
+    if ($tpm.Present -and ($tpm.Version -eq "2.0" -or $tpm.Status -eq "OK")) {
+        Write-Host "$($tpm.Name) [TERDETEKSI / AKTIF]" -ForegroundColor Green
+    } elseif ($tpm.Present) {
+        Write-Host "$($tpm.Name) [TERDETEKSI / PERLU BYPASS]" -ForegroundColor Yellow
+    } else {
+        Write-Host "TIDAK TERDETEKSI / LAWAS [DIBYPASS]" -ForegroundColor Yellow
+    }
+
+    # 3. Cek UEFI & Secure Boot (Non-Admin Resilient)
+    Write-Host "  * Firmware & Boot    : " -ForegroundColor White -NoNewline
+    $fw = [Environment]::GetEnvironmentVariable('firmware_type')
+    if (-not $fw) { $fw = if (Test-Path "$env:SystemDrive\EFI") { "UEFI" } else { "BIOS" } }
+
+    $sb = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\State' -ErrorAction SilentlyContinue).UEFISecureBootEnabled
+
+    if ($fw -eq "UEFI") {
+        if ($sb -eq 1) {
+            Write-Host "UEFI [SECURE BOOT AKTIF]" -ForegroundColor Green
         } else {
-            Write-Host "NONAKTIF / LEGACY BIOS [DIBYPASS]" -ForegroundColor Yellow
+            Write-Host "UEFI [SECURE BOOT NONAKTIF / DIBYPASS]" -ForegroundColor Yellow
         }
-    } catch {
-        Write-Host "LEGACY BIOS / TIDAK DIDUKUNG [DIBYPASS]" -ForegroundColor Yellow
+    } else {
+        Write-Host "LEGACY BIOS [DIBYPASS OLEH SUITE INI]" -ForegroundColor Yellow
     }
 
-    # 3. Cek Status Bypass IFEO
+    # 4. Status Hook IFEO
     Write-Host "  * Status Hook IFEO   : " -ForegroundColor White -NoNewline
     $bStatus = Get-BypassStatus
     if ($bStatus -eq "INSTALLED") {
         Write-Host "TERPASANG [SIAP UPGRADE TANPA SYARAT]" -ForegroundColor Green
     } else {
-        Write-Host "BELUM TERPASANG (MASIH DIBATASI STANDAR)" -ForegroundColor Yellow
+        Write-Host "STANDAR (BELUM ADA HOOK BYPASS)" -ForegroundColor Gray
     }
 
-    # 4. Kebijakan MoSetup
+    # 5. Kebijakan MoSetup
     Write-Host "  * Kebijakan MoSetup  : " -ForegroundColor White -NoNewline
     $mo = (Get-ItemProperty "HKLM:\SYSTEM\Setup\MoSetup" -Name "AllowUpgradesWithUnsupportedTPMorCPU" -ErrorAction SilentlyContinue).AllowUpgradesWithUnsupportedTPMorCPU
     if ($mo -eq 1) {
         Write-Host "ALLOW UPGRADES [AKTIF]" -ForegroundColor Green
     } else {
-        Write-Host "STANDAR (BLOCKED ON UNSUPPORTED)" -ForegroundColor Yellow
+        Write-Host "STANDAR WINDOWS" -ForegroundColor Gray
     }
 
     Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray

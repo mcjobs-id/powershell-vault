@@ -3,6 +3,7 @@
 # Layanan Jasa : MATIKAN PEMBAGIAN UPDATE WINDOWS P2P SEDOT KUOTA
 # Modul SKU    : FK-PSH-156 (Delivery Optimization Guard)
 # Desain       : Ultra-Compact Golden 64 Layout (100% Single Terminal In-Place)
+# Handover     : Seamless Single-Window Elevation Handover (Auto-UAC + Exit)
 # Opsi         : BEFORE (Rawan Kuota) vs AFTER (Terkunci Hemat 100%) + UNDO
 # ==============================================================================
 
@@ -43,6 +44,37 @@ $isAdmin = $false
 try {
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 } catch {}
+
+# ==============================================================================
+# SEAMLESS SINGLE-WINDOW ELEVATION HANDOVER
+# Jika dijalankan di terminal biasa, buka terminal Administrator resmi dan langsung
+# tutup terminal non-admin lama agar tidak ada tumpukan terminal ganda (1 Terminal)
+# ==============================================================================
+if (-not $isAdmin -and -not $NonInteractive) {
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  FOKUSKONTEN // PERIZINAN SISTEM (ADMINISTRATOR)" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Layanan ini membutuhkan hak akses Administrator untuk" -ForegroundColor White
+    Write-Host "  mengunci Group Policy sistem dan mematikan DoSvc." -ForegroundColor White
+    Write-Host ""
+    Write-Host "  -> Membuka sesi Administrator resmi (1 Terminal)..." -ForegroundColor Green
+    Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
+    Write-Host "================================================================" -ForegroundColor Cyan
+    try {
+        $orderArg = if ($global:fkOrderNumber) { " -Order '$global:fkOrderNumber'" } else { "" }
+        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"& { irm fokuskonten.my.id/anti-sedot-kuota$orderArg | iex }`"" -Verb RunAs
+        exit
+    } catch {
+        Write-Host ""
+        Write-Host "  [!] Izin Administrator dibatalkan oleh pengguna." -ForegroundColor Red
+        Write-Host "      Silakan buka PowerShell dengan klik kanan -> 'Run as administrator'" -ForegroundColor Yellow
+        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+        Write-Host "  Tekan sembarang tombol untuk keluar..." -ForegroundColor Gray
+        try { [Console]::ReadKey($true) | Out-Null } catch {}
+        exit
+    }
+}
 
 function Restore-Terminal {
     try {
@@ -180,18 +212,9 @@ function Set-DisableP2P {
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
 
-    if (-not $isAdmin) {
-        Write-Host "  [!] HAK AKSES SISTEM DIBUTUHKAN:" -ForegroundColor Yellow
-        Write-Host "      Untuk mengunci Group Policy HKLM dan mematikan DoSvc," -ForegroundColor White
-        Write-Host "      PowerShell membutuhkan hak akses Administrator." -ForegroundColor White
-        Write-Host ""
-        Write-Host "  Melanjutkan percobaan eksekusi pada level hak akses aktif..." -ForegroundColor DarkGray
-        Write-Host ""
-    }
-
     $allOk = $true
 
-    # Langkah 1: Kunci Kebijakan Mesin (HKLM Policy)
+    # Langkah 1: Kunci Kebijakan Mesin (HKLM Policy DODownloadMode = 0)
     Write-Host "  [1/4] Mengunci Group Policy DODownloadMode = 0 (HTTP Only)..." -NoNewline
     try {
         $polPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization"
@@ -206,7 +229,7 @@ function Set-DisableP2P {
         $allOk = $false
     }
 
-    # Langkah 2: Kunci Registri Akun NetworkService (S-1-5-20)
+    # Langkah 2: Kunci Registri Akun NetworkService (S-1-5-20 DownloadMode = 0)
     Write-Host "  [2/4] Mengunci Registri S-1-5-20 DownloadMode = 0 (GUI OFF)..." -NoNewline
     try {
         $nsPath = "Registry::HKEY_USERS\S-1-5-20\Software\Microsoft\Windows\CurrentVersion\DeliveryOptimization\Settings"
@@ -241,6 +264,12 @@ function Set-DisableP2P {
         Write-Host " [SELESAI]" -ForegroundColor Green
     }
 
+    # Tambahan: Set DODownloadMode via CIM jika modul tersedia
+    try {
+        Import-Module DeliveryOptimization -ErrorAction SilentlyContinue
+        Set-DODownloadMode -downloadMode CdnOnly -ErrorAction SilentlyContinue
+    } catch {}
+
     Write-Host ""
     if ($allOk) {
         Write-Host "  ============================================================" -ForegroundColor Green
@@ -251,8 +280,7 @@ function Set-DisableP2P {
     } else {
         Write-Host "  ============================================================" -ForegroundColor Yellow
         Write-Host "  [PERHATIAN] Beberapa kunci registri memerlukan izin Admin." -ForegroundColor Yellow
-        Write-Host "  Solusi: Tutup terminal ini, klik kanan ikon PowerShell," -ForegroundColor White
-        Write-Host "  pilih 'Run as administrator', lalu tempelkan kembali perintah." -ForegroundColor Cyan
+        Write-Host "  Mohon buka PowerShell dengan klik kanan -> 'Run as administrator'" -ForegroundColor Cyan
         Write-Host "  ============================================================" -ForegroundColor Yellow
     }
 
@@ -299,6 +327,12 @@ function Set-RestoreBefore {
     } catch {
         Write-Host " [LEWAT]" -ForegroundColor DarkGray
     }
+
+    # Kembalikan via CIM jika modul tersedia
+    try {
+        Import-Module DeliveryOptimization -ErrorAction SilentlyContinue
+        Set-DODownloadMode -downloadMode Lan -ErrorAction SilentlyContinue
+    } catch {}
 
     Write-Host ""
     Write-Host "  ============================================================" -ForegroundColor Yellow

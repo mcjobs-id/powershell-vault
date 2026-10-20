@@ -151,33 +151,6 @@ function Show-CompactHeader {
 
 $aveyoB64 = "QChzZXQgJyg9KXx8JyA8IyBsZWFuIGFuZCBtZWFuIGNtZCAvIHBvd2Vyc2hlbGwgaHlicmlkICM+IEAnDQoNCjo6IyBHZXQgMTEgb24gJ3Vuc3VwcG9ydGVkJyBQQyB2aWEgV2luZG93cyBVcGRhdGUgb3IgbW91bnRlZCBJU08gKG5vIHBhdGNoaW5nIG5lZWRlZCkNCjo6IyBpZiBXVSBpcyBzdHVjayB1c2Ugd2luZG93c191cGRhdGVfcmVmcmVzaC5iYXQ7IEJldGEvRGV2L0NhbmFyeSBuZWVkcyBPZmZsaW5lSW5zaWRlckVucm9sbA0KOjojIFYxMzogc2tpcCAybmQgdHBtIGNoZWNrIG9uIENhbmFyeSBpc287IG5vIFNlcnZlciBsYWJlbDsgZnV0dXJlIHByb29maW5nOyB0ZXN0ZWQgd2l0aCAyNjAxMCBpc28sIHd1IGFuZCB3dSByZXBhaXIgdmVyc2lvbg0KDQpAZWNobyBvZmYgJiB0aXRsZSBnZXQgMTEgb24gJ3Vuc3VwcG9ydGVkJyBQQyB8fCBBdmVZbyAyMDIzLjEyLjA3DQppZiAvaSAiJX5mMCIgbmVxICIlU3lzdGVtRHJpdmUlXFNjcmlwdHNcZ2V0MTEuY21kIiBnb3RvIHNldHVwDQpwb3dlcnNoZWxsIC13aW4gMSAtbm9wIC1jICI7Ig0Kc2V0IENMST0lKiYgc2V0IFNPVVJDRVM9JVN5c3RlbURyaXZlJVwkV0lORE9XUy5+QlRcU291cmNlcyYgc2V0IE1FRElBPS4mIHNldCBNT0Q9Q0xJJiBzZXQgUFJFPVdVQSYgc2V0IC9hIFZFUj0xMQ0KaWYgbm90IGRlZmluZWQgQ0xJIChleGl0IC9iKSBlbHNlIGlmIG5vdCBleGlzdCAlU09VUkNFUyVcU2V0dXBIb3N0LmV4ZSAoZXhpdCAvYikNCmlmIG5vdCBleGlzdCAlU09VUkNFUyVcV2luZG93c1VwZGF0ZUJveC5leGUgbWtsaW5rIC9oICVTT1VSQ0VTJVxXaW5kb3dzVXBkYXRlQm94LmV4ZSAlU09VUkNFUyVcU2V0dXBIb3N0LmV4ZQ0KcmVnIGFkZCBIS0xNXFNPRlRXQVJFXFBvbGljaWVzXE1pY3Jvc29mdFxXaW5kb3dzXFdpbmRvd3NVcGRhdGUgL2YgL3YgRGlzYWJsZVdVZkJTYWZlZ3VhcmRzIC9kIDEgL3QgcmVnX2R3b3JkDQpyZWcgYWRkIEhLTE1cU1lTVEVNXFNldHVwXE1vU2V0dXAgL2YgL3YgQWxsb3dVcGdyYWRlc1dpdGhVbnN1cHBvcnRlZFRQTW9yQ1BVIC9kIDEgL3QgcmVnX2R3b3JkDQpzZXQgT1BUPS9Db21wYXQgSWdub3JlV2FybmluZyAvTWlncmF0ZURyaXZlcnMgQWxsIC9UZWxlbWV0cnkgRGlzYWJsZQ0Kc2V0IC9hIHJlc3RhcnRfYXBwbGljYXRpb249MHg4MDA3MDVCQiAmIChjYWxsIHNldCBDTEk9JSVDTEk6JTEgPSUlKQ0Kc2V0IC9hIGluY29ycmVjdF9wYXJhbWV0ZXI9MHg4MDA3MDA1NyAmIChzZXQgU1JWPSVDTEk6L1Byb2R1Y3QgQ2xpZW50ID0lKQ0Kc2V0IC9hIGxhdW5jaF9vcHRpb25fZXJyb3I9MHhjMTkwMDEwYSAmIChzZXQgU1JWPSVTUlY6L1Byb2R1Y3QgU2VydmVyID0lKQ0KZm9yICUlVyBpbiAoJUNMSSUpIGRvIGlmIC9pICUlVyA9PSAvUHJlRG93bmxvYWQgKHNldCBNT0Q9U1JWKQ0KZm9yICUlVyBpbiAoJUNMSSUpIGRvIGlmIC9pICUlVyA9PSAvSW5zdGFsbEZpbGUgKHNldCBQUkU9SVNPJiBzZXQgIk1FRElBPSIpIGVsc2UgaWYgbm90IGRlZmluZWQgTUVESUEgc2V0ICJNRURJQT0lJX5kcFciDQppZiAlVkVSJSA9PSAxMSBmb3IgJSVXIGluICgiJU1FRElBJWFwcHJhaXNlcnJlcy5kbGwiKSBkbyBpZiBleGlzdCAlJVcgaWYgJSV+elcgPT0gMCBzZXQgQWxyZWFkeVBhdGNoZWQ9MSAmIHNldCAvYSBWRVI9MTANCmlmICVWRVIlID09IDExIGZpbmRzdHIgL3IgIlAuci5vLmQudS5jLnQuVi5lLnIucy5pLm8ubi4uLjEuMC5cLi4wLlwuLjIuWzItOV0iICVTT1VSQ0VTJVxTZXR1cEhvc3QuZXhlID5udWwgMj5udWwgfHwgc2V0IC9hIFZFUj0xMA0KaWYgJVZFUiUgPT0gMTEgaWYgbm90IGV4aXN0ICIlTUVESUElRUkuY2ZnIiAoZWNobztbQ2hhbm5lbF0+JVNPVVJDRVMlXEVJLmNmZyAmIGVjaG87X0RlZmF1bHQ+PiVTT1VSQ0VTJVxFSS5jZmcpDQppZiAlVkVSJV8lUFJFJSA9PSAxMV9JU08gKCVTT1VSQ0VTJVxXaW5kb3dzVXBkYXRlQm94LmV4ZSAvUHJvZHVjdCBTZXJ2ZXIgL1ByZURvd25sb2FkIC9RdWlldCAlT1BUJSkNCmlmICVWRVIlXyVQUkUlID09IDExX0lTTyAoZGVsIC9mIC9xICVTT1VSQ0VTJVxhcHByYWlzZXJyZXMuZGxsIDI+bnVsICYgY2QuPiVTT1VSQ0VTJVxhcHByYWlzZXJyZXMuZGxsICYgY2FsbCA6Y2FuYXJ5KQ0KaWYgJVZFUiVfJU1PRCUgPT0gMTFfU1JWIChzZXQgQVJHPSVPUFQlICVTUlYlIC9Qcm9kdWN0IFNlcnZlcikNCmlmICVWRVIlXyVNT0QlID09IDExX0NMSSAoc2V0IEFSRz0lT1BUJSAlQ0xJJSkNCiVTT1VSQ0VTJVxXaW5kb3dzVXBkYXRlQm94LmV4ZSAlQVJHJQ0KaWYgJWVycm9ybGV2ZWwlID09ICVyZXN0YXJ0X2FwcGxpY2F0aW9uJSAoY2FsbCA6Y2FuYXJ5ICYgJVNPVVJDRVMlXFdpbmRvd3NVcGRhdGVCb3guZXhlICVBUkclKQ0KZXhpdCAvYg0KDQo6Y2FuYXJ5IGlzbyBza2lwIDJuZCB0cG0gY2hlY2sgYnkgQXZlWW8gIA0Kc2V0IEM9ICAkWD0nJVNPVVJDRVMlXGh3cmVxY2hrLmRsbCc7ICRZPSdTUV9UcG1WZXJzaW9uIEdURSAxJzsgJFo9J1NRX1RwbVZlcnNpb24gR1RFIDAnOyBpZiAodGVzdC1wYXRoICRYKSB7IA0Kc2V0IEM9JUMlICB0cnkgeyB0YWtlb3duLmV4ZSAvZiAkWCAvYTsgaWNhY2xzLmV4ZSAkWCAvZ3JhbnQgKlMtMS01LTMyLTU0NDpmOyBhdHRyaWIgLVIgLVMgJFg7IFtpby5maWxlXTo6T3BlbldyaXRlKCRYKS5jbG9zZSgpIH0NCnNldCBDPSVDJSAgY2F0Y2ggeyByZXR1cm4gfTsgJFI9W1RleHQuRW5jb2RpbmddOjpVVEY4LkdldEJ5dGVzKCRaKTsgJGw9JFIuTGVuZ3RoOyAkaT0yOyAkdz0hMTsNCnNldCBDPSVDJSAgJEI9W2lvLmZpbGVdOjpSZWFkQWxsQnl0ZXMoJFgpOyAkSD1bQml0Q29udmVydGVyXTo6VG9TdHJpbmcoJEIpIC1yZXBsYWNlICctJzsNCnNldCBDPSVDJSAgJFM9W0JpdENvbnZlcnRlcl06OlRvU3RyaW5nKFtUZXh0LkVuY29kaW5nXTo6VVRGOC5HZXRCeXRlcygkWSkpIC1yZXBsYWNlICctJzsNCnNldCBDPSVDJSAgZG8geyAkaT0kSC5JbmRleE9mKCRTLCAkaSArIDIpOyBpZiAoJGkgLWd0IDApIHsgJHc9ITA7IGZvciAoJGs9MDsgJGsgLWx0ICRsOyAkaysrKSB7ICRCWyRrICsgJGkgLyAyXT0kUlska10gfSB9IH0NCnNldCBDPSVDJSAgdW50aWwgKCRpIC1sdCAxKTsgaWYgKCR3KSB7IFtpby5maWxlXTo6V3JpdGVBbGxCeXRlcygkWCwgJEIpOyBbR0NdOjpDb2xsZWN0KCkgfSB9DQppZiAlVkVSJV8lUFJFJSA9PSAxMV9JU08gcG93ZXJzaGVsbCAtbm9wIC1jIGlleCgkZW52OkMpID5udWwgMj5udWwNCmV4aXQgL2INCg0KOnNldHVwDQo6OiMgZWxldmF0ZSB3aXRoIG5hdGl2ZSBzaGVsbCBieSBBdmVZbw0KPm51bCByZWcgYWRkIGhrY3Vcc29mdHdhcmVcY2xhc3Nlc1wuQWRtaW5cc2hlbGxccnVuYXNcY29tbWFuZCAvZiAvdmUgL2QgImNtZCAveCAvZCAvciBzZXQgXCJmMD0lJTJcIiYgY2FsbCBcIiUlMlwiICUlMyImIHNldCBfPSAlKg0KPm51bCBmbHRtY3x8IGlmICIlZjAlIiBuZXEgIiV+ZjAiIChjZC4+IiV0ZW1wJVxydW5hcy5BZG1pbiIgJiBzdGFydCAiJX5uMCIgL2hpZ2ggIiV0ZW1wJVxydW5hcy5BZG1pbiIgIiV+ZjAiICIlXzoiPSIiJSIgJiBleGl0IC9iKQ0KDQo6OiMgbGVhbiB4cCsgY29sb3IgbWFjcm9zIGJ5IEF2ZVlvOiAgJTwlOmFmICIgaGVsbG8gIiU+PiUgICYgICU8JTpjZiAiIHdcIm9yXCJsZCAiJT4lICAgZm9yIHNpbmdsZSBcIC8gIiB1c2UgLiV8JVwgIC4lfCUvICBcIiV8JVwiDQpmb3IgL2YgImRlbGltcz06IiAlJXMgaW4gKCdlY2hvO3Byb21wdCAkaCRzJGg6XnxjbWQgL2QnKSBkbyBzZXQgInw9JSVzIiZzZXQgIj4+PVwuLlxjIG51bCZzZXQgL3Agcz0lJXMlJXMlJXMlJXMlJXMlJXMlJXM8bnVsJnBvcGQiDQpzZXQgIjw9cHVzaGQgIiVhcHBkYXRhJSImMj5udWwgZmluZHN0ciAvYzpcIC9hIiAmc2V0ICI+PSU+PiUmZWNobzsiICZzZXQgInw9JXw6fjAsMSUiICZzZXQgL3Agcz1cPG51bD4iJWFwcGRhdGElXGMiDQoNCjo6IyB0b2dnbGUgd2hlbiBsYXVuY2hlZCB3aXRob3V0IGFyZ3VtZW50cywgZWxzZSBqdW1wIHRvIGFyZ3VtZW50czogImluc3RhbGwiIG9yICJyZW1vdmUiDQpzZXQgQ0xJPSUqJiAoc2V0IElGRU89SEtMTVxTT0ZUV0FSRVxNaWNyb3NvZnRcV2luZG93cyBOVFxDdXJyZW50VmVyc2lvblxJbWFnZSBGaWxlIEV4ZWN1dGlvbiBPcHRpb25zKQ0Kd21pYyAvbmFtZXNwYWNlOiJcXHJvb3Rcc3Vic2NyaXB0aW9uIiBwYXRoIF9fRXZlbnRGaWx0ZXIgd2hlcmUgTmFtZT0iU2tpcCBUUE0gQ2hlY2sgb24gRHluYW1pYyBVcGRhdGUiIGRlbGV0ZSA+bnVsIDI+bnVsICYgcmVtIHYxDQpyZWcgZGVsZXRlICIlSUZFTyVcdmRzbGRyLmV4ZSIgL2YgMj5udWwgJiByZW0gdjIgLSB2NQ0KaWYgL2kgIiVDTEklIj09IiIgcmVnIHF1ZXJ5ICIlSUZFTyVcU2V0dXBIb3N0LmV4ZVwwIiAvdiBEZWJ1Z2dlciA+bnVsIDI+bnVsICYmIGdvdG8gcmVtb3ZlIHx8IGdvdG8gaW5zdGFsbA0KaWYgL2kgIiV+MSI9PSJpbnN0YWxsIiAoZ290byBpbnN0YWxsKSBlbHNlIGlmIC9pICIlfjEiPT0icmVtb3ZlIiBnb3RvIHJlbW92ZQ0KDQo6aW5zdGFsbA0KbWtkaXIgJVN5c3RlbURyaXZlJVxTY3JpcHRzID5udWwgMj5udWwgJiBjb3B5IC95ICIlfmYwIiAiJVN5c3RlbURyaXZlJVxTY3JpcHRzXGdldDExLmNtZCIgPm51bCAyPm51bA0KcmVnIGFkZCAiJUlGRU8lXFNldHVwSG9zdC5leGUiIC9mIC92IFVzZUZpbHRlciAvZCAxIC90IHJlZ19kd29yZCA+bnVsDQpyZWcgYWRkICIlSUZFTyVcU2V0dXBIb3N0LmV4ZVwwIiAvZiAvdiBGaWx0ZXJGdWxsUGF0aCAvZCAiJVN5c3RlbURyaXZlJVwkV0lORE9XUy5+QlRcU291cmNlc1xTZXR1cEhvc3QuZXhlIiA+bnVsDQpyZWcgYWRkICIlSUZFTyVcU2V0dXBIb3N0LmV4ZVwwIiAvZiAvdiBEZWJ1Z2dlciAvZCAiJVN5c3RlbURyaXZlJVxTY3JpcHRzXGdldDExLmNtZCIgPm51bA0KZWNobzsNCiU8JTpmMCAiIFNraXAgVFBNIENoZWNrIG9uIER5bmFtaWMgVXBkYXRlIFYxMyAiJT4+JSAmICU8JToyZiAiIElOU1RBTExFRCAiJT4+JSAmICU8JTpmMCAiIHJ1biBhZ2FpbiB0byByZW1vdmUgIiU+JQ0KaWYgL2kgIiVDTEklIj09IiIgdGltZW91dCAvdCA3DQpleGl0IC9iDQoNCjpyZW1vdmUNCmRlbCAvZiAvcSAiJVN5c3RlbURyaXZlJVxTY3JpcHRzXGdldDExLmNtZCIgIiVQdWJsaWMlXGdldDExLmNtZCIgIiVQcm9ncmFtRGF0YSVcZ2V0MTEuY21kIiA+bnVsIDI+bnVsDQpyZWcgZGVsZXRlICIlSUZFTyVcU2V0dXBIb3N0LmV4ZSIgL2YgPm51bCAyPm51bA0KZWNobzsNCiU8JTpmMCAiIFNraXAgVFBNIENoZWNrIG9uIER5bmFtaWMgVXBkYXRlIFYxMyAiJT4+JSAmICU8JTpkZiAiIFJFTU9WRUQgIiU+PiUgJiAlPCU6ZjAgIiBydW4gYWdhaW4gdG8gaW5zdGFsbCAiJT4lDQppZiAvaSAiJUNMSSUiPT0iIiB0aW1lb3V0IC90IDcNCmV4aXQgL2INCg0KJ0ApOyAkMCA9ICIkZW52OnRlbXBcU2tpcF9UUE1fQ2hlY2tfb25fRHluYW1pY19VcGRhdGUuY21kIjsgJHsoPSl8fH0gLXNwbGl0ICJccj9cbiIgfCBvdXQtZmlsZSAkMCAtZW5jb2RpbmcgZGVmYXVsdCAtZm9yY2U7ICYgJDANCiMgcHJlc3MgZW50ZXINCg=="
 
-function Invoke-SilentElevation {
-    param(
-        [string]$EncodedCommand
-    )
-
-    $workerVbs = Join-Path $env:TEMP ("fk_worker_" + [Guid]::NewGuid().ToString('N').Substring(0,8) + ".vbs")
-    $vbsContent = @"
-Set Wsh = CreateObject("WScript.Shell")
-Wsh.Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $EncodedCommand", 0, True
-"@
-    try {
-        [System.IO.File]::WriteAllText($workerVbs, $vbsContent, [System.Text.Encoding]::ASCII)
-        $p = Start-Process -FilePath "wscript.exe" -ArgumentList ('"' + $workerVbs + '"') -Verb RunAs -Wait -PassThru
-        Start-Sleep -Milliseconds 600
-        return ($p.ExitCode -eq 0)
-    } catch {
-        try {
-            $p = Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $EncodedCommand" -Verb RunAs -Wait -PassThru
-            return ($p.ExitCode -eq 0)
-        } catch {
-            return $false
-        }
-    } finally {
-        Remove-Item -Path $workerVbs -Force -ErrorAction SilentlyContinue
-    }
-}
-
 function Apply-BypassAction {
     Write-Host ""
     Write-Host "  [PROSES] Memasang Bypass Syarat Perangkat Keras Windows 11..." -ForegroundColor Cyan
@@ -222,11 +195,11 @@ function Apply-BypassAction {
         Write-Host "  > Membuka proteksi Windows Update Safeguards... " -ForegroundColor Cyan -NoNewline
         Write-Host "[OK]" -ForegroundColor Green
     } else {
-        Write-Host "  > Mengalihkan tugas ke worker senyap berizin sistem (UAC)... " -ForegroundColor Yellow
+        Write-Host "  > Mengalihkan tugas ke worker berizin sistem (UAC)... " -ForegroundColor Yellow
         $code = '& {' + $workerScript.ToString() + "} '$aveyoB64'"
         $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($code))
-        Invoke-SilentElevation -EncodedCommand $b64
-        if ((Get-BypassStatus) -eq "INSTALLED") {
+        $p = Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $b64" -Verb RunAs -Wait -PassThru
+        if ($p.ExitCode -eq 0) {
             Write-Host "  [OK] Seluruh protokol bypass berhasil diterapkan ke sistem." -ForegroundColor Green
         } else {
             Write-Host "  [!] Izin Administrator dibatalkan oleh pengguna (UAC ditolak)." -ForegroundColor Red
@@ -285,13 +258,11 @@ function Remove-BypassAction {
         Write-Host "  > Membersihkan modul get11.cmd dari sistem... " -ForegroundColor Cyan -NoNewline
         Write-Host "[OK]" -ForegroundColor Green
     } else {
-        Write-Host "  > Mengalihkan tugas pencabutan ke worker senyap (UAC)... " -ForegroundColor Yellow
+        Write-Host "  > Mengalihkan tugas pencabutan ke izin sistem (UAC)... " -ForegroundColor Yellow
         $code = '& {' + $workerScript.ToString() + '}'
         $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($code))
-        Invoke-SilentElevation -EncodedCommand $b64
-        if ((Get-BypassStatus) -eq "NOT_INSTALLED") {
-            Write-Host "  [OK] Seluruh protokol bypass berhasil dicabut dari sistem." -ForegroundColor Green
-        } else {
+        $p = Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $b64" -Verb RunAs -Wait -PassThru
+        if ($p.ExitCode -ne 0) {
             Write-Host "  [!] Pencabutan dibatalkan oleh pengguna (UAC ditolak)." -ForegroundColor Red
             return
         }

@@ -4,6 +4,7 @@ DRAFT RESMI POSTINGAN SHOPEE (STANDAR OPEN API V2) — POWERSHELL RESCUE SUITE
 KODE SKU              : FK-PSH-63
 NAMA FOLDER KATALOG   : [FK-PSH-63] Jasa Ganti Edisi Windows Home Menjadi Windows Pro Tanpa Instal Ulang
 PAYLOAD FULFILLMENT   : irm fokuskonten.my.id/win-pro | iex
+PAYLOAD ALTERNATIF    : irm fokuskonten.my.id/fk-psh-63 | iex
 CATATAN FULFILLMENT   : Perintah di atas HANYA dikirimkan via Chat Toko setelah buyer checkout!
 ARSITEKTUR PENGIRIMAN : Pure Command Stream (Zero Marginal Cost, Zero File Download)
 ================================================================================

@@ -3,7 +3,7 @@
 # Layanan Jasa : MATIKAN PEMBAGIAN UPDATE WINDOWS P2P SEDOT KUOTA
 # Modul SKU    : FK-PSH-156 (Delivery Optimization Guard)
 # Desain       : Ultra-Compact Golden 64 Layout (100% Single Terminal In-Place)
-# Handover     : Seamless Single-Window Elevation Handover (Auto-UAC + Exit)
+# Arsitektur   : In-Place Execution (Zero Terminal Exit, Zero Lingering Windows)
 # Opsi         : BEFORE (Rawan Kuota) vs AFTER (Terkunci Hemat 100%) + UNDO
 # ==============================================================================
 
@@ -44,37 +44,6 @@ $isAdmin = $false
 try {
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 } catch {}
-
-# ==============================================================================
-# SEAMLESS SINGLE-WINDOW ELEVATION HANDOVER
-# Jika dijalankan di terminal biasa, buka terminal Administrator resmi dan langsung
-# tutup terminal non-admin lama agar tidak ada tumpukan terminal ganda (1 Terminal)
-# ==============================================================================
-if (-not $isAdmin -and -not $NonInteractive) {
-    Write-Host ""
-    Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  FOKUSKONTEN // PERIZINAN SISTEM (ADMINISTRATOR)" -ForegroundColor Yellow
-    Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  Layanan ini membutuhkan hak akses Administrator untuk" -ForegroundColor White
-    Write-Host "  mengunci Group Policy sistem dan mematikan DoSvc." -ForegroundColor White
-    Write-Host ""
-    Write-Host "  -> Membuka sesi Administrator resmi (1 Terminal)..." -ForegroundColor Green
-    Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
-    Write-Host "================================================================" -ForegroundColor Cyan
-    try {
-        $orderArg = if ($global:fkOrderNumber) { " -Order '$global:fkOrderNumber'" } else { "" }
-        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"& { irm fokuskonten.my.id/anti-sedot-kuota$orderArg | iex }`"" -Verb RunAs
-        exit
-    } catch {
-        Write-Host ""
-        Write-Host "  [!] Izin Administrator dibatalkan oleh pengguna." -ForegroundColor Red
-        Write-Host "      Silakan buka PowerShell dengan klik kanan -> 'Run as administrator'" -ForegroundColor Yellow
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        Write-Host "  Tekan sembarang tombol untuk keluar..." -ForegroundColor Gray
-        try { [Console]::ReadKey($true) | Out-Null } catch {}
-        exit
-    }
-}
 
 function Restore-Terminal {
     try {
@@ -146,7 +115,7 @@ function Show-Header {
     }
 
     if ($isAdmin) {
-        Write-Host "  AKSES  : [ ADMINISTRATOR RESMI ] (Siap Eksekusi 1 Terminal)" -ForegroundColor Green
+        Write-Host "  AKSES  : [ ADMINISTRATOR RESMI ] (Eksekusi Native Langsung)" -ForegroundColor Green
     } else {
         Write-Host "  AKSES  : [ USER STANDAR ] (Mode In-Place 1 Terminal)" -ForegroundColor Yellow
     }
@@ -212,66 +181,83 @@ function Set-DisableP2P {
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
 
-    $allOk = $true
-
-    # Langkah 1: Kunci Kebijakan Mesin (HKLM Policy DODownloadMode = 0)
-    Write-Host "  [1/4] Mengunci Group Policy DODownloadMode = 0 (HTTP Only)..." -NoNewline
-    try {
-        $polPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization"
-        if (-not (Test-Path -LiteralPath $polPath)) {
-            New-Item -Path $polPath -Force -ErrorAction Stop | Out-Null
+    # Jika sesi sudah Administrator, eksekusi langsung in-place
+    if ($isAdmin) {
+        Write-Host "  [1/4] Mengunci Group Policy DODownloadMode = 0 (HTTP Only)..." -NoNewline
+        try {
+            $polPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization"
+            if (-not (Test-Path -LiteralPath $polPath)) { New-Item -Path $polPath -Force -ErrorAction Stop | Out-Null }
+            Set-ItemProperty -Path $polPath -Name "DODownloadMode" -Value 0 -Type DWord -Force -ErrorAction Stop
+            Write-Host " [OK]" -ForegroundColor Green
+        } catch {
+            Write-Host " [GAGAL]" -ForegroundColor Red
         }
-        Set-ItemProperty -Path $polPath -Name "DODownloadMode" -Value 0 -Type DWord -Force -ErrorAction Stop
-        Write-Host " [OK]" -ForegroundColor Green
-    } catch {
-        Write-Host " [GAGAL]" -ForegroundColor Red
-        Write-Host "        Pesan: $($_.Exception.Message)" -ForegroundColor DarkGray
-        $allOk = $false
-    }
 
-    # Langkah 2: Kunci Registri Akun NetworkService (S-1-5-20 DownloadMode = 0)
-    Write-Host "  [2/4] Mengunci Registri S-1-5-20 DownloadMode = 0 (GUI OFF)..." -NoNewline
-    try {
-        $nsPath = "Registry::HKEY_USERS\S-1-5-20\Software\Microsoft\Windows\CurrentVersion\DeliveryOptimization\Settings"
-        if (-not (Test-Path -LiteralPath $nsPath)) {
-            New-Item -Path $nsPath -Force -ErrorAction Stop | Out-Null
+        Write-Host "  [2/4] Mengunci Registri S-1-5-20 DownloadMode = 0 (GUI OFF)..." -NoNewline
+        try {
+            $nsPath = "Registry::HKEY_USERS\S-1-5-20\Software\Microsoft\Windows\CurrentVersion\DeliveryOptimization\Settings"
+            if (-not (Test-Path -LiteralPath $nsPath)) { New-Item -Path $nsPath -Force -ErrorAction Stop | Out-Null }
+            Set-ItemProperty -Path $nsPath -Name "DownloadMode" -Value 0 -Type DWord -Force -ErrorAction Stop
+            Write-Host " [OK]" -ForegroundColor Green
+        } catch {
+            Write-Host " [GAGAL]" -ForegroundColor Red
         }
-        Set-ItemProperty -Path $nsPath -Name "DownloadMode" -Value 0 -Type DWord -Force -ErrorAction Stop
-        Write-Host " [OK]" -ForegroundColor Green
-    } catch {
-        Write-Host " [GAGAL]" -ForegroundColor Red
-        Write-Host "        Pesan: $($_.Exception.Message)" -ForegroundColor DarkGray
-        $allOk = $false
+
+        Write-Host "  [3/4] Menghentikan background service DoSvc..." -NoNewline
+        try {
+            Stop-Service -Name "DoSvc" -Force -ErrorAction SilentlyContinue
+            Set-Service -Name "DoSvc" -StartupType Manual -ErrorAction Stop
+            Write-Host " [OK]" -ForegroundColor Green
+        } catch {
+            Write-Host " [LEWAT]" -ForegroundColor Yellow
+        }
+
+        Write-Host "  [4/4] Membersihkan cache sisa Delivery Optimization..." -NoNewline
+        try {
+            Delete-DeliveryOptimizationCache -Force -ErrorAction SilentlyContinue | Out-Null
+            Write-Host " [OK]" -ForegroundColor Green
+        } catch {
+            Write-Host " [SELESAI]" -ForegroundColor Green
+        }
+    } else {
+        # Jika sesi standar, jalankan satu kali eksekusi elevated via proses tersembunyi
+        # Terminal aktif tetap terbuka dan tidak pernah ditutup!
+        Write-Host "  -> Menyiapkan konfigurasi proteksi sistem..." -ForegroundColor Cyan
+        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows)" -ForegroundColor Yellow
+        Write-Host ""
+
+        $scriptBlock = @'
+try {
+    $pol = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization'
+    if (-not (Test-Path $pol)) { New-Item -Path $pol -Force | Out-Null }
+    Set-ItemProperty -Path $pol -Name 'DODownloadMode' -Value 0 -Type DWord -Force
+
+    $ns = 'Registry::HKEY_USERS\S-1-5-20\Software\Microsoft\Windows\CurrentVersion\DeliveryOptimization\Settings'
+    if (-not (Test-Path $ns)) { New-Item -Path $ns -Force | Out-Null }
+    Set-ItemProperty -Path $ns -Name 'DownloadMode' -Value 0 -Type DWord -Force
+
+    Stop-Service -Name 'DoSvc' -Force -ErrorAction SilentlyContinue
+    Set-Service -Name 'DoSvc' -StartupType Manual -ErrorAction SilentlyContinue
+    Delete-DeliveryOptimizationCache -Force -ErrorAction SilentlyContinue | Out-Null
+} catch {}
+'@
+        $bytes = [System.Text.Encoding]::Unicode.GetBytes($scriptBlock)
+        $encoded = [Convert]::ToBase64String($bytes)
+
+        try {
+            $proc = Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded" -Verb RunAs -Wait -PassThru -WindowStyle Hidden
+        } catch {
+            Write-Host "  [!] Izin sistem dibatalkan oleh pengguna." -ForegroundColor Red
+        }
+
+        # Bersihkan cache dari sesi aktif
+        try { Delete-DeliveryOptimizationCache -Force -ErrorAction SilentlyContinue | Out-Null } catch {}
     }
 
-    # Langkah 3: Hentikan Service DoSvc & Set ke Manual
-    Write-Host "  [3/4] Menghentikan background service DoSvc..." -NoNewline
-    try {
-        Stop-Service -Name "DoSvc" -Force -ErrorAction SilentlyContinue
-        Set-Service -Name "DoSvc" -StartupType Manual -ErrorAction Stop
-        Write-Host " [OK]" -ForegroundColor Green
-    } catch {
-        Write-Host " [GAGAL]" -ForegroundColor Yellow
-        Write-Host "        Pesan: $($_.Exception.Message)" -ForegroundColor DarkGray
-    }
-
-    # Langkah 4: Pembersihan Cache Delivery Optimization
-    Write-Host "  [4/4] Membersihkan cache sisa Delivery Optimization..." -NoNewline
-    try {
-        Delete-DeliveryOptimizationCache -Force -ErrorAction SilentlyContinue | Out-Null
-        Write-Host " [OK]" -ForegroundColor Green
-    } catch {
-        Write-Host " [SELESAI]" -ForegroundColor Green
-    }
-
-    # Tambahan: Set DODownloadMode via CIM jika modul tersedia
-    try {
-        Import-Module DeliveryOptimization -ErrorAction SilentlyContinue
-        Set-DODownloadMode -downloadMode CdnOnly -ErrorAction SilentlyContinue
-    } catch {}
-
+    # Verifikasi hasil akhir secara objektif
+    $check = Get-DoState
     Write-Host ""
-    if ($allOk) {
+    if ($check.IsProtected) {
         Write-Host "  ============================================================" -ForegroundColor Green
         Write-Host "  [SUKSES] STATUS SISTEM BERHASIL DIUBAH MENJADI: AFTER!" -ForegroundColor Green
         Write-Host "  Windows Update kini 100% direct-download tanpa P2P upload." -ForegroundColor White
@@ -279,8 +265,8 @@ function Set-DisableP2P {
         Write-Host "  ============================================================" -ForegroundColor Green
     } else {
         Write-Host "  ============================================================" -ForegroundColor Yellow
-        Write-Host "  [PERHATIAN] Beberapa kunci registri memerlukan izin Admin." -ForegroundColor Yellow
-        Write-Host "  Mohon buka PowerShell dengan klik kanan -> 'Run as administrator'" -ForegroundColor Cyan
+        Write-Host "  [INFO] Perubahan belum diterapkan sepenuhnya." -ForegroundColor Yellow
+        Write-Host "  Pastikan Anda mengklik 'Yes' pada dialog konfirmasi Windows." -ForegroundColor White
         Write-Host "  ============================================================" -ForegroundColor Yellow
     }
 
@@ -294,45 +280,63 @@ function Set-RestoreBefore {
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
 
-    # Langkah 1: Hapus Group Policy
-    Write-Host "  [1/3] Menghapus Group Policy DODownloadMode..." -NoNewline
-    try {
-        $polPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization"
-        if (Test-Path -LiteralPath $polPath) {
-            Remove-ItemProperty -Path $polPath -Name "DODownloadMode" -ErrorAction SilentlyContinue
+    if ($isAdmin) {
+        Write-Host "  [1/3] Menghapus Group Policy DODownloadMode..." -NoNewline
+        try {
+            $polPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization"
+            if (Test-Path -LiteralPath $polPath) {
+                Remove-ItemProperty -Path $polPath -Name "DODownloadMode" -ErrorAction SilentlyContinue
+            }
+            Write-Host " [OK]" -ForegroundColor Green
+        } catch {
+            Write-Host " [LEWAT]" -ForegroundColor DarkGray
         }
-        Write-Host " [OK]" -ForegroundColor Green
-    } catch {
-        Write-Host " [LEWAT]" -ForegroundColor DarkGray
-    }
 
-    # Langkah 2: Kembalikan NetworkService ke Default LAN (1)
-    Write-Host "  [2/3] Mengembalikan NetworkService DownloadMode = 1 (LAN)..." -NoNewline
-    try {
-        $nsPath = "Registry::HKEY_USERS\S-1-5-20\Software\Microsoft\Windows\CurrentVersion\DeliveryOptimization\Settings"
-        if (Test-Path -LiteralPath $nsPath) {
-            Set-ItemProperty -Path $nsPath -Name "DownloadMode" -Value 1 -Type DWord -Force -ErrorAction Stop
+        Write-Host "  [2/3] Mengembalikan NetworkService DownloadMode = 1 (LAN)..." -NoNewline
+        try {
+            $nsPath = "Registry::HKEY_USERS\S-1-5-20\Software\Microsoft\Windows\CurrentVersion\DeliveryOptimization\Settings"
+            if (Test-Path -LiteralPath $nsPath) {
+                Set-ItemProperty -Path $nsPath -Name "DownloadMode" -Value 1 -Type DWord -Force -ErrorAction Stop
+            }
+            Write-Host " [OK]" -ForegroundColor Green
+        } catch {
+            Write-Host " [LEWAT]" -ForegroundColor DarkGray
         }
-        Write-Host " [OK]" -ForegroundColor Green
-    } catch {
-        Write-Host " [LEWAT]" -ForegroundColor DarkGray
-    }
 
-    # Langkah 3: Kembalikan Service DoSvc ke Automatic & Start
-    Write-Host "  [3/3] Mengembalikan service DoSvc ke Automatic..." -NoNewline
-    try {
-        Set-Service -Name "DoSvc" -StartupType Automatic -ErrorAction SilentlyContinue
-        Start-Service -Name "DoSvc" -ErrorAction SilentlyContinue
-        Write-Host " [OK]" -ForegroundColor Green
-    } catch {
-        Write-Host " [LEWAT]" -ForegroundColor DarkGray
-    }
+        Write-Host "  [3/3] Mengembalikan service DoSvc ke Automatic..." -NoNewline
+        try {
+            Set-Service -Name "DoSvc" -StartupType Automatic -ErrorAction SilentlyContinue
+            Start-Service -Name "DoSvc" -ErrorAction SilentlyContinue
+            Write-Host " [OK]" -ForegroundColor Green
+        } catch {
+            Write-Host " [LEWAT]" -ForegroundColor DarkGray
+        }
+    } else {
+        Write-Host "  -> Mengembalikan setelan awal ke kondisi bawaan Windows..." -ForegroundColor Cyan
+        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows)" -ForegroundColor Yellow
+        Write-Host ""
 
-    # Kembalikan via CIM jika modul tersedia
-    try {
-        Import-Module DeliveryOptimization -ErrorAction SilentlyContinue
-        Set-DODownloadMode -downloadMode Lan -ErrorAction SilentlyContinue
-    } catch {}
+        $scriptBlock = @'
+try {
+    $pol = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization'
+    if (Test-Path $pol) { Remove-ItemProperty -Path $pol -Name 'DODownloadMode' -ErrorAction SilentlyContinue }
+
+    $ns = 'Registry::HKEY_USERS\S-1-5-20\Software\Microsoft\Windows\CurrentVersion\DeliveryOptimization\Settings'
+    if (Test-Path $ns) { Set-ItemProperty -Path $ns -Name 'DownloadMode' -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue }
+
+    Set-Service -Name 'DoSvc' -StartupType Automatic -ErrorAction SilentlyContinue
+    Start-Service -Name 'DoSvc' -ErrorAction SilentlyContinue
+} catch {}
+'@
+        $bytes = [System.Text.Encoding]::Unicode.GetBytes($scriptBlock)
+        $encoded = [Convert]::ToBase64String($bytes)
+
+        try {
+            $proc = Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded" -Verb RunAs -Wait -PassThru -WindowStyle Hidden
+        } catch {
+            Write-Host "  [!] Izin sistem dibatalkan oleh pengguna." -ForegroundColor Red
+        }
+    }
 
     Write-Host ""
     Write-Host "  ============================================================" -ForegroundColor Yellow
@@ -410,6 +414,4 @@ function Run-MainMenu {
     }
 }
 
-if ($MyInvocation.InvocationName -ne '.') {
-    Run-MainMenu
-}
+Run-MainMenu

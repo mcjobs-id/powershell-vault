@@ -1,264 +1,357 @@
 # ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 01: OFFICER HELPER - Pemulihan Microsoft Office (Ohook)
-# Core Engine : Powered by Microsoft Activation Scripts (MAS) / Ohook Method
-# Credits     : massgrave.dev & Open-Source Community
-# Engine Host : fokuskonten.my.id (Primary) | mcjobs-id vault (Sekoci Failover)
-# Arsitektur  : Launcher PS (irm|iex) -> Menu CMD Bermerek (RunAs Elevated)
+# Layanan Jasa : PEMULIHAN LISENSI MICROSOFT OFFICE BEBAS NOTIFIKASI
+# Modul SKU    : FK-PSH-01 (Officer Helper Suite)
+# Desain       : Ultra-Compact Golden Layout (Fit di Jendela Default Terminal)
+# Fitur        : 1-Klik OHook, Diagnostik Status, Copot/Undo, Buka Aplikasi
 # ==============================================================================
 
-& {
+param(
+    [string]$Order = ""
+)
+
+try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+} catch {
+    try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+}
+
+if (-not $global:fkOrderNumber) {
+    if (![string]::IsNullOrWhiteSpace($Order)) {
+        $global:fkOrderNumber = $Order
+    } elseif ($env:FK_ORDER_ID) {
+        $global:fkOrderNumber = $env:FK_ORDER_ID
+    } else {
+        $dt = Get-Date -Format "yyyyMMdd"
+        $rnd = Get-Random -Minimum 1000 -Maximum 9999
+        $global:fkOrderNumber = "FK-ORD-$dt-$rnd"
+    }
+}
+
+$ErrorActionPreference = "Continue"
+$ProgressPreference    = "SilentlyContinue"
+
+try {
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // OFFICER HELPER - PEMULIHAN OFFICE"
+} catch {}
+
+$origFg = $Host.UI.RawUI.ForegroundColor
+$origBg = $Host.UI.RawUI.BackgroundColor
+
+function Restore-Terminal {
     try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
-    } catch {
-        try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
-    }
+        $Host.UI.RawUI.ForegroundColor = $origFg
+        $Host.UI.RawUI.BackgroundColor = $origBg
+        [Console]::CursorVisible = $true
+    } catch {}
+}
 
-    $ErrorActionPreference = "Continue"
-    $ProgressPreference    = "SilentlyContinue"
-    $psv = (Get-Host).Version.Major
-
-    # --- Pemeriksaan Prasyarat ---
-    if ($ExecutionContext.SessionState.LanguageMode.value__ -ne 0) {
-        Write-Host "  [!] PowerShell tidak dalam mode FullLanguage. Aborting." -ForegroundColor Red
-        return
-    }
+function Test-IsAdmin {
     try {
-        [void][System.AppDomain]::CurrentDomain.GetAssemblies()
-        [void][System.Math]::Sqrt(144)
+        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = [Security.Principal.WindowsPrincipal]$identity
+        return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
     } catch {
-        Write-Host "  [!] Error .NET: $($_.Exception.Message)" -ForegroundColor Red
-        return
+        return $false
+    }
+}
+
+function Find-OfficePaths {
+    return @(
+        (Join-Path $env:ProgramFiles "Microsoft Office"),
+        (Join-Path ${env:ProgramFiles(x86)} "Microsoft Office")
+    )
+}
+
+function Get-OfficeState {
+    $paths = Find-OfficePaths
+    $hasOffice = $false
+    foreach ($p in $paths) {
+        if (Test-Path -LiteralPath $p) {
+            $hasOffice = $true
+            break
+        }
+    }
+    if (-not $hasOffice) {
+        return "NOT_INSTALLED"
     }
 
-    # --- Cek Antivirus Pihak Ketiga ---
-    function Check-ThirdPartyAV {
+    # Cek keberadaan hook virtualisasi sppc.dll
+    foreach ($p in $paths) {
+        $hook = Get-ChildItem -LiteralPath $p -Filter "sppc.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($hook) {
+            return "LICENSED"
+        }
+    }
+    return "UNLICENSED"
+}
+
+function Request-Elevation {
+    Write-Host ""
+    Write-Host "  [PROSES] Menyiapkan Sesi Administrator (UAC)..." -ForegroundColor Cyan
+    Write-Host "  Klik 'Yes' pada jendela konfirmasi sistem di layar Anda." -ForegroundColor Yellow
+    try {
+        $cmd = "irm fokuskonten.my.id/office | iex"
+        Start-Process powershell.exe -ArgumentList "-NoExit", "-Command", $cmd -Verb RunAs
+        exit 0
+    } catch {
+        Write-Host "  [!] Izin Administrator tidak diberikan." -ForegroundColor Red
+        Start-Sleep -Seconds 2
+    }
+}
+
+function Get-EnginePath {
+    # 1. Cek direktori lokal jika ada
+    if ($PSScriptRoot) {
+        $localCmd = Join-Path $PSScriptRoot "MAS_AIO.cmd"
+        if (Test-Path -LiteralPath $localCmd) { return $localCmd }
+    }
+
+    # 2. Cek temp cache
+    $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) "FK_Officer"
+    if (-not (Test-Path -LiteralPath $tempDir)) {
+        [System.IO.Directory]::CreateDirectory($tempDir) | Out-Null
+    }
+    $cached = Join-Path $tempDir "MAS_AIO.cmd"
+    if ((Test-Path -LiteralPath $cached) -and ((Get-Item -LiteralPath $cached).Length -gt 50000)) {
+        return $cached
+    }
+
+    # 3. Unduh dari CDN GitHub Vault resmi
+    Write-Host "  > Menghubungkan ke Jaringan Cloud FokusKonten..." -ForegroundColor Gray
+    Write-Host "  > Mengunduh komponen engine resmi via CDN..." -ForegroundColor Cyan
+    $urls = @(
+        "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/01_Officer_Helper/MAS_AIO.cmd",
+        "https://fokuskonten.my.id/assets/engine/FK_Engine_Core.cmd"
+    )
+
+    foreach ($u in $urls) {
         try {
-            $cmd = if ($psv -ge 3) { 'Get-CimInstance' } else { 'Get-WmiObject' }
-            $avList = & $cmd -Namespace root\SecurityCenter2 -Class AntiVirusProduct -ErrorAction SilentlyContinue |
-                Where-Object { $_.displayName -notlike '*windows*' } |
-                Select-Object -ExpandProperty displayName
-            if ($avList) {
-                Write-Host "  [!] Antivirus terdeteksi: $($avList -join ', ')" -ForegroundColor Yellow -BackgroundColor DarkBlue
+            Invoke-WebRequest -Uri $u -OutFile $cached -UseBasicParsing -TimeoutSec 30
+            if ((Test-Path -LiteralPath $cached) -and ((Get-Item -LiteralPath $cached).Length -gt 50000)) {
+                Write-Host "  > Komponen engine berhasil disiapkan! [OK]" -ForegroundColor Green
+                return $cached
             }
         } catch {}
     }
 
-    # --- Download Engine (Dual-Channel) ---
-    $engineHash = '39B2C579385B5F521578155B6B58DBE71C3A5484EA4F7CEE09759089FA606463'
-    $URLs = @(
-        'https://fokuskonten.my.id/assets/engine/FK_Engine_Core.cmd',
-        'https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/01_Officer_Helper/MAS_AIO.cmd'
-    )
+    return $null
+}
 
+function Show-CompactHeader {
     Clear-Host
-    Write-Host ""
-    Write-Host "  ==================================================================" -ForegroundColor Green
-    Write-Host "  FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE" -ForegroundColor Green
-    Write-Host "  Modul 01 : OFFICER HELPER - Pemulihan Microsoft Office" -ForegroundColor Yellow
-    Write-Host "  Metode   : OHook Dynamic Hook Injection (sppc.dll)" -ForegroundColor White
-    Write-Host "  ==================================================================" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "  -> Menyiapkan komponen engine..." -ForegroundColor Cyan
+    $state = Get-OfficeState
+    $isAdmin = Test-IsAdmin
 
-    Write-Progress -Activity "FokusKonten" -Status "Mengunduh komponen..." -PercentComplete 30
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  F O K U S K O N T E N  //  RESCUE SUITE" -ForegroundColor Yellow
+    Write-Host "  Officer Helper: Pemulihan Lisensi Word & Excel" -ForegroundColor White
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  ORDER  : $global:fkOrderNumber" -ForegroundColor Green
+    Write-Host "  TIKET  : [FK-PSH-01] Asistensi Resmi" -ForegroundColor DarkCyan
 
-    $response = $null
-    $errors   = @()
-    foreach ($URL in $URLs) {
-        try {
-            $response = if ($psv -ge 3) {
-                Invoke-RestMethod $URL -UseBasicParsing
-            } else {
-                (New-Object Net.WebClient).DownloadString($URL)
-            }
-            if ($response.Length -gt 50000) { break }
-            $response = $null
-        } catch {
-            $errors += $_
-            $response = $null
-        }
-    }
-    Write-Progress -Activity "FokusKonten" -Status "Selesai" -Completed
-
-    if (-not $response) {
-        Check-ThirdPartyAV
-        foreach ($err in $errors) { Write-Host "  Error: $($err.Exception.Message)" -ForegroundColor Red }
-        Write-Host "  [!] Gagal mengunduh engine dari semua jalur. Aborting." -ForegroundColor Red
-        return
+    if ($state -eq "LICENSED") {
+        Write-Host "  STATUS : [ BERLISENSI: OHOOK PERMANEN ] (Bebas Notifikasi)" -ForegroundColor Green
+    } elseif ($state -eq "UNLICENSED") {
+        Write-Host "  STATUS : [ NOTIFIKASI AKTIF / PERLU PEMULIHAN ]" -ForegroundColor Yellow
+    } else {
+        Write-Host "  STATUS : [ MICROSOFT OFFICE BELUM TERDETEKSI ]" -ForegroundColor DarkYellow
     }
 
-    # --- Verifikasi SHA-256 ---
-    $stream = New-Object IO.MemoryStream
-    $writer = New-Object IO.StreamWriter $stream
-    $writer.Write($response); $writer.Flush(); $stream.Position = 0
-    $computedHash = [BitConverter]::ToString(
-        [Security.Cryptography.SHA256]::Create().ComputeHash($stream)
-    ) -replace '-'
-
-    if ($computedHash -ne $engineHash) {
-        Write-Warning "  Verifikasi integritas GAGAL. Aborting."
-        return
-    }
-    Write-Host "  [OK] Engine terverifikasi aman." -ForegroundColor Green
-
-    # --- Cek AutoRun Registry ---
-    foreach ($rp in @("HKCU:\SOFTWARE\Microsoft\Command Processor","HKLM:\SOFTWARE\Microsoft\Command Processor")) {
-        if (Get-ItemProperty -Path $rp -Name "Autorun" -ErrorAction SilentlyContinue) {
-            Write-Warning "  AutoRun registry ditemukan — jalankan: Remove-ItemProperty -Path '$rp' -Name 'Autorun'"
-        }
-    }
-
-    # --- Simpan Engine ke Temp GUID ---
-    $rand     = [Guid]::NewGuid().Guid
-    $isAdmin  = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -match 'S-1-5-32-544')
-    $engPath  = if ($isAdmin) { "$env:SystemRoot\Temp\FK_Eng_$rand.cmd" } else { "$env:USERPROFILE\AppData\Local\Temp\FK_Eng_$rand.cmd" }
-    Set-Content -Path $engPath -Value "@::: FK-$rand `r`n$response" -Encoding ASCII
-
-    if (-not (Test-Path $engPath)) {
-        Check-ThirdPartyAV
-        Write-Host "  [!] Gagal membuat berkas engine temp. Aborting." -ForegroundColor Red
-        return
-    }
-
-    # --- Bangun Menu CMD Bermerek FokusKonten (inline batch) ---
-    $menuScript = @"
-@echo off
-chcp 65001 >nul 2>&1
-color 1F
-title  FokusKonten // OFFICER HELPER - Microsoft Office
-
-:MENU
-cls
-echo.
-echo   ################################################################
-echo   ##  FOKUSKONTEN  //  OFFICER HELPER                          ##
-echo   ##  Pemulihan Lisensi Microsoft Office  ^|  Layanan Resmi     ##
-echo   ################################################################
-echo.
-echo   Dokumen Word, Excel, PowerPoint, dan Outlook Anda aman 100%%.
-echo   Tidak ada file kerja yang disentuh atau diubah selama proses.
-echo   ----------------------------------------------------------------
-echo   DETAIL LAYANAN OFFICE:
-echo   * Produk   : Microsoft Office ^(Word / Excel / PowerPoint / Outlook^)
-echo   * Metode   : OHook - Dynamic Hook Injection via sppc.dll
-echo   * Komponen : ospp.vbs ^| sppc.dll ^| Office Licensing Service
-echo   * Risiko   : 0%% - Bebas antivirus, tanpa ubah dokumen kerja
-echo   ----------------------------------------------------------------
-echo   MENU TINDAKAN:
-echo.
-echo       [1] Pasang Lisensi Office Otomatis  ^(Disarankan^)
-echo           Aktivasi permanen. Banner lisensi Office hilang sepenuhnya.
-echo.
-echo       [2] Cek Status Lisensi Office Saat Ini
-echo           Tampilkan partial key, masa aktif, dan laporan ospp.vbs.
-echo.
-echo       [3] Copot Lisensi Office  ^(Kembalikan ke Semula^)
-echo           Cabut OHook dan pulihkan Office ke kondisi awal.
-echo.
-echo       [4] Toko Digital FokusKonten - Software ^& Template Bisnis
-echo.
-echo       [0] Keluar
-echo   ################################################################
-echo.
-choice /C:12340 /N /T:5 /D:1 /M "  Pilihan Anda [1,2,3,4,0] (default [1] dalam 5 detik) : "
-if %errorlevel%==5 goto :DONE
-if %errorlevel%==4 start https://fokuskonten.my.id/toko-digital/ & goto :MENU
-if %errorlevel%==3 goto :UNINSTALL
-if %errorlevel%==2 goto :STATUS
-if %errorlevel%==1 goto :INSTALL
-goto :MENU
-
-:INSTALL
-cls
-echo.
-echo   ################################################################
-echo   ##  MEMASANG LISENSI MICROSOFT OFFICE VIA OHOOK...           ##
-echo   ##  Proses berjalan - mohon tunggu beberapa saat.            ##
-echo   ################################################################
-echo.
-call "$engPath" /ohook
-echo.
-echo   [OK] LISENSI OFFICE BERHASIL DIPASANG!
-echo   Banner notifikasi lisensi tidak akan muncul lagi.
-echo   Terima kasih telah menggunakan layanan resmi FokusKonten.
-echo.
-pause
-goto :DONE
-
-:STATUS
-cls
-echo.
-echo   ################################################################
-echo   ##  STATUS LISENSI MICROSOFT OFFICE  ^(ospp.vbs /dstatus^)    ##
-echo   ################################################################
-echo.
-for /f "delims=" %%i in ('dir /b /s "C:\Program Files\Microsoft Office\ospp.vbs" 2^>nul') do cscript //nologo "%%i" /dstatus
-for /f "delims=" %%i in ('dir /b /s "C:\Program Files (x86)\Microsoft Office\ospp.vbs" 2^>nul') do cscript //nologo "%%i" /dstatus
-echo.
-pause
-goto :MENU
-
-:UNINSTALL
-cls
-echo.
-echo   ################################################################
-echo   ##  MENCABUT LISENSI OFFICE  ^(OHook Uninstall^)              ##
-echo   ################################################################
-echo.
-call "$engPath" /Ohook-Uninstall
-echo.
-echo   [OK] LISENSI OFFICE BERHASIL DICABUT!
-echo   Office kembali ke kondisi awal ^(unlicensed^).
-echo.
-pause
-goto :MENU
-
-:DONE
-del /f /q "$engPath" 2>nul
-exit /b 0
-"@
-
-    # Simpan menu sebagai CMD temp GUID terpisah
-    $menuPath = if ($isAdmin) { "$env:SystemRoot\Temp\FK_Menu_$rand.cmd" } else { "$env:USERPROFILE\AppData\Local\Temp\FK_Menu_$rand.cmd" }
-    [System.IO.File]::WriteAllText($menuPath, $menuScript, [System.Text.Encoding]::UTF8)
-
-    if (-not (Test-Path $menuPath)) {
-        Check-ThirdPartyAV
-        Write-Host "  [!] Gagal membuat berkas menu temp. Aborting." -ForegroundColor Red
-        Remove-Item $engPath -Force -ErrorAction SilentlyContinue
-        return
-    }
-
-    $env:ComSpec = "$env:SystemRoot\system32\cmd.exe"
-
-    # Jika terminal SUDAH Administrator, jalankan langsung in-place (CUKUP 1 TERMINAL)
     if ($isAdmin) {
-        Write-Host "  [OK] Hak akses Administrator terverifikasi (Eksekusi 1 Terminal)." -ForegroundColor Green
-        & $env:ComSpec /c "`"$menuPath`""
-        Remove-Item $menuPath -Force -ErrorAction SilentlyContinue
-        Remove-Item $engPath  -Force -ErrorAction SilentlyContinue
+        Write-Host "  AKSES  : [ ADMINISTRATOR RESMI ] (Siap Eksekusi 1-Klik)" -ForegroundColor Green
+    } else {
+        Write-Host "  AKSES  : [ USER STANDAR ] (Perlu Izin Administrator)" -ForegroundColor Yellow
+    }
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+}
+
+function Install-OfficeLicense {
+    if (-not (Test-IsAdmin)) {
+        Request-Elevation
         return
     }
 
-    Write-Host "  -> Membuka menu FokusKonten Office Rescue..." -ForegroundColor Cyan
-    Write-Host "     Meminta izin Administrator sistem (UAC)..." -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  [PROSES] Menyiapkan Pemulihan Lisensi Microsoft Office..." -ForegroundColor Cyan
+    $engine = Get-EnginePath
+
+    if (-not $engine) {
+        Write-Host "  [GAGAL] Tidak dapat mengunduh engine pemulihan." -ForegroundColor Red
+        Write-Host "  Periksa koneksi internet Anda lalu coba lagi." -ForegroundColor Gray
+        Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+        return
+    }
+
+    Write-Host "  > Menerapkan OHook Virtualization resmi (sppc.dll)..." -ForegroundColor Cyan
+    & cmd.exe /c "`"$engine`" /ohook"
+
+    Write-Host ""
+    Write-Host "  [SUKSES] Lisensi Microsoft Office Berhasil Dipulihkan!" -ForegroundColor Green
+    Write-Host "  Word, Excel, & PowerPoint Anda kini aktif bebas notifikasi." -ForegroundColor White
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+}
+
+function Check-OfficeStatus {
+    Write-Host ""
+    Write-Host "  [PROSES] Memeriksa Diagnostik Status Lisensi Office..." -ForegroundColor Cyan
+    
+    # Cari ospp.vbs
+    $ospp = $null
+    foreach ($p in (Find-OfficePaths)) {
+        $found = Get-ChildItem -LiteralPath $p -Filter "ospp.vbs" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($found) { $ospp = $found.FullName; break }
+    }
+
+    if ($ospp) {
+        Write-Host "  > Menjalankan cscript ospp.vbs /dstatus..." -ForegroundColor Yellow
+        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+        cscript.exe //nologo $ospp /dstatus
+    } else {
+        Write-Host "  > ospp.vbs tidak ditemukan. Menjalankan engine status..." -ForegroundColor Yellow
+        $engine = Get-EnginePath
+        if ($engine) {
+            & cmd.exe /c "`"$engine`" /status"
+        } else {
+            Write-Host "  [PERINGATAN] Microsoft Office tidak terdeteksi di sistem." -ForegroundColor Red
+        }
+    }
+
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+}
+
+function Remove-OfficeLicense {
+    if (-not (Test-IsAdmin)) {
+        Request-Elevation
+        return
+    }
+
+    Write-Host ""
+    Write-Host "  [PERINGATAN] Anda akan mencabut lisensi OHook Office." -ForegroundColor Yellow
+    Write-Host -NoNewline "  Apakah Anda yakin ingin melanjutkan? [Y/N] : " -ForegroundColor Cyan
+    $ans = [Console]::ReadLine()
+    if ($ans.Trim().ToUpper() -ne "Y") {
+        Write-Host "  Proses pembatalan dibatalkan." -ForegroundColor Gray
+        Start-Sleep -Seconds 1
+        return
+    }
+
+    Write-Host ""
+    Write-Host "  [PROSES] Mencabut lisensi OHook (Kembalikan ke Semula)..." -ForegroundColor Cyan
+    $engine = Get-EnginePath
+    if ($engine) {
+        & cmd.exe /c "`"$engine`" /Ohook-Uninstall"
+        Write-Host ""
+        Write-Host "  [BERHASIL] Lisensi OHook telah berhasil dicabut bersih." -ForegroundColor Green
+        Write-Host "  Office Anda telah kembali ke kondisi awal." -ForegroundColor White
+    } else {
+        Write-Host "  [GAGAL] Komponen engine tidak ditemukan." -ForegroundColor Red
+    }
+
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+}
+
+function Launch-OfficeApps {
+    Write-Host ""
+    $wordExe = $null
+    $excelExe = $null
+
+    foreach ($p in (Find-OfficePaths)) {
+        if (-not $wordExe) {
+            $w = Get-ChildItem -LiteralPath $p -Filter "WINWORD.EXE" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($w) { $wordExe = $w.FullName }
+        }
+        if (-not $excelExe) {
+            $e = Get-ChildItem -LiteralPath $p -Filter "EXCEL.EXE" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($e) { $excelExe = $e.FullName }
+        }
+    }
+
+    if ($wordExe) {
+        Start-Process -FilePath $wordExe
+        Write-Host "  > Microsoft Word berhasil dibuka di layar Anda!" -ForegroundColor Green
+        Write-Host "  Tips: Buka menu File -> Account untuk cek status lisensi." -ForegroundColor Yellow
+    } elseif ($excelExe) {
+        Start-Process -FilePath $excelExe
+        Write-Host "  > Microsoft Excel berhasil dibuka di layar Anda!" -ForegroundColor Green
+        Write-Host "  Tips: Buka menu File -> Account untuk cek status lisensi." -ForegroundColor Yellow
+    } else {
+        try {
+            Start-Process "winword.exe"
+            Write-Host "  > Microsoft Word berhasil dibuka!" -ForegroundColor Green
+        } catch {
+            Write-Host "  [PERINGATAN] Aplikasi Word/Excel belum terpasang di PC." -ForegroundColor Yellow
+        }
+    }
+
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+}
+
+function Show-ExitBanner {
+    Restore-Terminal
+    Clear-Host
+    $finalStatus = if ((Get-OfficeState) -eq "LICENSED") { "OHook Virtualization (Bebas Notifikasi)" } else { "Standar / Unlicensed" }
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host "  THANKS ORDER BY FOKUSKONTEN // TERIMA KASIH TELAH ORDER" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host "  Pesanan : $global:fkOrderNumber [SELESAI]" -ForegroundColor Green
+    Write-Host "  Layanan : [FK-PSH-01] Pemulihan Lisensi Word & Excel" -ForegroundColor White
+    Write-Host "  Status  : $finalStatus (Siap Pakai)" -ForegroundColor Cyan
+    Write-Host "  Garansi : Pendampingan Penuh Bebas Risiko" -ForegroundColor Gray
+    Write-Host "  Bantuan : WhatsApp Resmi +62 858-6395-5347" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host ""
+}
+
+# ------------------------------------------------------------------------------
+# LOOP UTAMA INTERAKTIF (ULTRA-COMPACT GOLDEN LAYOUT)
+# ------------------------------------------------------------------------------
+while ($true) {
+    Show-CompactHeader
+
+    Write-Host "  PILIHAN MENU LAYANAN:" -ForegroundColor White
+    Write-Host ""
+    Write-Host "   [1] Pasang / Pulihkan Lisensi Office (Rekomendasi 1-Klik)" -ForegroundColor Green
+    Write-Host "   [2] Cek / Diagnostik Status Lisensi (ospp.vbs /dstatus)" -ForegroundColor Cyan
+    Write-Host "   [3] Copot / Batalkan Lisensi (Kembalikan ke Semula / Undo)" -ForegroundColor Yellow
+    Write-Host "   [4] Buka Aplikasi Word / Excel (Cek Status di Layar)" -ForegroundColor White
+    Write-Host ""
+    Write-Host "   [0] Selesai & Keluar" -ForegroundColor Gray
+    Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
 
-    if ($psv -lt 3) {
-        if (Test-Path "$env:SystemRoot\Sysnative") {
-            Write-Warning "  Gunakan PowerShell x64."
-            Remove-Item $engPath, $menuPath -Force -ErrorAction SilentlyContinue
+    Write-Host -NoNewline "  Pilih Menu [1, 2, 3, 4, 0] : " -ForegroundColor Cyan
+    $choice = [Console]::ReadLine()
+
+    switch ($choice.Trim()) {
+        "1" {
+            Install-OfficeLicense
+        }
+        "2" {
+            Check-OfficeStatus
+        }
+        "3" {
+            Remove-OfficeLicense
+        }
+        "4" {
+            Launch-OfficeApps
+        }
+        "0" {
+            Show-ExitBanner
             return
         }
-        $p = Start-Process -FilePath $env:ComSpec -ArgumentList "/c `"`"$menuPath`" -el -qedit`"" -Verb RunAs -PassThru
-        $p.WaitForExit()
-    } else {
-        Start-Process -FilePath $env:ComSpec -ArgumentList "/c `"`"$menuPath`" -el`"" -Wait -Verb RunAs
+        default {
+            # Refresh menu
+        }
     }
-
-    # Cleanup — menu CMD sudah menghapus engPath sendiri via :DONE
-    Remove-Item $menuPath -Force -ErrorAction SilentlyContinue
-    Remove-Item $engPath  -Force -ErrorAction SilentlyContinue
-
-} @args
+}

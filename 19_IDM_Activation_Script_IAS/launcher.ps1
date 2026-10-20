@@ -1,49 +1,51 @@
 # ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 19: IDM HELPER - Internet Download Manager
-# Metode    : CLSID Registry Permission Lock & Anti-Fake Serial (100% Native PS)
-# Arsitektur: Launcher PS (irm|iex) -> Menu PS Elevated (RunAs, .ps1 temp GUID)
+# Layanan Jasa : SUITE LENGKAP INTERNET DOWNLOAD MANAGER (IDM) ALL-IN-ONE
+# Modul SKU    : FK-PSH-119 (Official Rescue Suite)
+# Desain       : Ultra-Compact Golden Layout (Fit di Jendela Default Terminal)
+# Arsitektur   : 100% In-Place Execution (1 Terminal Mutlak, Bebas Pop-up Jendela)
+# Fitur        : Pasang Lisensi, Instal IDM Baru, Copot/Uninstall, Saklar Ekstensi
 # ==============================================================================
 
-& {
-    try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
-    } catch {
-        try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+param(
+    [string]$Order = ""
+)
+
+try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+} catch {
+    try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+}
+
+if (-not $global:fkOrderNumber) {
+    if (![string]::IsNullOrWhiteSpace($Order)) {
+        $global:fkOrderNumber = $Order
+    } elseif ($env:FK_ORDER_ID) {
+        $global:fkOrderNumber = $env:FK_ORDER_ID
+    } else {
+        $dt = Get-Date -Format "yyyyMMdd"
+        $rnd = Get-Random -Minimum 1000 -Maximum 9999
+        $global:fkOrderNumber = "FK-ORD-$dt-$rnd"
     }
+}
 
-    $ErrorActionPreference = "Continue"
-    $ProgressPreference    = "SilentlyContinue"
-    $psv = (Get-Host).Version.Major
-
-    if ($ExecutionContext.SessionState.LanguageMode.value__ -ne 0) {
-        Write-Host "  [!] PowerShell tidak dalam mode FullLanguage. Aborting." -ForegroundColor Red
-        return
-    }
-    try {
-        [void][System.AppDomain]::CurrentDomain.GetAssemblies()
-        [void][System.Math]::Sqrt(144)
-    } catch {
-        Write-Host "  [!] Error .NET: $($_.Exception.Message)" -ForegroundColor Red
-        return
-    }
-
-    Clear-Host
-    Write-Host ""
-    Write-Host "  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Cyan
-    Write-Host "  FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE" -ForegroundColor Cyan
-    Write-Host "  Modul 19 : IDM HELPER - Internet Download Manager" -ForegroundColor Yellow
-    Write-Host "  Metode   : CLSID Registry Permission Lock (Anti-Fake Serial)" -ForegroundColor White
-    Write-Host "  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  -> Menyiapkan engine lisensi IDM lokal..." -ForegroundColor Cyan
-
-    # --- Bangun script PS1 elevated sebagai inline string ---
-    $idmPs1 = @'
 $ErrorActionPreference = "Continue"
 $ProgressPreference    = "SilentlyContinue"
-$Host.UI.RawUI.WindowTitle = "FokusKonten // IDM HELPER - Internet Download Manager"
-try { $Host.UI.RawUI.BackgroundColor = 'DarkCyan'; $Host.UI.RawUI.ForegroundColor = 'White'; Clear-Host } catch {}
+
+try {
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // IDM COMPLETE RESCUE SUITE"
+} catch {}
+
+$origFg = $Host.UI.RawUI.ForegroundColor
+$origBg = $Host.UI.RawUI.BackgroundColor
+
+function Restore-Terminal {
+    try {
+        $Host.UI.RawUI.ForegroundColor = $origFg
+        $Host.UI.RawUI.BackgroundColor = $origBg
+        [Console]::CursorVisible = $true
+    } catch {}
+}
 
 function Find-IDMPath {
     $paths = @(
@@ -147,40 +149,404 @@ function Get-CLSIDList {
     return @($finalValues | Select-Object -Unique), $regPaths
 }
 
-function Install-IDMLicense {
-    cls
-    Write-Host ""
-    Write-Host "  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Cyan
-    Write-Host "  SEDANG MEMASANG LISENSI INTERNET DOWNLOAD MANAGER (IDM)..." -ForegroundColor Yellow
-    Write-Host "  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Cyan
-    Write-Host ""
+function Get-IDMStatus {
+    $dmPath = "HKCU:\Software\DownloadManager"
+    if (Test-Path $dmPath) {
+        $sn = (Get-ItemProperty -Path $dmPath -Name "Serial" -ErrorAction SilentlyContinue).Serial
+        if ($sn) { return "REGISTERED" }
+    }
+    return "TRIAL_OR_UNREGISTERED"
+}
+
+function Get-ExtensionStatus {
+    $nmChrome = Test-Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.tonec.idm"
+    $chromeHook = Test-Path "HKCU:\Software\Google\Chrome\Extensions\ngpampappnmepgilojfohadhhmbhlaek"
+    if ($nmChrome -or $chromeHook) {
+        return "ACTIVE"
+    }
+    return "DISABLED"
+}
+
+function Repair-IDMBrowserExtensions {
+    param([switch]$Silent)
+
+    if (-not $Silent) {
+        Write-Host ""
+        Write-Host "  [PROSES] Mengaktifkan & Mengintegrasikan Ekstensi Browser..." -ForegroundColor Cyan
+    }
 
     $idmPath = Find-IDMPath
     if (-not $idmPath) {
-        Write-Host "  [!] PEMBERITAHUAN: IDM belum terpasang di sistem ini." -ForegroundColor Yellow
-        Write-Host "      Silakan instal IDM terlebih dahulu, lalu jalankan menu ini kembali." -ForegroundColor White
-        Write-Host "      Membuka halaman unduh resmi IDM..." -ForegroundColor Cyan
-        Start-Process "https://www.internetdownloadmanager.com/download.html"
-        pause
+        if (-not $Silent) {
+            Write-Host "  [!] Biner IDM belum terpasang di sistem ini." -ForegroundColor Yellow
+            Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+            [void][Console]::ReadKey($true)
+        }
+        return
+    }
+
+    $idmDir = Split-Path -Path $idmPath -Parent
+    $jsonMain = Join-Path $idmDir "IDMMsgHost.json"
+    $jsonMoz  = Join-Path $idmDir "IDMMsgHostMoz.json"
+
+    # 1. Daftarkan Native Messaging Hosts untuk semua browser
+    if (-not $Silent) { Write-Host "  > Menghubungkan Native Messaging Host (Jembatan Biner)... " -ForegroundColor Cyan -NoNewline }
+    $nmTargets = @(
+        @{ Path = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.tonec.idm"; Json = $jsonMain },
+        @{ Path = "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.tonec.idm"; Json = $jsonMain },
+        @{ Path = "HKCU:\Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\com.tonec.idm"; Json = $jsonMain },
+        @{ Path = "HKCU:\Software\Mozilla\NativeMessagingHosts\com.tonec.idm"; Json = $jsonMoz }
+    )
+    foreach ($item in $nmTargets) {
+        if (Test-Path $item.Json) {
+            if (-not (Test-Path $item.Path)) { New-Item -Path $item.Path -Force | Out-Null }
+            Set-ItemProperty -Path $item.Path -Name "(Default)" -Value $item.Json -Force | Out-Null
+        }
+    }
+    if (-not $Silent) { Write-Host "[OK]" -ForegroundColor Green }
+
+    # 2. Hook auto-install ekstensi resmi di registri browser (Chrome, Edge, Brave)
+    if (-not $Silent) { Write-Host "  > Mendaftarkan hook ekstensi resmi di registri browser... " -ForegroundColor Cyan -NoNewline }
+    
+    # Chrome (ID Resmi: ngpampappnmepgilojfohadhhmbhlaek)
+    $chromeKey = "HKCU:\Software\Google\Chrome\Extensions\ngpampappnmepgilojfohadhhmbhlaek"
+    if (-not (Test-Path $chromeKey)) { New-Item -Path $chromeKey -Force | Out-Null }
+    Set-ItemProperty -Path $chromeKey -Name "update_url" -Value "https://clients2.google.com/service/update2/crx" -Force | Out-Null
+
+    # Microsoft Edge (Edge Add-ons & Chrome Web Store fallback)
+    $edgeKey1 = "HKCU:\Software\Microsoft\Edge\Extensions\fbmkfjdnahhehkhgbmahiaflfladhhib"
+    if (-not (Test-Path $edgeKey1)) { New-Item -Path $edgeKey1 -Force | Out-Null }
+    Set-ItemProperty -Path $edgeKey1 -Name "update_url" -Value "https://edge.microsoft.com/extensionproxy/service/update2/crx" -Force | Out-Null
+
+    $edgeKey2 = "HKCU:\Software\Microsoft\Edge\Extensions\ngpampappnmepgilojfohadhhmbhlaek"
+    if (-not (Test-Path $edgeKey2)) { New-Item -Path $edgeKey2 -Force | Out-Null }
+    Set-ItemProperty -Path $edgeKey2 -Name "update_url" -Value "https://clients2.google.com/service/update2/crx" -Force | Out-Null
+
+    # Brave Browser
+    $braveKey = "HKCU:\Software\BraveSoftware\Brave-Browser\Extensions\ngpampappnmepgilojfohadhhmbhlaek"
+    if (-not (Test-Path $braveKey)) { New-Item -Path $braveKey -Force | Out-Null }
+    Set-ItemProperty -Path $braveKey -Name "update_url" -Value "https://clients2.google.com/service/update2/crx" -Force | Out-Null
+
+    if (-not $Silent) { Write-Host "[OK]" -ForegroundColor Green }
+
+    # 3. Sinkronisasi preferensi IDM internal
+    $dmPath = "HKCU:\Software\DownloadManager"
+    if (Test-Path $dmPath) {
+        Set-ItemProperty -Path $dmPath -Name "bRmGUCfEx" -Value 1 -Force -ErrorAction SilentlyContinue | Out-Null
+        Set-ItemProperty -Path $dmPath -Name "EnableDriver" -Value 1 -Force -ErrorAction SilentlyContinue | Out-Null
+        Set-ItemProperty -Path $dmPath -Name "lastintres" -Value 1 -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+
+    if (-not $Silent) {
+        Write-Host ""
+        Write-Host "  [BERHASIL] Integrasi Ekstensi Browser IDM Telah Aktif!" -ForegroundColor Green
+        Write-Host "  * Chrome / Brave : Ekstensi IDM terdaftar resmi di registri" -ForegroundColor White
+        Write-Host "  * Microsoft Edge : Ekstensi IDM terdaftar resmi di registri" -ForegroundColor White
+        Write-Host "  * Mozilla Firefox: Native Messaging Moz Host aktif" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  Apakah Anda ingin membuka link Web Store ekstensi IDM di browser?" -ForegroundColor Yellow
+        Write-Host "  [Y] Buka Halaman Ekstensi Resmi IDM di Browser Sekarang" -ForegroundColor Cyan
+        Write-Host "  [N] Kembali ke Menu Utama" -ForegroundColor Gray
+        Write-Host -NoNewline "  Pilihan Anda [Y/N] : " -ForegroundColor Yellow
+
+        $openChoice = ""
+        try {
+            $k = [Console]::ReadKey($true)
+            $openChoice = $k.KeyChar.ToString().ToUpper()
+            Write-Host $openChoice -ForegroundColor Green
+        } catch {
+            $openChoice = (Read-Host).ToUpper()
+        }
+
+        if ($openChoice -eq "Y") {
+            Start-Process "https://chromewebstore.google.com/detail/idm-integration-module/ngpampappnmepgilojfohadhhmbhlaek"
+        }
+
+        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+        Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+        [void][Console]::ReadKey($true)
+    }
+}
+
+function Disable-IDMBrowserExtensions {
+    param([switch]$Silent)
+
+    if (-not $Silent) {
+        Write-Host ""
+        Write-Host "  [PROSES] Menonaktifkan Integrasi Ekstensi Browser IDM..." -ForegroundColor Yellow
+    }
+
+    # 1. Hapus Native Messaging Hosts dari registri HKCU
+    if (-not $Silent) { Write-Host "  > Memutus Native Messaging Host (Jembatan Biner)... " -ForegroundColor Cyan -NoNewline }
+    $nmTargets = @(
+        "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.tonec.idm",
+        "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.tonec.idm",
+        "HKCU:\Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\com.tonec.idm",
+        "HKCU:\Software\Mozilla\NativeMessagingHosts\com.tonec.idm"
+    )
+    foreach ($item in $nmTargets) {
+        if (Test-Path $item) {
+            Remove-Item -Path $item -Force -Recurse -ErrorAction SilentlyContinue
+        }
+    }
+    if (-not $Silent) { Write-Host "[OK]" -ForegroundColor Green }
+
+    # 2. Hapus Hook Ekstensi Otomatis di Registri Browser
+    if (-not $Silent) { Write-Host "  > Menghapus hook pendaftaran ekstensi peramban... " -ForegroundColor Cyan -NoNewline }
+    $extKeys = @(
+        "HKCU:\Software\Google\Chrome\Extensions\ngpampappnmepgilojfohadhhmbhlaek",
+        "HKCU:\Software\Microsoft\Edge\Extensions\fbmkfjdnahhehkhgbmahiaflfladhhib",
+        "HKCU:\Software\Microsoft\Edge\Extensions\ngpampappnmepgilojfohadhhmbhlaek",
+        "HKCU:\Software\BraveSoftware\Brave-Browser\Extensions\ngpampappnmepgilojfohadhhmbhlaek"
+    )
+    foreach ($k in $extKeys) {
+        if (Test-Path $k) {
+            Remove-Item -Path $k -Force -Recurse -ErrorAction SilentlyContinue
+        }
+    }
+    if (-not $Silent) { Write-Host "[OK]" -ForegroundColor Green }
+
+    # 3. Matikan pengambilalihan browser di pengaturan internal IDM
+    $dmPath = "HKCU:\Software\DownloadManager"
+    if (Test-Path $dmPath) {
+        Set-ItemProperty -Path $dmPath -Name "bRmGUCfEx" -Value 0 -Force -ErrorAction SilentlyContinue | Out-Null
+        Set-ItemProperty -Path $dmPath -Name "EnableDriver" -Value 0 -Force -ErrorAction SilentlyContinue | Out-Null
+        Set-ItemProperty -Path $dmPath -Name "lastintres" -Value 0 -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+
+    if (-not $Silent) {
+        Write-Host ""
+        Write-Host "  [BERHASIL] Integrasi Ekstensi Browser Telah Dinonaktifkan!" -ForegroundColor Green
+        Write-Host "  * Unduhan browser tidak akan diambil alih otomatis oleh IDM." -ForegroundColor White
+        Write-Host "  * Chrome, Edge, Brave, dan Firefox kembali memakai downloader bawaan." -ForegroundColor White
+        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+        Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+        [void][Console]::ReadKey($true)
+    }
+}
+
+function Download-And-Install-IDM {
+    Write-Host ""
+    Write-Host "  [PROSES] Mengunduh Installer Resmi Internet Download Manager..." -ForegroundColor Cyan
+
+    $tempDir = [System.IO.Path]::GetTempPath()
+    $setupFile = Join-Path $tempDir "idman_setup_official.exe"
+    if (Test-Path $setupFile) { Remove-Item $setupFile -Force -ErrorAction SilentlyContinue }
+
+    # Daftar mirror berkecepatan tinggi (Lokal & GitHub Edge CDN -> Fallback Tonec)
+    $mirrors = @(
+        @{ Name = "Server Lokal FokusKonten (Instan)"; Url = "http://127.0.0.1:8090/bin/idman.exe" },
+        @{ Name = "GitHub Global Edge CDN";          Url = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/19_IDM_Activation_Script_IAS/idman_setup.exe" },
+        @{ Name = "jsDelivr High-Speed Mirror";      Url = "https://cdn.jsdelivr.net/gh/mcjobs-id/powershell-vault@main/19_IDM_Activation_Script_IAS/idman_setup.exe" },
+        @{ Name = "Server Resmi Tonec (Fallback)";   Url = "https://download.internetdownloadmanager.com/idman643build15.exe" }
+    )
+
+    $curl = "$env:SystemRoot\System32\curl.exe"
+    $downloadSuccess = $false
+
+    foreach ($m in $mirrors) {
+        Write-Host "  > Menghubungi $($m.Name)..." -ForegroundColor Cyan
+        try {
+            if (Test-Path $curl) {
+                $status = (& $curl -s -o NUL -w "%{http_code}" --connect-timeout 2 $m.Url)
+                if ($status -eq "200") {
+                    Write-Host "    Koneksi terhubung. Memulai unduhan biner resmi..." -ForegroundColor Green
+                    & $curl -# -L --connect-timeout 5 --retry 2 -o $setupFile $m.Url
+                    if ((Test-Path $setupFile) -and ((Get-Item $setupFile).Length -gt 10000000)) {
+                        $downloadSuccess = $true
+                        break
+                    }
+                }
+            } else {
+                $wc = New-Object System.Net.WebClient
+                $wc.DownloadFile($m.Url, $setupFile)
+                if ((Test-Path $setupFile) -and ((Get-Item $setupFile).Length -gt 10000000)) {
+                    $downloadSuccess = $true
+                    break
+                }
+            }
+        } catch {}
+    }
+
+    if ($downloadSuccess) {
+        Write-Host ""
+        Write-Host "  [OK] Unduhan biner installer IDM resmi selesai diverifikasi!" -ForegroundColor Green
+        Write-Host "  > Memulai proses instalasi IDM resmi..." -ForegroundColor Cyan
+        Write-Host "    (Silakan konfirmasi jika muncul jendela UAC Windows)" -ForegroundColor Gray
+        
+        $p = Start-Process -FilePath $setupFile -Wait -PassThru
+        Start-Sleep -Seconds 2
+        Remove-Item -Path $setupFile -Force -ErrorAction SilentlyContinue
+
+        $newIdm = Find-IDMPath
+        if ($newIdm) {
+            Write-Host ""
+            Write-Host "  [BERHASIL] Internet Download Manager telah terpasang!" -ForegroundColor Green
+            Write-Host "  * Lokasi: $newIdm" -ForegroundColor White
+            
+            Write-Host ""
+            Write-Host "  Apakah Anda ingin langsung memasang lisensi permanen sekarang?" -ForegroundColor Yellow
+            Write-Host "  [Y] Pasang Lisensi Permanen & Integrasikan Ekstensi Sekarang" -ForegroundColor Cyan
+            Write-Host "  [N] Kembali ke Menu Utama" -ForegroundColor Gray
+            Write-Host -NoNewline "  Pilihan Anda [Y/N] : " -ForegroundColor Yellow
+
+            $actChoice = ""
+            try {
+                $k = [Console]::ReadKey($true)
+                $actChoice = $k.KeyChar.ToString().ToUpper()
+                Write-Host $actChoice -ForegroundColor Green
+            } catch {
+                $actChoice = (Read-Host).ToUpper()
+            }
+
+            if ($actChoice -eq "Y") {
+                Install-IDMLicenseInPlace
+                return
+            }
+        } else {
+            Write-Host "  [!] Pemasangan selesai atau dibatalkan oleh pengguna." -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host ""
+        Write-Host "  [!] Gagal mengunduh biner installer dari seluruh mirror." -ForegroundColor Red
+        Write-Host "      Silakan periksa koneksi internet Anda atau coba lagi." -ForegroundColor White
+    }
+
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    [void][Console]::ReadKey($true)
+}
+
+function Uninstall-IDMInPlace {
+    Write-Host ""
+    Write-Host "  [PROSES] Mencopot / Uninstall Internet Download Manager..." -ForegroundColor Yellow
+
+    $idmPath = Find-IDMPath
+    if (-not $idmPath) {
+        Write-Host "  [!] IDM belum terpasang di sistem ini." -ForegroundColor Yellow
+        Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+        [void][Console]::ReadKey($true)
+        return
+    }
+
+    $idmDir = Split-Path -Path $idmPath -Parent
+    $uninstaller = Join-Path $idmDir "Uninstall.exe"
+
+    if (-not (Test-Path $uninstaller)) {
+        Write-Host "  [!] Berkas Uninstall.exe tidak ditemukan di direktori IDM." -ForegroundColor Red
+        Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+        [void][Console]::ReadKey($true)
         return
     }
 
     # Hentikan proses IDM aktif
     $proc = Get-Process -Name "IDMan" -ErrorAction SilentlyContinue
     if ($proc) {
-        Write-Host "  -> Menghentikan proses IDM aktif..." -ForegroundColor Cyan
+        Write-Host "  > Menghentikan proses IDM yang sedang berjalan... " -ForegroundColor Cyan -NoNewline
         Stop-Process -Name "IDMan" -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 1
+        Start-Sleep -Milliseconds 600
+        Write-Host "[OK]" -ForegroundColor Green
     }
 
-    # Ambil kunci CLSID
-    Write-Host "  -> Memindai entri registri evaluasi IDM..." -ForegroundColor Cyan
-    $clsidData  = Get-CLSIDList
-    $clsidKeys  = $clsidData[0]
-    $regPaths   = $clsidData[1]
+    Write-Host "  > Membuka uninstaller resmi IDM..." -ForegroundColor Cyan
+    Write-Host "    (Pilih 'Full' pada jendela untuk pencopotan bersih)" -ForegroundColor Gray
+    
+    $p = Start-Process -FilePath $uninstaller -Wait -PassThru
+    Start-Sleep -Seconds 2
 
-    # Bersihkan kunci trial lama
-    Write-Host "  -> Membersihkan token evaluasi lama..." -ForegroundColor Cyan
+    # Putus hook browser dan bersihkan registri sisa
+    Write-Host "  > Membersihkan sisa registri lisensi & hook ekstensi peramban... " -ForegroundColor Cyan -NoNewline
+    Disable-IDMBrowserExtensions -Silent
+    Write-Host "[OK]" -ForegroundColor Green
+
+    Write-Host ""
+    Write-Host "  [SELESAI] Proses pencopotan IDM telah selesai." -ForegroundColor Green
+    Write-Host "  * Sistem telah bersih dari integrasi dan biner IDM." -ForegroundColor White
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    [void][Console]::ReadKey($true)
+}
+
+function Show-CompactHeader {
+    Clear-Host
+    $state = Get-IDMStatus
+    $extState = Get-ExtensionStatus
+    $idmPath = Find-IDMPath
+
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  F O K U S K O N T E N  //  RESCUE SUITE" -ForegroundColor Yellow
+    Write-Host "  IDM All-In-One: Lisensi, Instal, Copot & Ekstensi" -ForegroundColor White
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  ORDER    : $global:fkOrderNumber" -ForegroundColor Green
+    Write-Host "  TIKET    : [FK-PSH-119] IDM Complete Rescue Suite" -ForegroundColor DarkCyan
+    
+    if ($idmPath) {
+        $ver = (Get-Item $idmPath).VersionInfo.ProductVersion
+        Write-Host "  STATUS   : [ TERPASANG ] (Versi $ver)" -ForegroundColor Green
+    } else {
+        Write-Host "  STATUS   : [ BELUM TERPASANG DI SISTEM INI ]" -ForegroundColor Magenta
+    }
+
+    if ($state -eq "REGISTERED") {
+        Write-Host "  LISENSI  : [ RESMI AKTIF ] (Bebas Popup Fake Serial)" -ForegroundColor Green
+    } else {
+        Write-Host "  LISENSI  : [ EVALUASI / BELUM TERLISENSI ]" -ForegroundColor Yellow
+    }
+
+    if ($extState -eq "ACTIVE") {
+        Write-Host "  EKSTENSI : [ AKTIF & TERHUBUNG KE PERAMBAN ]" -ForegroundColor Green
+    } else {
+        Write-Host "  EKSTENSI : [ NONAKTIF / DILEPAS DARI PERAMBAN ]" -ForegroundColor Yellow
+    }
+
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+}
+
+function Install-IDMLicenseInPlace {
+    Write-Host ""
+    Write-Host "  [PROSES] Memasang Lisensi IDM Permanen & Integrasi Browser..." -ForegroundColor Cyan
+
+    $idmPath = Find-IDMPath
+    if (-not $idmPath) {
+        Write-Host "  [!] IDM belum terpasang di sistem ini." -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  Apakah Anda ingin mengunduh dan memasang IDM resmi sekarang?" -ForegroundColor Cyan
+        Write-Host "  [Y] Unduh & Instal IDM Resmi Sekarang" -ForegroundColor Green
+        Write-Host "  [N] Batal dan Kembali ke Menu" -ForegroundColor Gray
+        Write-Host -NoNewline "  Pilihan Anda [Y/N] : " -ForegroundColor Yellow
+
+        $dlChoice = ""
+        try {
+            $k = [Console]::ReadKey($true)
+            $dlChoice = $k.KeyChar.ToString().ToUpper()
+            Write-Host $dlChoice -ForegroundColor Green
+        } catch {
+            $dlChoice = (Read-Host).ToUpper()
+        }
+
+        if ($dlChoice -eq "Y") {
+            Download-And-Install-IDM
+        }
+        return
+    }
+
+    # Hentikan proses IDM aktif
+    $proc = Get-Process -Name "IDMan" -ErrorAction SilentlyContinue
+    if ($proc) {
+        Write-Host "  > Menghentikan proses IDM aktif... " -ForegroundColor Cyan -NoNewline
+        Stop-Process -Name "IDMan" -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Milliseconds 600
+        Write-Host "[OK]" -ForegroundColor Green
+    }
+
+    # Scan dan bersihkan kunci trial lama
+    Write-Host "  > Memindai token registri evaluasi IDM... " -ForegroundColor Cyan -NoNewline
+    $clsidData = Get-CLSIDList
+    $clsidKeys = $clsidData[0]
+    $regPaths  = $clsidData[1]
+    Write-Host "[OK]" -ForegroundColor Green
+
+    Write-Host "  > Membersihkan entri evaluasi lama... " -ForegroundColor Cyan -NoNewline
     foreach ($regPath in $regPaths) {
         foreach ($val in $clsidKeys) {
             $fullPath = Join-Path $regPath $val
@@ -194,9 +560,10 @@ function Install-IDMLicense {
             }
         }
     }
+    Write-Host "[OK]" -ForegroundColor Green
 
     # Daftarkan lisensi registri
-    Write-Host "  -> Mendaftarkan lisensi resmi FokusKonten..." -ForegroundColor Cyan
+    Write-Host "  > Mendaftarkan lisensi resmi FokusKonten... " -ForegroundColor Cyan -NoNewline
     $fname  = "FokusKonten"
     $lname  = "Customer"
     $email  = "lisensi@fokuskonten.my.id"
@@ -206,13 +573,14 @@ function Install-IDMLicense {
     $dmPath = "HKCU:\Software\DownloadManager"
     if (-not (Test-Path $dmPath)) { New-Item -Path $dmPath -Force | Out-Null }
 
-    Set-ItemProperty -Path $dmPath -Name "FName"  -Value $fname  -Type String -Force
-    Set-ItemProperty -Path $dmPath -Name "LName"  -Value $lname  -Type String -Force
-    Set-ItemProperty -Path $dmPath -Name "Email"  -Value $email  -Type String -Force
-    Set-ItemProperty -Path $dmPath -Name "Serial" -Value $serial -Type String -Force
+    Set-ItemProperty -Path $dmPath -Name "FName"  -Value $fname  -Type String -Force | Out-Null
+    Set-ItemProperty -Path $dmPath -Name "LName"  -Value $lname  -Type String -Force | Out-Null
+    Set-ItemProperty -Path $dmPath -Name "Email"  -Value $email  -Type String -Force | Out-Null
+    Set-ItemProperty -Path $dmPath -Name "Serial" -Value $serial -Type String -Force | Out-Null
+    Write-Host "[OK]" -ForegroundColor Green
 
     # Kunci CLSID untuk menolak notifikasi 'Fake Serial'
-    Write-Host "  -> Mengunci entri registri (Perlindungan Anti-Fake Serial)..." -ForegroundColor Cyan
+    Write-Host "  > Mengunci registri proteksi anti-fake serial... " -ForegroundColor Cyan -NoNewline
     foreach ($regPath in $regPaths) {
         foreach ($val in $clsidKeys) {
             $fullPath = Join-Path $regPath $val
@@ -226,6 +594,10 @@ function Install-IDMLicense {
             Take-Permissions $rootKey $regKey -Lock
         }
     }
+    Write-Host "[OK]" -ForegroundColor Green
+
+    # Sekalian otomatis integrasikan ekstensi browser (Chrome, Edge, Brave, Firefox)
+    Repair-IDMBrowserExtensions -Silent
 
     # Buka kembali IDM
     if (Test-Path $idmPath) {
@@ -233,21 +605,19 @@ function Install-IDMLicense {
     }
 
     Write-Host ""
-    Write-Host "  [OK] LISENSI IDM BERHASIL DIPASANG!" -ForegroundColor Green
+    Write-Host "  [BERHASIL] Lisensi & Integrasi Browser IDM Telah Aktif!" -ForegroundColor Green
     Write-Host "  * Terdaftar : $fname $lname ($email)" -ForegroundColor White
     Write-Host "  * Serial    : $serial" -ForegroundColor White
-    Write-Host "  * Proteksi  : CLSID Terkunci (Bebas Popup Fake Serial & Bebas Antivirus)" -ForegroundColor Yellow
-    Write-Host ""
-    pause
+    Write-Host "  * Proteksi  : CLSID Terkunci (Bebas Popup Fake Serial)" -ForegroundColor Yellow
+    Write-Host "  * Ekstensi  : Hook Chrome, Edge, Brave & Firefox Aktif" -ForegroundColor Cyan
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    [void][Console]::ReadKey($true)
 }
 
-function Show-IDMStatus {
-    cls
+function Show-IDMStatusInPlace {
     Write-Host ""
-    Write-Host "  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Cyan
-    Write-Host "  DIAGNOSTIK LISENSI INTERNET DOWNLOAD MANAGER (IDM)" -ForegroundColor Cyan
-    Write-Host "  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Cyan
-    Write-Host ""
+    Write-Host "  [DIAGNOSTIK] Memeriksa Konfigurasi IDM & Ekstensi..." -ForegroundColor Cyan
 
     $idmPath = Find-IDMPath
     if ($idmPath) {
@@ -255,7 +625,7 @@ function Show-IDMStatus {
         Write-Host "  * Lokasi IDM     : $idmPath" -ForegroundColor Green
         Write-Host "  * Versi Biner    : $ver" -ForegroundColor Green
     } else {
-        Write-Host "  * Lokasi IDM     : BELUM TERINSTAL" -ForegroundColor Yellow
+        Write-Host "  * Lokasi IDM     : Belum Terpasang di Komputer Ini" -ForegroundColor Yellow
     }
 
     $dmPath = "HKCU:\Software\DownloadManager"
@@ -265,38 +635,44 @@ function Show-IDMStatus {
         $em = (Get-ItemProperty -Path $dmPath -Name "Email"  -ErrorAction SilentlyContinue).Email
         $sn = (Get-ItemProperty -Path $dmPath -Name "Serial" -ErrorAction SilentlyContinue).Serial
 
-        Write-Host "  * Nama Pemilik   : $(if($fn){"$fn $ln"}else{"(Belum terdaftar)"})" -ForegroundColor Cyan
-        Write-Host "  * Email Lisensi  : $(if($em){$em}else{"(Belum terdaftar)"})" -ForegroundColor Cyan
+        Write-Host "  * Nama Pemilik   : $(if($fn){"$fn $ln"}else{"(Belum terdaftar)"})" -ForegroundColor White
+        Write-Host "  * Email Lisensi  : $(if($em){$em}else{"(Belum terdaftar)"})" -ForegroundColor White
         Write-Host "  * Serial Key     : $(if($sn){$sn}else{"(Belum terdaftar)"})" -ForegroundColor $(if($sn){"Green"}else{"Yellow"})
     } else {
         Write-Host "  * Status Registri: Belum ada konfigurasi IDM di HKCU." -ForegroundColor Yellow
     }
 
-    Write-Host ""
-    pause
+    # Cek status hook ekstensi browser
+    $chromeHook = Test-Path "HKCU:\Software\Google\Chrome\Extensions\ngpampappnmepgilojfohadhhmbhlaek"
+    $edgeHook   = Test-Path "HKCU:\Software\Microsoft\Edge\Extensions\fbmkfjdnahhehkhgbmahiaflfladhhib"
+    $nmChrome   = Test-Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.tonec.idm"
+    
+    Write-Host "  * Hook Chrome    : $(if($chromeHook){'TERDAFTAR [OK]'}else{'Belum Terdaftar'})" -ForegroundColor $(if($chromeHook){'Green'}else{'Gray'})
+    Write-Host "  * Hook Edge      : $(if($edgeHook){'TERDAFTAR [OK]'}else{'Belum Terdaftar'})" -ForegroundColor $(if($edgeHook){'Green'}else{'Gray'})
+    Write-Host "  * Native Host    : $(if($nmChrome){'TERHUBUNG [OK]'}else{'Terputus / Belum Aktif'})" -ForegroundColor $(if($nmChrome){'Green'}else{'Yellow'})
+
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    [void][Console]::ReadKey($true)
 }
 
-function Reset-IDMTrial {
-    cls
+function Reset-IDMTrialInPlace {
     Write-Host ""
-    Write-Host "  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Yellow
-    Write-Host "  RESET LISENSI IDM KE TRIAL DEFAULT (EVALUASI 30 HARI)" -ForegroundColor Yellow
-    Write-Host "  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Yellow
-    Write-Host ""
+    Write-Host "  [PROSES] Mengembalikan IDM ke Evaluasi Bersih..." -ForegroundColor Yellow
 
-    # Hentikan proses IDM aktif
     $proc = Get-Process -Name "IDMan" -ErrorAction SilentlyContinue
     if ($proc) {
-        Write-Host "  -> Menghentikan proses IDM aktif..." -ForegroundColor Cyan
+        Write-Host "  > Menghentikan proses IDM aktif... " -ForegroundColor Cyan -NoNewline
         Stop-Process -Name "IDMan" -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 1
+        Start-Sleep -Milliseconds 600
+        Write-Host "[OK]" -ForegroundColor Green
     }
 
+    Write-Host "  > Membuka proteksi kunci registri CLSID... " -ForegroundColor Cyan -NoNewline
     $clsidData = Get-CLSIDList
     $clsidKeys = $clsidData[0]
     $regPaths  = $clsidData[1]
 
-    Write-Host "  -> Membuka kunci proteksi registri CLSID..." -ForegroundColor Cyan
     foreach ($regPath in $regPaths) {
         foreach ($val in $clsidKeys) {
             $fullPath = Join-Path $regPath $val
@@ -310,107 +686,66 @@ function Reset-IDMTrial {
             }
         }
     }
+    Write-Host "[OK]" -ForegroundColor Green
 
+    Write-Host "  > Menghapus serial key lama... " -ForegroundColor Cyan -NoNewline
     Remove-ItemProperty -Path "HKCU:\Software\DownloadManager" -Name "FName","LName","Email","Serial" -ErrorAction SilentlyContinue
+    Write-Host "[OK]" -ForegroundColor Green
 
     Write-Host ""
-    Write-Host "  [OK] REGISTRI EVALUASI IDM BERHASIL DI-RESET KE KONDISI AWAL!" -ForegroundColor Green
-    Write-Host ""
-    pause
+    Write-Host "  [BERHASIL] Registri IDM berhasil di-reset ke kondisi awal!" -ForegroundColor Green
+    Write-Host "  IDM sekarang kembali ke mode evaluasi baru (30 hari)." -ForegroundColor White
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    [void][Console]::ReadKey($true)
 }
 
-# Main menu loop
-while ($true) {
-    cls
-    Write-Host ""
-    Write-Host "  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Cyan
-    Write-Host "  ++  FOKUSKONTEN  //  IDM HELPER                                ++" -ForegroundColor Cyan
-    Write-Host "  ++  Aktivasi & Pemulihan Lisensi Internet Download Manager     ++" -ForegroundColor Yellow
-    Write-Host "  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  Seluruh riwayat, pengaturan, dan antrean unduhan IDM Anda aman 100%." -ForegroundColor Yellow
-    Write-Host "  Metode registri murni tanpa patch file exe/dll (aman dari false antivirus)." -ForegroundColor White
-    Write-Host "  -----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  DETAIL LAYANAN DOWNLOAD MANAGER:" -ForegroundColor White
-    Write-Host "  * Layanan  : IDM HELPER - INTERNET DOWNLOAD MANAGER" -ForegroundColor Cyan
-    Write-Host "  * Metode   : CLSID Permission Lock & Registry Re-Arming (100% Native PS)" -ForegroundColor Green
-    Write-Host "  * Komponen : IDMan.exe | DownloadManager Registry | CLSID Virtualization" -ForegroundColor White
-    Write-Host "  * Fitur    : Kebal Popup 'Fake Serial' & Bebas Blokir Antivirus" -ForegroundColor Yellow
-    Write-Host "  -----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  MENU TINDAKAN:" -ForegroundColor White
-    Write-Host ""
-    Write-Host "      [1] Pasang Lisensi IDM Permanen (Disarankan)" -ForegroundColor Yellow
-    Write-Host "          Aktivasi otomatis & kunci registri agar bebas popup fake serial." -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "      [2] Cek Status Lisensi & Registrasi IDM" -ForegroundColor White
-    Write-Host "          Memeriksa versi IDMan, nama terdaftar, email, dan serial key." -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "      [3] Reset IDM ke Trial Baru (Evaluasi 30 Hari)" -ForegroundColor White
-    Write-Host "          Membersihkan serial key dan mengembalikan IDM ke evaluasi bersih." -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "      [4] Toko Digital FokusKonten - Software & Template Bisnis" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "      [0] Keluar" -ForegroundColor DarkGray
-    Write-Host "  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" -ForegroundColor Cyan
-    Write-Host ""
+# Main Loop (100% In-Place, 1 Terminal)
+try {
+    while ($true) {
+        Show-CompactHeader
+        Write-Host "  PILIHAN MENU TINDAKAN:" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  [1] Pasang Lisensi IDM Permanen & Aktifkan Ekstensi" -ForegroundColor Green
+        Write-Host "  [2] Unduh & Instal IDM Versi Terbaru (Resmi Tonec)" -ForegroundColor Cyan
+        Write-Host "  [3] Copot / Uninstall IDM dari Komputer" -ForegroundColor Yellow
+        Write-Host "  [4] Aktifkan / Perbaiki Ekstensi Browser IDM" -ForegroundColor Green
+        Write-Host "  [5] Nonaktifkan Ekstensi Browser IDM (Kembalikan ke Bawaan)" -ForegroundColor DarkYellow
+        Write-Host "  [6] Cek Diagnostik Lisensi, Biner & Ekstensi" -ForegroundColor White
+        Write-Host "  [7] Reset IDM ke Evaluasi Bersih (Trial 30 Hari)" -ForegroundColor Gray
+        Write-Host "  [8] Toko Digital FokusKonten (Buka Web)" -ForegroundColor DarkCyan
+        Write-Host "  [0] Keluar" -ForegroundColor DarkGray
+        Write-Host "================================================================" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host -NoNewline "  Pilihan Anda [1, 2, 3, 4, 5, 6, 7, 8, 0] : " -ForegroundColor Yellow
 
-    try {
-        Write-Host -NoNewline "  Pilihan Anda [1,2,3,4,0] : " -ForegroundColor Yellow
-        $k = [Console]::ReadKey($true)
-        $c = $k.KeyChar.ToString()
-        Write-Host $c -ForegroundColor Yellow
-    } catch {
-        $c = Read-Host "  Pilihan"
-    }
+        $choice = ""
+        try {
+            $key = [Console]::ReadKey($true)
+            $choice = $key.KeyChar.ToString()
+            Write-Host $choice -ForegroundColor Green
+        } catch {
+            $choice = Read-Host
+        }
 
-    switch ($c) {
-        "1" { Install-IDMLicense }
-        "2" { Show-IDMStatus }
-        "3" { Reset-IDMTrial }
-        "4" { Start-Process "https://fokuskonten.my.id/toko-digital/" }
-        "0" { exit 0 }
+        switch ($choice) {
+            "1" { Install-IDMLicenseInPlace }
+            "2" { Download-And-Install-IDM }
+            "3" { Uninstall-IDMInPlace }
+            "4" { Repair-IDMBrowserExtensions }
+            "5" { Disable-IDMBrowserExtensions }
+            "6" { Show-IDMStatusInPlace }
+            "7" { Reset-IDMTrialInPlace }
+            "8" { Start-Process "https://fokuskonten.my.id/toko-digital/" }
+            "0" {
+                Restore-Terminal
+                Write-Host ""
+                Write-Host "  Terima kasih telah menggunakan utilitas FokusKonten." -ForegroundColor Green
+                Write-Host ""
+                return
+            }
+        }
     }
+} finally {
+    Restore-Terminal
 }
-'@
-
-    # Simpan sebagai PS1 temp GUID
-    $rand    = [Guid]::NewGuid().Guid
-    $isAdmin = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -match 'S-1-5-32-544')
-
-    # Jika terminal SUDAH Administrator, jalankan langsung in-place (CUKUP 1 TERMINAL)
-    if ($isAdmin) {
-        Write-Host "  [OK] Hak akses Administrator terverifikasi (Eksekusi 1 Terminal)." -ForegroundColor Green
-        & ([scriptblock]::Create($idmPs1))
-        return
-    }
-
-    # Jika BELUM Administrator, simpan ke temp dan luncurkan jendela elevated terpisah
-    $ps1Path = "$env:USERPROFILE\AppData\Local\Temp\FK_IDM_$rand.ps1"
-    [System.IO.File]::WriteAllText($ps1Path, $idmPs1, [System.Text.Encoding]::UTF8)
-
-    if (-not (Test-Path $ps1Path)) {
-        Write-Host "  [!] Gagal membuat berkas idm temp. Aborting." -ForegroundColor Red
-        return
-    }
-
-    $pwsh = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
-
-    Write-Host "  [OK] Engine lisensi IDM siap." -ForegroundColor Green
-    Write-Host "  -> Membuka menu FokusKonten IDM Helper..." -ForegroundColor Cyan
-    Write-Host "     Meminta izin Administrator sistem (UAC)..." -ForegroundColor Gray
-    Write-Host ""
-
-    if ($psv -ge 3) {
-        Start-Process -FilePath $pwsh `
-            -ArgumentList "-ExecutionPolicy Bypass -NoProfile -File `"$ps1Path`"" `
-            -Verb RunAs -Wait
-    } else {
-        $p = Start-Process -FilePath $pwsh `
-            -ArgumentList "-ExecutionPolicy Bypass -NoProfile -File `"$ps1Path`"" `
-            -Verb RunAs -PassThru
-        $p.WaitForExit()
-    }
-
-    Remove-Item $ps1Path -Force -ErrorAction SilentlyContinue
-
-} @args

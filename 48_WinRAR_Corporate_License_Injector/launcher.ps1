@@ -39,22 +39,26 @@ $origBg = $Host.UI.RawUI.BackgroundColor
 
 $global:winrarKeyData = @"
 RAR registration data
-Corporate Unlimited License
+WinRAR
 Unlimited Company License
-UID=4d2626e25cbf78a48312
-641221225083128d58c1448b17b6a12b4b2c15ea41b213bfa7a7b8
-336f3db17f1a9b2b5fcaef91bb16b60c49cf532ec79f5a772c9a17
-4c5b3644917578b948754b2a8634e2c0e86b24058b732bb64d84f8
-d9a8c7b89d4e286e969966b0336214300300958f310f81d58d9294
-00389b83b4b533f848f2b7b8a74e2b0c16b6188e404b9015e12be8
+UID=4b914fb772c8376bf571
+6412212250f5711ad072cf351cfa39e2851192daf8a362681bbb1d
+cd48da1d14d995f0bbf960fce6cb5ffde62890079861be57638717
+7131ced835ed65cc743d9777f2ea71a8e32c7e593cf66794343565
+b41bcf56929486b8bcdac33d50ecf773996052598f1f556defffbd
+982fbe71e93df6b6346c37a3890f3c7edc65d7f5455470d13d1190
+6e6fb824bcf25f155547b5fc41901ad58c0992f570be1cf5608ba9
+aef69d48c864bcd72d15163897773d314187f6a9af350808719796
 "@
 
-$global:targetPaths = @(
-    "$env:LOCALAPPDATA\Programs\WinRAR",
-    "$env:ProgramFiles\WinRAR",
-    "${env:ProgramFiles(x86)}\WinRAR",
-    "$env:APPDATA\WinRAR"
-)
+function Get-TargetPaths {
+    return @(
+        (Join-Path $env:LOCALAPPDATA "Programs\WinRAR"),
+        (Join-Path $env:ProgramFiles "WinRAR"),
+        (Join-Path ${env:ProgramFiles(x86)} "WinRAR"),
+        (Join-Path $env:APPDATA "WinRAR")
+    )
+}
 
 function Restore-Terminal {
     try {
@@ -65,8 +69,9 @@ function Restore-Terminal {
 }
 
 function Get-WinRARState {
-    foreach ($p in $global:targetPaths) {
-        if (Test-Path (Join-Path $p "rarreg.key")) {
+    foreach ($p in (Get-TargetPaths)) {
+        $kf = Join-Path $p "rarreg.key"
+        if (Test-Path -LiteralPath $kf) {
             return "LICENSED"
         }
     }
@@ -85,7 +90,7 @@ function Show-CompactHeader {
     Write-Host "  TIKET  : [FK-PSH-24] Asistensi Resmi" -ForegroundColor DarkCyan
     
     if ($state -eq "LICENSED") {
-        Write-Host "  STATUS : [ BERLISENSI: CORPORATE UNLIMITED ] (Bebas Pop-up)" -ForegroundColor Green
+        Write-Host "  STATUS : [ BERLISENSI: UNLIMITED COMPANY ] (Bebas Pop-up)" -ForegroundColor Green
     } else {
         Write-Host "  STATUS : [ MODE EVALUASI / TRIAL 40 HARI ] (Pop-up Aktif)" -ForegroundColor Yellow
     }
@@ -97,21 +102,23 @@ function Install-WinRARLicense {
     Write-Host "  [PROSES] Menyuntikkan Lisensi Resmi WinRAR..." -ForegroundColor Cyan
     $successCount = 0
     
+    $cleanKey = $global:winrarKeyData.Replace("`r`n", "`n") + "`r`n"
+    
     # Pastikan direktori AppData WinRAR ada
-    $appDataDir = "$env:APPDATA\WinRAR"
-    if (-not (Test-Path $appDataDir)) {
+    $appDataDir = Join-Path $env:APPDATA "WinRAR"
+    if (-not (Test-Path -LiteralPath $appDataDir)) {
         New-Item -ItemType Directory -Path $appDataDir -Force | Out-Null
     }
     
-    foreach ($p in $global:targetPaths) {
-        if (Test-Path $p) {
+    foreach ($p in (Get-TargetPaths)) {
+        if (Test-Path -LiteralPath $p) {
             try {
                 $targetFile = Join-Path $p "rarreg.key"
-                Set-Content -LiteralPath $targetFile -Value $global:winrarKeyData -Encoding ASCII -Force
+                [System.IO.File]::WriteAllText($targetFile, $cleanKey)
                 Write-Host "  > Update lisensi: $p... [OK]" -ForegroundColor Green
                 $successCount++
             } catch {
-                # Lewati jika permission folder Program Files terkunci
+                # Lewati jika folder Program Files membutuhkan elevasi
             }
         }
     }
@@ -134,7 +141,7 @@ function Remove-WinRARLicense {
     Write-Host "  [PROSES] Mengembalikan WinRAR ke Mode Evaluasi (Undo)..." -ForegroundColor Yellow
     $removedCount = 0
     
-    foreach ($p in $global:targetPaths) {
+    foreach ($p in (Get-TargetPaths)) {
         $targetFile = Join-Path $p "rarreg.key"
         if (Test-Path -LiteralPath $targetFile) {
             try {
@@ -158,9 +165,9 @@ function Launch-WinRARApp {
     Write-Host "  [PROSES] Menjalankan aplikasi WinRAR..." -ForegroundColor Cyan
     
     $exeFound = $null
-    foreach ($p in $global:targetPaths) {
+    foreach ($p in (Get-TargetPaths)) {
         $testExe = Join-Path $p "WinRAR.exe"
-        if (Test-Path $testExe) {
+        if (Test-Path -LiteralPath $testExe) {
             $exeFound = $testExe
             break
         }
@@ -171,7 +178,6 @@ function Launch-WinRARApp {
         Write-Host "  > WinRAR berhasil dibuka di layar Anda!" -ForegroundColor Green
         Write-Host "  Tips: Buka menu 'Help' -> 'About WinRAR' untuk cek lisensi." -ForegroundColor Yellow
     } else {
-        Write-Host "  > Mencoba membuka WinRAR via path registri..." -ForegroundColor Cyan
         try {
             Start-Process "WinRAR.exe"
             Write-Host "  > WinRAR berhasil dibuka!" -ForegroundColor Green
@@ -190,9 +196,10 @@ function Show-SystemGuide {
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host "  PANDUAN & INFORMASI LISENSI WINRAR" -ForegroundColor Yellow
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  * Tipe Lisensi  : Corporate Unlimited Company License" -ForegroundColor White
+    Write-Host "  * Tipe Lisensi  : Unlimited Company License" -ForegroundColor White
     Write-Host "  * Metode Resmi  : Injeksi rarreg.key standar resmi WinRAR" -ForegroundColor Gray
     Write-Host "  * Keamanan      : 100% Bersih, Tanpa Crack Biner, Tanpa Virus" -ForegroundColor Green
+    Write-Host "  * Kompatibel    : WinRAR 5.x, 6.x, hingga WinRAR 7.x Terbaru" -ForegroundColor Yellow
     Write-Host "  * Efek          : Menghilangkan pop-up evaluasi 40 hari" -ForegroundColor Gray
     Write-Host "  * Fleksibilitas : Bebas dihapus kembali via Menu [2]" -ForegroundColor Gray
     Write-Host "================================================================" -ForegroundColor Cyan
@@ -203,7 +210,7 @@ function Show-SystemGuide {
 function Show-ExitBanner {
     Restore-Terminal
     Clear-Host
-    $finalStatus = if ((Get-WinRARState) -eq "LICENSED") { "Corporate Unlimited License" } else { "Evaluation Trial Mode" }
+    $finalStatus = if ((Get-WinRARState) -eq "LICENSED") { "Unlimited Company License" } else { "Evaluation Trial Mode" }
     Write-Host ""
     Write-Host "================================================================" -ForegroundColor Green
     Write-Host "  THANKS ORDER BY FOKUSKONTEN // TERIMA KASIH TELAH ORDER" -ForegroundColor Yellow

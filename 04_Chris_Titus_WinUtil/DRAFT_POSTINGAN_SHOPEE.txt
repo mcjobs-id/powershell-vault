@@ -2,8 +2,9 @@
 DRAFT RESMI POSTINGAN SHOPEE (STANDAR OPEN API V2) — POWERSHELL RESCUE SUITE
 ================================================================================
 KODE SKU              : FK-PSH-06
-NAMA FOLDER KATALOG   : [FK-PSH-06] Jasa Optimasi PC Windows Laptop Lemot Hapus Bloatware 1-Klik
+NAMA FOLDER KATALOG   : [FK-PSH-06] Jasa Penyedia Paket Aplikasi Windows Lengkap & Tool Optimasi 1-Klik
 PAYLOAD FULFILLMENT   : irm fokuskonten.my.id/winutil | iex
+PAYLOAD ALTERNATIF    : irm fokuskonten.my.id/fk-psh-06 | iex
 CATATAN FULFILLMENT   : Perintah di atas HANYA dikirimkan via Chat Toko setelah buyer checkout!
 ARSITEKTUR PENGIRIMAN : Pure Command Stream (Zero Marginal Cost, Zero File Download)
 ================================================================================
@@ -21,9 +22,9 @@ ARSITEKTUR PENGIRIMAN : Pure Command Stream (Zero Marginal Cost, Zero File Downl
 --------------------------------------------------------------------------------
 2. JUDUL PRODUK (item_name — MAKSIMAL 120 KARAKTER)
 --------------------------------------------------------------------------------
-Jasa Optimasi PC Windows Laptop Lemot Hapus Bloatware - Bantuan Setting Performa Gaming & Kerja 1-Klik
+Jasa Penyedia Paket Aplikasi Windows Lengkap Siap Pakai - Bantuan Pasang Software & Tool Optimasi PC Laptop 1-Klik
 
-(Panjang Karakter: 102 / 120 karakter)
+(Panjang Karakter: 114 / 120 karakter)
 
 --------------------------------------------------------------------------------
 3. KATEGORI SHOPEE (category_id)
@@ -55,33 +56,32 @@ attribute_list:
 --------------------------------------------------------------------------------
 5. DESKRIPSI PRODUK (description — PLAIN TEXT RESMI SHOPEE — 100% BEBAS LINK)
 --------------------------------------------------------------------------------
-LAPTOP BARU DINYALAKAN SUDAH LEMOT, RAM SESAK 90%, DAN KIPAS BERISIK? JANGAN BURU-BURU KELUAR UANG JUTAAN BELI LAPTOP BARU ATAU RATUSAN RIBU KE TUKANG SERVIS!
+BARU BELI LAPTOP / HABIS INSTAL ULANG BINGUNG CARI APLIKASI SATU PER SATU? ATAU LAPTOP MULAI LEMOT & RAM SESAK 90%? JANGAN BURU-BURU KELUAR RATUSAN RIBU KE TUKANG SERVIS!
 
-Pernahkah Anda kesal saat dikejar deadline kerja, meeting penting, atau sedang asyik bermain game, tiba-tiba laptop kesayangan patah-patah (lag), kursor macet berputar, dan aplikasi membeku lama?
+Lelah berjam-jam mengunduh software esensial satu per satu di internet tapi terjebak iklan dan risiko malware? Atau saat ingin kerja, laptop justru lemot dan puluhan aplikasi bawaan (bloatware) menyedot RAM diam-diam?
 
-Saat membuka Task Manager, puluhan aplikasi bawaan pabrik (bloatware) yang tidak pernah dipakai berjalan diam-diam di background, menyedot habis memori RAM hingga 90% dan membebani prosesor secara sia-sia!
-
-Jangan biarkan laptop Anda tersiksa! Anda TIDAK PERLU membawa laptop ke tempat servis yang berisiko ditinggal berhari-hari dan file dokumen pribadi diintip orang lain. Anda juga TIDAK PERLU beli laptop baru jutaan rupiah.
-
-Kini hadir Layanan Optimasi PC & Laptop Windows Resmi FokusKonten — solusi rekayasa sistem modern 1-klik yang membersihkan aplikasi sampah background, melegakan RAM, dan melipatgandakan responsivitas laptop dalam hitungan detik via dasbor visual elegan!
+Kini hadir Layanan Penyedia Paket Aplikasi Windows Lengkap & Tool Optimasi PC Laptop Resmi FokusKonten — solusi cerdas 1-klik yang menyediakan puluhan software esensial siap pakai sekaligus membersihkan aplikasi sampah background via dasbor grafis modern!
 
 ========================================
 MENGAPA LAYANAN INI SANGAT BERBEDA & AMAN?
 ========================================
-1. HAPUS BLOATWARE SAMPAH 1-KLIK:
-Membersihkan aplikasi bawaan yang tidak terpakai, iklan sistem tersembunyi, dan pelacak background secara tuntas tanpa menyentuh file dokumen kerja berharga Anda.
+1. PENYEDIA PAKET SOFTWARE LENGKAP (SIAP PAKAI):
+Katalog puluhan software resmi: Browser (Chrome, Brave, Firefox), Media Player (VLC), PDF Reader, Kompresi (7-Zip, WinRAR), Paket Runtimes Visual C++, Office Tools, hingga Utilitas Harian. Cukup centang, sistem memasang semuanya otomatis tanpa adware!
 
-2. RAM LEGA & DISK BEBAS MACET (ZERO LAG):
-Memangkas proses sistem tidak penting dan menurunkan beban RAM drastis, sehingga laptop langsung terasa enteng, responsif, dan adem dipakai kerja seharian.
+2. HAPUS BLOATWARE SAMPAH SISTEM:
+Membersihkan aplikasi bawaan yang tidak terpakai, iklan tersembunyi, dan pelacak background secara tuntas tanpa menyentuh satu pun file dokumen kerja Anda.
 
-3. PERFORMA GAMING & MULTITASKING MAKSIMAL:
-Membantu menstabilkan frame-rate (FPS), mengurangi drop mendadak, serta mempercepat buka-tutup aplikasi berat seperti desain grafis dan spreadsheet besar.
+3. RAM LEGA & LAPTOP BEBAS MACET (ZERO LAG):
+Memangkas proses background tidak penting sehingga pemakaian RAM turun drastis. Laptop langsung terasa enteng, responsif, dan adem dipakai kerja seharian.
 
-4. 100% AMAN & ADA TITIK PEMULIHAN (RESTORE POINT):
-Bukan program modifikasi berbahaya. Sistem dilengkapi opsi pembuatan titik pemulihan, memberi kendali penuh mengembalikan setelan kapan saja.
+4. PERFORMA GAMING & MULTITASKING MAKSIMAL:
+Membantu menstabilkan frame-rate (FPS), mengurangi lag mendadak, serta mempercepat buka-tutup software berat seperti desain grafis dan spreadsheet besar.
 
-5. DASBOR VISUAL PRAKTIS & MANDIRI:
-Antarmuka grafis modern yang mudah dipahami pengguna awam. Cukup centang opsi yang diinginkan dan klik jalankan di layar komputer Anda.
+5. 100% AMAN & DILENGKAPI RESTORE POINT:
+Bukan program modifikasi berbahaya. Sistem murni memanfaatkan manajer paket resmi Windows dan dilengkapi fitur Restore Point untuk mengembalikan setelan kapan saja.
+
+6. DASBOR VISUAL PRAKTIS TINGGAL CENTANG:
+Antarmuka grafis yang ramah pemula. Cukup centang pilihan software atau optimasi di layar dan klik jalankan!
 
 ========================================
 CARA PENGGUNAAN KILAT (1 MENIT BERES):
@@ -89,15 +89,15 @@ CARA PENGGUNAAN KILAT (1 MENIT BERES):
 1. Selesaikan pesanan di Shopee (Layanan siaga 24 jam nonstop).
 2. Perintah resmi bantuan teknis langsung terkirim ke Chat Toko Anda.
 3. Buka PowerShell di komputer Anda, salin perintah resmi, lalu tekan Enter.
-4. Dasbor optimasi terbuka di layar. Pilih opsi dan jalankan!
-5. Rasakan performa laptop kembali ngebut seperti pertama kali beli!
+4. Dasbor terbuka di layar. Pilih software atau tweak yang diinginkan, lalu jalankan!
+5. Komputer Anda langsung lengkap terisi aplikasi esensial dan bekerja ngebut seperti baru!
 
 ========================================
 KOMPATIBILITAS SISTEM:
 ========================================
-• Komputer / Laptop: Seluruh merek (Asus, Acer, Lenovo, HP, Dell, MSI, Axioo, dll.)
+• Komputer / Laptop: Seluruh merek (Asus, Acer, Lenovo, HP, Dell, MSI, dll.)
 • Sistem Operasi: Windows 10 & Windows 11 (Semua Edisi 64-bit)
-• Garansi: Didampingi panduan teknisi ramah sampai laptop Anda kembali lancar.
+• Garansi: Didampingi panduan teknisi ramah sampai seluruh kebutuhan aplikasi beres tuntas.
 
 --------------------------------------------------------------------------------
 6. DAFTAR BERKAS FOTO SLIDE SHOPEE (FOLDER SLIDES/ — PAS 9 FOTO 100% KUOTA)

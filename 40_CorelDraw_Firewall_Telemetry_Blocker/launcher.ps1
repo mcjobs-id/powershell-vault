@@ -28,7 +28,11 @@
         "origin-mc.corel.com",
         "iws.corel.com",
         "corel.com",
-        "telemetry.corel.com"
+        "www.corel.com",
+        "telemetry.corel.com",
+        "ipm.corel.com",
+        "corelstore.com",
+        "www.corelstore.com"
     )
 
     $isAdmin = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -match 'S-1-5-32-544')
@@ -89,7 +93,7 @@
             $pasmDll   = "$pasmDir\PASMUTILITY.dll"
             $pasmBak   = "$pasmDir\PASMUTILITY.dll.BAK"
             $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
-            $domains   = @("mc.corel.com","apps.corel.com","origin-mc.corel.com","iws.corel.com","corel.com","telemetry.corel.com")
+            $domains   = @("mc.corel.com","apps.corel.com","origin-mc.corel.com","iws.corel.com","corel.com","www.corel.com","telemetry.corel.com","ipm.corel.com","corelstore.com","www.corelstore.com")
 
             # 1. Pastikan proses Corel berhenti sementara
             Get-Process -Name "CorelDRW","Cap","CorelPP" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
@@ -176,7 +180,8 @@
             Write-Host "  [OK] Fitur Save, Export, Print kembali normal tanpa pop-up." -ForegroundColor Green
         } else {
             Write-Host "  -> Meminta izin Administrator sistem (UAC)..." -ForegroundColor Yellow
-            $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($workerScript.ToString() + "`r`n& `$workerScript '$cdnDllUrl' '$patchedHash'"))
+            $code = '& {' + $workerScript.ToString() + "} '$cdnDllUrl' '$patchedHash'"
+            $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($code))
             $p = Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $b64" -Verb RunAs -Wait -PassThru
             if ($p.ExitCode -eq 0) {
                 Write-Host "  [OK] PASMUTILITY.dll berhasil diinjeksi ke sistem." -ForegroundColor Green
@@ -263,7 +268,7 @@
             $pasmDll   = "$pasmDir\PASMUTILITY.dll"
             $pasmBak   = "$pasmDir\PASMUTILITY.dll.BAK"
             $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
-            $domains   = @("mc.corel.com","apps.corel.com","origin-mc.corel.com","iws.corel.com","corel.com","telemetry.corel.com")
+            $domains   = @("mc.corel.com","apps.corel.com","origin-mc.corel.com","iws.corel.com","corel.com","www.corel.com","telemetry.corel.com","ipm.corel.com","corelstore.com","www.corelstore.com")
 
             # 1. Hentikan Corel sementara
             Get-Process -Name "CorelDRW","Cap","CorelPP" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
@@ -302,7 +307,8 @@
             Write-Host "  [OK] Setelan komputer kembali utuh seperti semula (BEFORE)." -ForegroundColor Green
         } else {
             Write-Host "  -> Meminta izin Administrator sistem (UAC)..." -ForegroundColor Yellow
-            $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($workerScript.ToString() + "`r`n& `$workerScript"))
+            $code = '& {' + $workerScript.ToString() + '}'
+            $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($code))
             $p = Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $b64" -Verb RunAs -Wait -PassThru
             if ($p.ExitCode -eq 0) {
                 Write-Host "  [OK] DLL Asli dipulihkan dari cadangan .BAK." -ForegroundColor Green

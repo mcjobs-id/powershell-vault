@@ -80,17 +80,6 @@ function Get-OfficeState {
     return "UNLICENSED"
 }
 
-function Check-ElevationPrompt {
-    if (-not $isAdmin) {
-        Write-Host ""
-        Write-Host "  [!] PEMBERITAHUAN HAK AKSES SISTEM:" -ForegroundColor Yellow
-        Write-Host "      Disarankan menjalankan PowerShell sebagai Administrator:" -ForegroundColor White
-        Write-Host "      Klik kanan ikon PowerShell -> 'Run as administrator'" -ForegroundColor Cyan
-        Write-Host "      Melanjutkan eksekusi in-place pada terminal saat ini..." -ForegroundColor DarkGray
-        Write-Host ""
-    }
-}
-
 function Get-EnginePath {
     if ($PSScriptRoot) {
         $localCmd = Join-Path $PSScriptRoot "MAS_AIO.cmd"
@@ -160,52 +149,44 @@ function Show-Header {
     } else {
         Write-Host "  AKSES  : [ USER STANDAR ] (Mode In-Place 1 Terminal)" -ForegroundColor Yellow
     }
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkCyan
 }
 
 function Invoke-Action {
-    Check-ElevationPrompt
-
+    Clear-Host
     $engine = Get-EnginePath
-    Write-Host ""
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  SEDANG MENERAPKAN PEMULIHAN LISENSI MICROSOFT OFFICE..." -ForegroundColor Yellow
+    Write-Host "  FOKUSKONTEN // PEMASANGAN LISENSI PERMANEN OFFICE" -ForegroundColor Yellow
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     
-    # Eksekusi background 1 Terminal Mutlak (Zero Window Popup & Zero Terminal Clutter)
+    $arg = "/c `"`"$engine`" /ohook -qedit -el`""
     if ($isAdmin) {
-        Write-Host "  -> Menerapkan injeksi hook lisensi resmi di latar belakang..." -ForegroundColor Cyan
-        $arg = "/c `"`"$engine`" /ohook -qedit -el`""
+        Write-Host "  -> Memasang hook lisensi Office di latar belakang..." -ForegroundColor Cyan
         $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Wait -WindowStyle Hidden -PassThru
     } else {
-        Write-Host "  -> Menjalankan sesi pemulihan lisensi resmi (1 Terminal In-Place)..." -ForegroundColor Green
-        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows di layar)" -ForegroundColor DarkGray
-        Write-Host ""
-        $arg = "/c `"`"$engine`" /ohook -qedit -el`""
+        Write-Host "  -> Izin Sistem: Klik 'Yes' pada dialog konfirmasi Windows..." -ForegroundColor Yellow
         $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Verb RunAs -Wait -WindowStyle Hidden -PassThru
     }
 
     Write-Host ""
     $state = Get-OfficeState
     if ($state -eq "LICENSED") {
-        Write-Host "  [OK] PROSES PEMULIHAN OFFICE BERHASIL 100%!" -ForegroundColor Green
-        Write-Host "  Status  : Berlisensi Penuh (OHook Virtualization Aktif)" -ForegroundColor White
-        Write-Host "  Catatan : Seluruh notifikasi lisensi telah dinonaktifkan." -ForegroundColor Yellow
+        Write-Host "  [OK] LISENSI OFFICE BERHASIL DIPASANG PERMANEN!" -ForegroundColor Green
+        Write-Host "  Status : Berlisensi Penuh (Bebas Notifikasi Selamanya)" -ForegroundColor White
     } else {
-        Write-Host "  [OK] PROSES PEMULIHAN OFFICE SELESAI DENGAN SUKSES!" -ForegroundColor Green
-        Write-Host "  Banner notifikasi merah/kuning telah dinonaktifkan." -ForegroundColor White
+        Write-Host "  [OK] PROSES PEMULIHAN OFFICE SELESAI DIEKSEKUSI!" -ForegroundColor Green
+        Write-Host "  Status : Silakan buka Word / Excel untuk memastikan lisensi." -ForegroundColor White
     }
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
     try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 
 function Check-Diagnostics {
-    Check-ElevationPrompt
-    Write-Host ""
+    Clear-Host
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  DIAGNOSTIK STATUS LISENSI SISTEM (OFFICIAL ENGINE)" -ForegroundColor Yellow
+    Write-Host "  DIAGNOSTIK STATUS LISENSI MICROSOFT OFFICE (OSPP.VBS)" -ForegroundColor Yellow
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     
@@ -226,14 +207,13 @@ function Check-Diagnostics {
         }
     }
 
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
     try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 
 function Remove-License {
-    Check-ElevationPrompt
-    Write-Host ""
+    Clear-Host
     Write-Host "================================================================" -ForegroundColor Yellow
     Write-Host "  SEDANG MENCABUT LISENSI OHOOK (KEMBALIKAN KE SEMULA)..." -ForegroundColor Yellow
     Write-Host "================================================================" -ForegroundColor Yellow
@@ -243,12 +223,10 @@ function Remove-License {
     if ($engine) {
         $arg = "/c `"`"$engine`" /Ohook-Uninstall -qedit -el`""
         if ($isAdmin) {
-            Write-Host "  -> Mencabut lisensi Ohook di latar belakang (1 Terminal)..." -ForegroundColor Cyan
+            Write-Host "  -> Mencabut lisensi di latar belakang..." -ForegroundColor Cyan
             $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Wait -WindowStyle Hidden -PassThru
         } else {
-            Write-Host "  -> Menjalankan pencabutan lisensi resmi (1 Terminal In-Place)..." -ForegroundColor Green
-            Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows di layar)" -ForegroundColor DarkGray
-            Write-Host ""
+            Write-Host "  -> Izin Sistem: Klik 'Yes' pada dialog konfirmasi Windows..." -ForegroundColor Yellow
             $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Verb RunAs -Wait -WindowStyle Hidden -PassThru
         }
         Write-Host ""
@@ -258,8 +236,8 @@ function Remove-License {
         Write-Host "  [GAGAL] Komponen engine tidak ditemukan." -ForegroundColor Red
     }
 
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
     try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 
@@ -296,8 +274,8 @@ function Launch-OfficeApps {
         }
     }
 
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
     try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 

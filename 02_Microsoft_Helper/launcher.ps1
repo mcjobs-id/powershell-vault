@@ -133,45 +133,46 @@ function Show-Header {
     } else {
         Write-Host "  AKSES  : [ USER STANDAR ] (Mode In-Place 1 Terminal)" -ForegroundColor Yellow
     }
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkCyan
 }
 
 function Invoke-Action {
+    Clear-Host
     $engine = Get-EnginePath
-    Write-Host ""
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  SEDANG MENDAFTARKAN LISENSI DIGITAL WINDOWS (HWID)..." -ForegroundColor Yellow
+    Write-Host "  FOKUSKONTEN // PENDAFTARAN LISENSI DIGITAL WINDOWS HWID" -ForegroundColor Yellow
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  Menghubungkan ke layanan registrasi tiket ClipSVC..." -ForegroundColor White
-    Write-Host "  Proses berlangsung 10-30 detik. Jangan tutup jendela ini." -ForegroundColor DarkGray
     Write-Host ""
     
     # Eksekusi background 1 Terminal Mutlak (Zero Window Popup & Zero Terminal Clutter)
+    $arg = "/c `"`"$engine`" /hwid -qedit -el`""
     if ($isAdmin) {
         Write-Host "  -> Mendaftarkan tiket lisensi HWID di latar belakang..." -ForegroundColor Cyan
-        $arg = "/c `"`"$engine`" /hwid -qedit -el`""
         $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Wait -WindowStyle Hidden -PassThru
     } else {
-        Write-Host "  -> Menjalankan sesi registrasi lisensi resmi (1 Terminal In-Place)..." -ForegroundColor Green
-        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows di layar)" -ForegroundColor DarkGray
-        Write-Host ""
-        $arg = "/c `"`"$engine`" /hwid -qedit -el`""
+        Write-Host "  -> Izin Sistem: Klik 'Yes' pada dialog konfirmasi Windows..." -ForegroundColor Yellow
         $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Verb RunAs -Wait -WindowStyle Hidden -PassThru
     }
 
     Write-Host ""
-    Write-Host "  [OK] PROSES REGISTRASI LISENSI WINDOWS SELESAI!" -ForegroundColor Green
-    Write-Host "  Lisensi digital HWID terikat permanen ke motherboard PC." -ForegroundColor White
-    Write-Host "  Tanda air (watermark) pojok kanan bawah otomatis hilang." -ForegroundColor Green
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    $state = Get-WindowsLicenseState
+    if ($state -eq "LICENSED") {
+        Write-Host "  [OK] LISENSI DIGITAL WINDOWS BERHASIL DIDAFTARKAN!" -ForegroundColor Green
+        Write-Host "  Status  : Berlisensi Permanen HWID (Motherboard Terikat)" -ForegroundColor White
+        Write-Host "  Catatan : Tanda air (watermark) otomatis dinonaktifkan." -ForegroundColor Yellow
+    } else {
+        Write-Host "  [OK] OPERASI REGISTRASI TIKET SELESAI DIEKSEKUSI!" -ForegroundColor Green
+        Write-Host "  Status  : Silakan periksa status aktivasi di Windows Settings." -ForegroundColor White
+    }
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
     try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 
 function Check-Diagnostics {
-    Write-Host ""
+    Clear-Host
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  DIAGNOSTIK STATUS LISENSI WINDOWS (OFFICIAL SLMGR)" -ForegroundColor Yellow
+    Write-Host "  DIAGNOSTIK STATUS LISENSI WINDOWS (SLMGR.VBS)" -ForegroundColor Yellow
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     
@@ -187,13 +188,13 @@ function Check-Diagnostics {
         }
     }
 
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
     try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 
 function Remove-License {
-    Write-Host ""
+    Clear-Host
     Write-Host "================================================================" -ForegroundColor Yellow
     Write-Host "  SEDANG MENGHAPUS KUNCI LISENSI WINDOWS (RESET TOTAL)..." -ForegroundColor Yellow
     Write-Host "================================================================" -ForegroundColor Yellow
@@ -205,9 +206,7 @@ function Remove-License {
             Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /upk" -Wait -WindowStyle Hidden
             Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /cpky" -Wait -WindowStyle Hidden
         } else {
-            Write-Host "  -> Menjalankan pencabutan kunci lisensi (1 Terminal In-Place)..." -ForegroundColor Green
-            Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows di layar)" -ForegroundColor DarkGray
-            Write-Host ""
+            Write-Host "  -> Izin Sistem: Klik 'Yes' pada dialog konfirmasi Windows..." -ForegroundColor Yellow
             Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /upk" -Verb RunAs -Wait -WindowStyle Hidden
             Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /cpky" -Verb RunAs -Wait -WindowStyle Hidden
         }
@@ -218,8 +217,8 @@ function Remove-License {
         Write-Host "  [GAGAL] Utilitas slmgr.vbs tidak ditemukan di sistem." -ForegroundColor Red
     }
 
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
     try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 
@@ -233,8 +232,8 @@ function Open-ActivationSettings {
         Write-Host "  [PERINGATAN] Tidak dapat membuka ms-settings:activation." -ForegroundColor Yellow
     }
 
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
     try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 

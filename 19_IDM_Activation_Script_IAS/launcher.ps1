@@ -345,26 +345,19 @@ function Download-And-Install-IDM {
     $activeMirrorName = ""
 
     foreach ($m in $mirrors) {
-        Write-Host "  > Menghubungi $($m.Name)... " -ForegroundColor Cyan -NoNewline
+        Write-Host "  > Menghubungi $($m.Name)..." -ForegroundColor Cyan
+        Write-Host "  > Sumber Server : $($m.Url)" -ForegroundColor Gray
+        Write-Host "  > Mengunduh biner resmi (12.5 MB) via jaringan internet..." -ForegroundColor Yellow
+        Write-Host ""
         try {
             if (Test-Path $curl) {
-                $status = (& $curl -s -o NUL -w "%{http_code}" --connect-timeout 4 $m.Url)
-                if ($status -eq "200") {
-                    Write-Host "[TERHUBUNG]" -ForegroundColor Green
-                    Write-Host "  > Sumber Server : $($m.Url)" -ForegroundColor Gray
-                    Write-Host "  > Mengunduh berkas biner (12.5 MB) via jaringan internet..." -ForegroundColor Yellow
-                    Write-Host ""
-                    & $curl -# -L --connect-timeout 10 --retry 2 -o $setupFile $m.Url
-                    if ((Test-Path $setupFile) -and ((Get-Item $setupFile).Length -gt 10000000)) {
-                        $downloadSuccess = $true
-                        $activeMirrorName = $m.Name
-                        break
-                    }
-                } else {
-                    Write-Host "[LEWATI - Status: $status]" -ForegroundColor DarkGray
+                & $curl -# -L --connect-timeout 10 --retry 1 -o $setupFile $m.Url
+                if (($LASTEXITCODE -eq 0) -and (Test-Path $setupFile) -and ((Get-Item $setupFile).Length -gt 10000000)) {
+                    $downloadSuccess = $true
+                    $activeMirrorName = $m.Name
+                    break
                 }
             } else {
-                Write-Host "[TERHUBUNG]" -ForegroundColor Green
                 $wc = New-Object System.Net.WebClient
                 $wc.DownloadFile($m.Url, $setupFile)
                 if ((Test-Path $setupFile) -and ((Get-Item $setupFile).Length -gt 10000000)) {
@@ -374,7 +367,7 @@ function Download-And-Install-IDM {
                 }
             }
         } catch {
-            Write-Host "[GAGAL]" -ForegroundColor DarkGray
+            Write-Host "  [!] Mirror tidak merespons, beralih ke mirror cadangan..." -ForegroundColor DarkGray
         }
     }
 

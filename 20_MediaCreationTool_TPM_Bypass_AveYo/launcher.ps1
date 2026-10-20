@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
 # Layanan Jasa : SUITE BYPASS SYARAT INSTALASI & UPDATE WINDOWS 11 (AVEYO)
 # Modul SKU    : FK-PSH-05 (Official Rescue Suite)
@@ -8,9 +8,7 @@
 # Fitur        : Bypass TPM 2.0, Secure Boot, CPU Lawas, Undo 1-Klik, Diagnostik
 # ==============================================================================
 
-param(
-    [string]$Order = ""
-)
+$Order = if ($args -and $args.Count -gt 0) { $args[0] } else { "" }
 
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
@@ -30,7 +28,7 @@ if (-not $global:fkOrderNumber) {
     }
 }
 
-$ErrorActionPreference = "Continue"
+$ErrorActionPreference = "SilentlyContinue"
 $ProgressPreference    = "SilentlyContinue"
 
 try {
@@ -44,7 +42,7 @@ function Restore-Terminal {
     try {
         $Host.UI.RawUI.ForegroundColor = $origFg
         $Host.UI.RawUI.BackgroundColor = $origBg
-        [Console]::CursorVisible = $true
+        try { [Console]::CursorVisible = $true } catch {}
     } catch {}
 }
 
@@ -80,9 +78,9 @@ function Show-CompactHeader {
     Write-Host "  Layanan Jasa Pasang Windows 11 Bypass TPM & Secure Boot" -ForegroundColor White
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host "  ORDER    : $global:fkOrderNumber" -ForegroundColor Green
-    Write-Host "  TIKET    : [FK-PSH-05] Windows 11 TPM & Hardware Bypass Suite" -ForegroundColor DarkCyan
+    Write-Host "  TIKET    : [FK-PSH-05] Windows 11 TPM & Hardware Bypass Suite" -ForegroundColor Cyan
     Write-Host "  SISTEM   : [ $($hw.OS) ]" -ForegroundColor White
-    Write-Host "  PROSESOR : [ $($hw.CPU) ]" -ForegroundColor DarkGray
+    Write-Host "  PROSESOR : [ $($hw.CPU) ]" -ForegroundColor Gray
 
     if ($bStatus -eq "INSTALLED") {
         Write-Host "  BYPASS   : [ TERPASANG / AKTIF ] (PC Bebas Syarat TPM & CPU)" -ForegroundColor Green
@@ -295,8 +293,8 @@ try {
         Write-Host "  [2] Cabut / Lepas Bypass (Kembalikan ke Setelan Bawaan / Undo)" -ForegroundColor Yellow
         Write-Host "  [3] Cek Diagnostik Kesiapan Perangkat Keras PC" -ForegroundColor Cyan
         Write-Host "  [4] Buka Windows Update di Layar (Mulai Update)" -ForegroundColor White
-        Write-Host "  [5] Toko Digital FokusKonten (Buka Web)" -ForegroundColor DarkCyan
-        Write-Host "  [0] Selesai & Keluar" -ForegroundColor DarkGray
+        Write-Host "  [5] Toko Digital FokusKonten (Buka Web)" -ForegroundColor Cyan
+        Write-Host "  [0] Selesai & Keluar" -ForegroundColor Gray
         Write-Host "================================================================" -ForegroundColor Cyan
         Write-Host ""
         Write-Host -NoNewline "  Pilihan Anda [1, 2, 3, 4, 5, 0] : " -ForegroundColor Yellow

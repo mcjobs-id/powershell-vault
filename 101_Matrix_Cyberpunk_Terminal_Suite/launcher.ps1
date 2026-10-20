@@ -1,23 +1,33 @@
 # ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 101: CYBER TERMINAL & MATRIX HACKER SUITE
-# Engine   : Native In-Memory Dynamic Terminal Simulation Engine
+# Layanan Jasa : SETUP TAMPILAN TERMINAL MATRIX & CYBER SIMULATOR
+# Modul SKU    : FK-PSH-101 (Official Rescue Suite)
+# Engineer     : FokusKonten Enterprise Automation & Cybersecurity Systems
+# Arsitektur   : Native In-Memory Dynamic Terminal Simulation (Zero Binary Risk)
 # ==============================================================================
+
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
 } catch {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 }
 
 $ErrorActionPreference = "Continue"
-$ProgressPreference = "SilentlyContinue"
+$ProgressPreference    = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // CYBER TERMINAL & MATRIX HACKER SUITE"
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // ENTERPRISE TERMINAL MODDING & CYBER RESCUE SUITE"
 } catch {}
 
 $origFg = $Host.UI.RawUI.ForegroundColor
 $origBg = $Host.UI.RawUI.BackgroundColor
+
+# State Palette Default: Green Matrix
+$global:themePrimary   = "Green"
+$global:themeSecondary = "DarkGreen"
+$global:themeHighlight = "White"
+$global:themeAccent    = "Cyan"
+$global:themeName      = "Emerald Matrix (Default)"
 
 function Restore-Terminal {
     try {
@@ -27,67 +37,104 @@ function Restore-Terminal {
     } catch {}
 }
 
-function Show-Header {
+function Show-CinematicOpening {
     Clear-Host
-    Write-Host "==================================================================" -ForegroundColor Green
-    Write-Host "  FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE" -ForegroundColor Green
-    Write-Host "  Cyber Terminal & Matrix Hacker Simulation Suite" -ForegroundColor Yellow
-    Write-Host "==================================================================" -ForegroundColor Green
+    try { [Console]::CursorVisible = $false } catch {}
+
     Write-Host ""
-    Write-Host "  Solusi visual interaktif 1-klik untuk presentasi, live streaming," -ForegroundColor White
-    Write-Host "  latar konten video edukasi, dan modding terminal profesional." -ForegroundColor Gray
-    Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  RINGKASAN MODUL:" -ForegroundColor White
-    Write-Host "  * Layanan        : MATRIX CYBERPUNK TERMINAL SIMULATOR" -ForegroundColor Cyan
-    Write-Host "  * Status Lisensi : AKTIF - MENGIKUTI KEBIJAKAN RESMI FOKUSKONTEN" -ForegroundColor Green
-    Write-Host "  * Metode Inti    : In-Memory Native PowerShell (Zero Third-Party Binary)" -ForegroundColor White
-    Write-Host "  * Tingkat Risiko : 0% (100% Aman, Ringan, Tidak Mengubah Sistem)" -ForegroundColor Green
-    Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  PILIHAN MODEL ANIMASI (LOOPING TINGGAL TEKAN TOMBOL UNTUK KEMBALI):" -ForegroundColor White
+    Write-Host " [BOOT] Inisialisasi Terminal Cyber Enterprise FokusKonten..." -ForegroundColor DarkGray
+    Start-Sleep -Milliseconds 80
+    Write-Host " [HOST] Arsitektur Sistem : $([System.Environment]::OSVersion.VersionString) (x64 Native)" -ForegroundColor DarkGray
+    Start-Sleep -Milliseconds 80
+    Write-Host " [AUTH] Verifikasi Tiket  : VALID // ID TIKET: [FK-PSH-101]" -ForegroundColor DarkGray
+    Start-Sleep -Milliseconds 80
+    Write-Host " [NET]  Jalur Terhubung   : http://127.0.0.1:8090" -ForegroundColor DarkGray
+    Start-Sleep -Milliseconds 100
+
     Write-Host ""
-    Write-Host "      [1] Matrix Rain Hijau Klasik (Digital Code Stream Vertikal)" -ForegroundColor Green
-    Write-Host "          Hujan kode digital mengalir deras dengan karakter dinamis." -ForegroundColor Gray
+    Write-Host -NoNewline " [LOAD] Membuka Modul Visual Terminal: [" -ForegroundColor DarkCyan
+    for ($i = 0; $i -lt 30; $i++) {
+        Write-Host -NoNewline "=" -ForegroundColor Green
+        Start-Sleep -Milliseconds 12
+    }
+    Write-Host "] SIAP 100%" -ForegroundColor White
+    Start-Sleep -Milliseconds 200
+
+    # Quick Cascade Intro
+    Clear-Host
+    $w = 80
+    try { $w = [Console]::WindowWidth } catch {}
+    $rnd = New-Object System.Random
+    for ($line = 0; $line -lt 4; $line++) {
+        $hexLine = ""
+        for ($k = 0; $k -lt [Math]::Min(36, [int]($w/2)); $k++) {
+            $hexLine += ($rnd.Next(0, 255)).ToString("X2") + " "
+        }
+        Write-Host " :: INITIALIZING STREAM :: $hexLine" -ForegroundColor DarkGreen
+        Start-Sleep -Milliseconds 25
+    }
+    Start-Sleep -Milliseconds 100
+    Clear-Host
+}
+
+function Show-GrandBanner {
+    Clear-Host
     Write-Host ""
-    Write-Host "      [2] Cyberpunk Data Stream (Cyan & Magenta High-Speed Hex Dump)" -ForegroundColor Cyan
-    Write-Host "          Aliran blok memori, paket data, dan protokol jaringan cepat." -ForegroundColor Gray
+    # Banner FOKUSKONTEN 11 Karakter Lengkap (Anti-Wrap)
+    Write-Host "  ██████╗ ██████╗ ██╗  ██╗██╗   ██╗███████╗██╗  ██╗ ██████╗ ███╗  ██╗████████╗███████╗███╗  ██╗" -ForegroundColor $global:themePrimary
+    Write-Host "  ██╔═══╝██╔═══██╗██║ ██╔╝██║   ██║██╔════╝██║ ██╔╝██╔═══██╗████╗ ██║╚══██╔══╝██╔════╝████╗ ██║" -ForegroundColor $global:themePrimary
+    Write-Host "  █████╗ ██║   ██║█████╔╝ ██║   ██║███████╗█████╔╝ ██║   ██║██╔██╗██║   ██║   █████╗  ██╔██╗██║" -ForegroundColor $global:themePrimary
+    Write-Host "  ██╔══╝ ██║   ██║██╔═██╗ ██║   ██║╚════██║██╔═██╗ ██║   ██║██║╚████║   ██║   ██╔══╝  ██║╚████║" -ForegroundColor $global:themeSecondary
+    Write-Host "  ██║    ╚██████╔╝██║  ██╗╚██████╔╝███████║██║  ██╗╚██████╔╝██║ ╚███║   ██║   ███████╗██║ ╚███║" -ForegroundColor $global:themeSecondary
+    Write-Host "  ╚═╝     ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚══╝   ╚═╝   ╚══════╝╚═╝  ╚══╝" -ForegroundColor $global:themeSecondary
+    Write-Host "               ENTERPRISE CYBERSECURITY & TERMINAL RESCUE INFRASTRUCTURE               " -ForegroundColor $global:themeAccent
+    Write-Host " ========================================================================================" -ForegroundColor $global:themeSecondary
+    Write-Host "  LAYANAN JASA : SETUP TAMPILAN TERMINAL MATRIX & CYBER SIMULATOR                         " -ForegroundColor White
+    Write-Host "  NOMOR TIKET  : [FK-PSH-101] (ASISTENSI RESMI FOKUSKONTEN)                               " -ForegroundColor Yellow
+    Write-Host "  STATUS JASA  : AKTIF // PENGERJAAN MANDIRI BERBANTUAN OTOMASI RESMI                     " -ForegroundColor $global:themePrimary
+    Write-Host "  TEMA AKTIF   : $global:themeName                                                       " -ForegroundColor Cyan
+    Write-Host " ========================================================================================" -ForegroundColor $global:themeSecondary
+    Write-Host "  PILIHAN MENU LAYANAN:" -ForegroundColor White
     Write-Host ""
-    Write-Host "      [3] Red Alert Breach Simulator (Simulasi Alarm & Penetrasi Cyber)" -ForegroundColor Red
-    Write-Host "          Simulasi alarm intrusi, bypass firewall, dan visual hack dramatis." -ForegroundColor Gray
+    Write-Host "      [1] Animasi Hujan Matrix (Hijau Klasik)" -ForegroundColor $global:themePrimary
+    Write-Host "      [2] Simulasi Hacking Terminal (Nmap & Cyber Tools)" -ForegroundColor Red
+    Write-Host "      [3] Aliran Kode Data Cepat (Cyberpunk Stream)" -ForegroundColor Cyan
+    Write-Host "      [4] Monitor Layar Komputer (CPU, RAM & Disk Sci-Fi)" -ForegroundColor Yellow
+    Write-Host "      [5] Ganti Warna Terminal (Hijau / Biru / Merah / Kuning)" -ForegroundColor Magenta
+    Write-Host "      [6] Putar Otomatis Nonstop (Looping Bergantian)" -ForegroundColor White
     Write-Host ""
-    Write-Host "      [4] Realtime Cyber HUD System Monitor (Sci-Fi Hardware Gauges)" -ForegroundColor Yellow
-    Write-Host "          Pemantau metrik CPU, RAM, Disk, dan Uptime bergaya kokpit hacker." -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "      [0] Keluar (Kembali ke Terminal Normal)" -ForegroundColor DarkGray
-    Write-Host "==================================================================" -ForegroundColor Green
+    Write-Host "      [0] Selesai & Keluar Layanan" -ForegroundColor DarkGray
+    Write-Host " ========================================================================================" -ForegroundColor $global:themeSecondary
     Write-Host ""
 }
 
 function Get-UserChoice {
     try {
-        Write-Host -NoNewline "  Pilihan Model [1, 2, 3, 4, 0] (Tekan Enter untuk [1]) : " -ForegroundColor Green
+        Write-Host -NoNewline "  Pilih Menu [1, 2, 3, 4, 5, 6, 0] (Enter untuk [1]) : " -ForegroundColor $global:themePrimary
         while ($true) {
             $k = [Console]::ReadKey($true)
             if ($k.Key -eq [ConsoleKey]::Enter) {
-                Write-Host "1" -ForegroundColor Green
+                Write-Host "1" -ForegroundColor $global:themePrimary
                 return "1"
             }
             $c = $k.KeyChar.ToString()
-            if ($c -in @('1','2','3','4','0')) {
-                Write-Host $c -ForegroundColor Green
+            if ($c -in @('1','2','3','4','5','6','0')) {
+                Write-Host $c -ForegroundColor $global:themePrimary
                 return $c
             }
         }
     } catch {
-        $c = Read-Host "  Pilihan Model [1, 2, 3, 4, 0] (Tekan Enter untuk [1])"
+        $c = Read-Host "  Pilih Menu [1, 2, 3, 4, 5, 6, 0] (Enter untuk [1])"
         if ([string]::IsNullOrWhiteSpace($c)) { return "1" }
         return $c.Trim()
     }
 }
 
-function Run-MatrixRain {
+# --- MODEL 1: ANIMASI HUJAN MATRIX ---
+function Run-MatrixRain ([int]$durationSeconds = 0) {
     Clear-Host
     try { [Console]::CursorVisible = $false } catch {}
-    
+
     $width = 80
     $height = 25
     try {
@@ -103,15 +150,16 @@ function Run-MatrixRain {
         $drops[$i] = $rnd.Next(-$height, 0)
     }
 
-    Write-Host "=== TEKAN TOMBOL APAPUN DI KEYBOARD UNTUK BERHENTI & KEMBALI KE MENU ===" -ForegroundColor Yellow
-    Start-Sleep -Milliseconds 800
+    Write-Host "=== [1] ANIMASI HUJAN MATRIX AKTIF ===" -ForegroundColor $global:themePrimary
+    Write-Host "Tekan sembarang tombol di keyboard untuk kembali ke menu..." -ForegroundColor Yellow
+    Start-Sleep -Milliseconds 600
     Clear-Host
 
+    $startTime = Get-Date
+
     while ($true) {
-        if ([Console]::KeyAvailable) {
-            $null = [Console]::ReadKey($true)
-            break
-        }
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        if ($durationSeconds -gt 0 -and ((Get-Date) - $startTime).TotalSeconds -ge $durationSeconds) { break }
 
         try {
             $w = [Console]::WindowWidth
@@ -129,7 +177,7 @@ function Run-MatrixRain {
                 try {
                     [Console]::SetCursorPosition($x, $y)
                     $c = $chars[$rnd.Next(0, $chars.Length)]
-                    Write-Host -NoNewline $c -ForegroundColor White
+                    Write-Host -NoNewline $c -ForegroundColor $global:themeHighlight
                 } catch {}
             }
 
@@ -137,7 +185,7 @@ function Run-MatrixRain {
                 try {
                     [Console]::SetCursorPosition($x, $y - 1)
                     $c = $chars[$rnd.Next(0, $chars.Length)]
-                    Write-Host -NoNewline $c -ForegroundColor Green
+                    Write-Host -NoNewline $c -ForegroundColor $global:themePrimary
                 } catch {}
             }
 
@@ -160,21 +208,119 @@ function Run-MatrixRain {
     Restore-Terminal
 }
 
-function Run-CyberpunkStream {
+# --- MODEL 2: SIMULASI HACKING TERMINAL (KARYA MUHARI) ---
+function Run-RedTeamC2Simulator ([int]$durationSeconds = 0) {
     Clear-Host
-    Write-Host "=== TEKAN TOMBOL APAPUN DI KEYBOARD UNTUK BERHENTI & KEMBALI KE MENU ===" -ForegroundColor Yellow
-    Start-Sleep -Milliseconds 800
+    try { [Console]::CursorVisible = $false } catch {}
+    Write-Host "=== [2] SIMULASI HACKING TERMINAL AKTIF ===" -ForegroundColor Red
+    Write-Host "Tekan sembarang tombol di keyboard untuk kembali ke menu..." -ForegroundColor Yellow
+    Start-Sleep -Milliseconds 600
+    Clear-Host
+
+    $rnd = New-Object System.Random
+    $startTime = Get-Date
+
+    while ($true) {
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        if ($durationSeconds -gt 0 -and ((Get-Date) - $startTime).TotalSeconds -ge $durationSeconds) { break }
+
+        $targetIp = "$($rnd.Next(10,192)).$($rnd.Next(1,250)).$($rnd.Next(1,250)).$($rnd.Next(1,250))"
+        $targetHost = "server-$($rnd.Next(100,999)).network.internal"
+
+        Clear-Host
+        Write-Host "====================================================================================" -ForegroundColor DarkGreen
+        Write-Host " [SIMULASI CYBER TERMINAL] - REKAYASA PENETRASI JARINGAN OTOMATIS" -ForegroundColor Green
+        Write-Host " TARGET : $targetHost ($targetIp) | STATUS: PEMINDAIAN REALTIME" -ForegroundColor Yellow
+        Write-Host " TOOLS  : NMAP 7.95, SQLMAP 1.7, COBALT STRIKE, HASHCAT 6.2, GDB PWNDBG" -ForegroundColor Cyan
+        Write-Host "====================================================================================" -ForegroundColor DarkGreen
+        Write-Host ""
+
+        # 1. NMAP SCAN
+        Write-Host "[*] TAHAP 1: PEMINDAIAN PORT & LAYANAN (NMAP 7.95)" -ForegroundColor Yellow
+        Write-Host "    Scanning target $targetIp..." -ForegroundColor DarkGray
+        Start-Sleep -Milliseconds 250
+        Write-Host "    PORT     STATE SERVICE       VERSION" -ForegroundColor White
+        Write-Host "    22/tcp   open  ssh           OpenSSH 9.2p1" -ForegroundColor Green
+        Write-Host "    80/tcp   open  http          nginx/1.22.1" -ForegroundColor Green
+        Write-Host "    443/tcp  open  ssl/http      nginx/1.22.1" -ForegroundColor Green
+        Write-Host "    8080/tcp open  http-proxy    Apache Tomcat/9.0.65" -ForegroundColor Green
+        Write-Host ""
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        Start-Sleep -Milliseconds 450
+
+        # 2. SQLMAP INJECTION
+        Write-Host "[*] TAHAP 2: PENGUJIAN KERENTANAN DATABASE (SQLMAP 1.7)" -ForegroundColor Yellow
+        Write-Host "    [INFO] Memeriksa parameter URL target..." -ForegroundColor DarkGray
+        Start-Sleep -Milliseconds 200
+        Write-Host "    [+] Ditemukan celah: UNION Query Injection (4 Kolom)" -ForegroundColor Green
+        Write-Host "    [+] Database aktif: PostgreSQL 15.2 (Linux x86_64)" -ForegroundColor Green
+        Write-Host "    [+] Berhasil mengekstrak skema tabel pengguna [OK]" -ForegroundColor Green
+        Write-Host ""
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        Start-Sleep -Milliseconds 450
+
+        # 3. C2 BEACON
+        Write-Host "[*] TAHAP 3: AKSES KONSOL JARAK JAUH (C2 BEACON)" -ForegroundColor Yellow
+        Write-Host "    [*] Mengirimkan paket terenkripsi AES-256..." -ForegroundColor DarkGray
+        Start-Sleep -Milliseconds 250
+        Write-Host "    [+] Sesi aktif terhubung: [BEACON-ID: #$($rnd.Next(10000,99999))]" -ForegroundColor Green
+        Write-Host "    [+] Hak akses sistem: Administrator / Root [CONFIRMED]" -ForegroundColor Green
+        Write-Host ""
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        Start-Sleep -Milliseconds 450
+
+        # 4. HASHCAT CRACKING
+        Write-Host "[*] TAHAP 4: DEKRIPSI KATA SANDI (HASHCAT 6.2)" -ForegroundColor Yellow
+        Write-Host "    Memulai benchmarking GPU NVIDIA RTX..." -ForegroundColor DarkGray
+        Start-Sleep -Milliseconds 200
+        for ($p = 20; $p -le 100; $p += 25) {
+            $rate = ($rnd.Next(13500, 15500) / 1000).ToString("N2")
+            Write-Host ("`r    [PROGRES] Dekripsi SHA-512 [" + $p + "%] | Kecepatan: " + $rate + " GH/s ") -NoNewline -ForegroundColor Cyan
+            Start-Sleep -Milliseconds 120
+        }
+        Write-Host ""
+        Write-Host "    [+] Kata sandi berhasil dipecahkan: admin:Pass2026! [MATCHED]" -ForegroundColor Green
+        Write-Host ""
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        Start-Sleep -Milliseconds 450
+
+        # 5. GDB PWNDBG
+        Write-Host "[*] TAHAP 5: VERIFIKASI INTEGRITAS MEMORI (GDB PWNDBG)" -ForegroundColor Yellow
+        Write-Host "    pwndbg> checksec: CANARY=ON, NX=ON, PIE=ON, RELRO=FULL" -ForegroundColor DarkGray
+        Start-Sleep -Milliseconds 250
+        Write-Host "    [+] ROP chain terpasang pada memori sistem [SUKSES]" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "====================================================================================" -ForegroundColor DarkGreen
+        Write-Host " [SELESAI] SIKLUS SIMULASI SELESAI -- MEMULAI TARGET BERIKUTNYA..." -ForegroundColor Green
+        Write-Host " (Tekan sembarang tombol di keyboard untuk kembali ke menu)" -ForegroundColor Yellow
+        Write-Host "====================================================================================" -ForegroundColor DarkGreen
+        
+        for ($cd = 3; $cd -ge 1; $cd--) {
+            if ([Console]::KeyAvailable) { break }
+            Write-Host -NoNewline ("`r Target berikutnya dalam " + $cd + " detik... ") -ForegroundColor Cyan
+            Start-Sleep -Milliseconds 1000
+        }
+        Write-Host ""
+    }
+
+    Restore-Terminal
+}
+
+# --- MODEL 3: ALIRAN KODE DATA CEPAT ---
+function Run-CyberpunkStream ([int]$durationSeconds = 0) {
+    Clear-Host
+    Write-Host "=== [3] ALIRAN KODE DATA CEPAT AKTIF ===" -ForegroundColor $global:themeAccent
+    Write-Host "Tekan sembarang tombol di keyboard untuk kembali ke menu..." -ForegroundColor Yellow
+    Start-Sleep -Milliseconds 600
     Clear-Host
 
     $rnd = New-Object System.Random
     $tags = @("NET-IN", "SYS-CORE", "MEM-DUMP", "CRYPTO-AES", "PROXY-NODE", "ROUTER-RX", "SOCKET-TCP", "AUTH-TOKEN")
-    $colors = @("Cyan", "DarkCyan", "Magenta", "White", "DarkGray")
+    $startTime = Get-Date
 
     while ($true) {
-        if ([Console]::KeyAvailable) {
-            $null = [Console]::ReadKey($true)
-            break
-        }
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        if ($durationSeconds -gt 0 -and ((Get-Date) - $startTime).TotalSeconds -ge $durationSeconds) { break }
 
         $tag = $tags[$rnd.Next(0, $tags.Length)]
         $addr = "0x" + ($rnd.Next(0x1000, 0xFFFF)).ToString("X4") + ":" + ($rnd.Next(0x1000, 0xFFFF)).ToString("X4")
@@ -184,10 +330,10 @@ function Run-CyberpunkStream {
             $bytes += ($rnd.Next(0, 255)).ToString("X2") + " "
         }
 
-        Write-Host -NoNewline "[$tag] " -ForegroundColor Cyan
+        Write-Host -NoNewline "[$tag] " -ForegroundColor $global:themeAccent
         Write-Host -NoNewline "$addr " -ForegroundColor DarkGray
         Write-Host -NoNewline "IP:$ip " -ForegroundColor White
-        Write-Host -NoNewline "DATA:[$bytes] " -ForegroundColor DarkCyan
+        Write-Host -NoNewline "DATA:[$bytes] " -ForegroundColor $global:themeSecondary
         $stat = if ($rnd.Next(0, 10) -gt 2) { "SYN_ACK_OK" } else { "BYPASS_ROUTE" }
         Write-Host "$stat" -ForegroundColor Magenta
 
@@ -197,79 +343,22 @@ function Run-CyberpunkStream {
     Restore-Terminal
 }
 
-function Run-RedAlertBreach {
-    Clear-Host
-    Write-Host "=== TEKAN TOMBOL APAPUN DI KEYBOARD UNTUK BERHENTI & KEMBALI KE MENU ===" -ForegroundColor Yellow
-    Start-Sleep -Milliseconds 800
-    Clear-Host
-
-    $rnd = New-Object System.Random
-    $nodes = @("GATEWAY_ROOT", "FIREWALL_KRNL", "SEC_VAULT_NODE", "AUTH_KEYSTONE", "DATA_STORAGE_C")
-    $steps = @(
-        "Initiating target connection handshake...",
-        "Probing defensive vector on open ports [80, 443, 8080, 9222]...",
-        "Payload staging: Exploit buffer injection into memory space...",
-        "Bypassing behavioral heuristics and active guard policies...",
-        "Elevating token privileges: SeDebugPrivilege -> ENABLED",
-        "Breaching core system security perimeter...",
-        "Root authorization key acquired: [0xCAFEBABE-FOKUSKONTEN]",
-        "Extracting target payload stream...",
-        "Access Granted. System under operator control."
-    )
-
-    while ($true) {
-        if ([Console]::KeyAvailable) {
-            $null = [Console]::ReadKey($true)
-            break
-        }
-
-        Clear-Host
-        Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" -ForegroundColor Red
-        Write-Host "  [!] RED ALERT: CYBER PENETRATION SEQUENCE ACTIVE [!]" -ForegroundColor Yellow
-        Write-Host "  TARGET NODE: $($nodes[$rnd.Next(0, $nodes.Length)]) | PROTOCOL: ZERO-DAY SIM" -ForegroundColor Red
-        Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" -ForegroundColor Red
-        Write-Host ""
-
-        foreach ($step in $steps) {
-            if ([Console]::KeyAvailable) { break }
-            Write-Host -NoNewline "  [*] " -ForegroundColor DarkRed
-            Write-Host -NoNewline "$step " -ForegroundColor White
-            Start-Sleep -Milliseconds ($rnd.Next(80, 200))
-            Write-Host "[OK]" -ForegroundColor Green
-        }
-
-        Write-Host ""
-        Write-Host "  >>> BREACH CONFIRMED - OPERATOR CONTROL ACTIVE <<<" -ForegroundColor Red
-        Write-Host ""
-        
-        for ($i = 0; $i -lt 15; $i++) {
-            if ([Console]::KeyAvailable) { break }
-            $hex = ($rnd.Next(10000000, 99999999)).ToString("X8")
-            Write-Host "  STREAM_DUMP: 0x$hex 0x$($rnd.Next(1000,9999).ToString('X4')) :: INTEGRITY 100%" -ForegroundColor DarkRed
-            Start-Sleep -Milliseconds 50
-        }
-
-        Start-Sleep -Milliseconds 1000
-    }
-
-    Restore-Terminal
-}
-
-function Run-CyberHudMonitor {
+# --- MODEL 4: MONITOR LAYAR KOMPUTER (CPU, RAM, DISK) ---
+function Run-CyberHudMonitor ([int]$durationSeconds = 0) {
     Clear-Host
     try { [Console]::CursorVisible = $false } catch {}
-    Write-Host "=== TEKAN TOMBOL APAPUN DI KEYBOARD UNTUK BERHENTI & KEMBALI KE MENU ===" -ForegroundColor Yellow
-    Start-Sleep -Milliseconds 800
+    Write-Host "=== [4] MONITOR KOMPUTER REALTIME AKTIF ===" -ForegroundColor Yellow
+    Write-Host "Tekan sembarang tombol di keyboard untuk kembali ke menu..." -ForegroundColor Yellow
+    Start-Sleep -Milliseconds 600
 
     $os = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
     $totalRamMb = [math]::Round($os.TotalVisibleMemorySize / 1024, 0)
     $driveC = Get-PSDrive C -ErrorAction SilentlyContinue
+    $startTime = Get-Date
 
     while ($true) {
-        if ([Console]::KeyAvailable) {
-            $null = [Console]::ReadKey($true)
-            break
-        }
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        if ($durationSeconds -gt 0 -and ((Get-Date) - $startTime).TotalSeconds -ge $durationSeconds) { break }
 
         $freeRamMb = [math]::Round($os.FreePhysicalMemory / 1024, 0)
         $usedRamMb = $totalRamMb - $freeRamMb
@@ -281,7 +370,7 @@ function Run-CyberHudMonitor {
 
         $timeStr = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
         $uptime = (Get-Date) - $os.LastBootUpTime
-        $uptimeStr = "$($uptime.Days)d $($uptime.Hours)h $($uptime.Minutes)m $($uptime.Seconds)s"
+        $uptimeStr = "$($uptime.Days)d $($uptime.Hours)h $($uptime.Minutes)m"
 
         $ramBars = [int]($ramPercent / 5)
         $ramGauge = "[" + ("=" * $ramBars) + ("." * (20 - $ramBars)) + "]"
@@ -290,19 +379,19 @@ function Run-CyberHudMonitor {
         $diskGauge = "[" + ("=" * $diskBars) + ("." * (20 - $diskBars)) + "]"
 
         Clear-Host
-        Write-Host "==================================================================" -ForegroundColor Green
-        Write-Host "  FOKUSKONTEN // CYBER HUD SYSTEM MONITOR" -ForegroundColor Green
-        Write-Host "  Live Hardware & Realtime Operational Telemetry" -ForegroundColor Yellow
-        Write-Host "==================================================================" -ForegroundColor Green
+        Write-Host "==================================================================" -ForegroundColor $global:themePrimary
+        Write-Host "  FOKUSKONTEN // MONITOR PERANGKAT KERAS KOMPUTER" -ForegroundColor $global:themePrimary
+        Write-Host "  Telemetri Penggunaan Memori, Harddisk, dan Waktu Nyala Sistem" -ForegroundColor Yellow
+        Write-Host "==================================================================" -ForegroundColor $global:themePrimary
         Write-Host ""
-        Write-Host "  [TIMESTAMP]  : $timeStr" -ForegroundColor Cyan
-        Write-Host "  [UPTIME]     : $uptimeStr" -ForegroundColor White
-        Write-Host "  [HOST]       : $env:COMPUTERNAME" -ForegroundColor DarkGray
+        Write-Host "  Waktu Sekarang : $timeStr" -ForegroundColor Cyan
+        Write-Host "  Waktu Nyala PC : $uptimeStr" -ForegroundColor White
+        Write-Host "  Nama Komputer  : $env:COMPUTERNAME" -ForegroundColor DarkGray
         Write-Host ""
         Write-Host "  ----------------------------------------------------------------" -ForegroundColor DarkGray
-        Write-Host "  RAM USAGE    : $ramGauge $ramPercent% ($usedRamMb MB / $totalRamMb MB)" -ForegroundColor Green
-        Write-Host "  DISK C:      : $diskGauge $diskPercent% ($diskUsedGb GB / $diskTotalGb GB)" -ForegroundColor Cyan
-        Write-Host "  STATUS       : SYSTEM NORMAL // OPERATIONAL 100%" -ForegroundColor Green
+        Write-Host ("  PENGGUNAAN RAM : " + $ramGauge + " " + $ramPercent + "% [" + $usedRamMb + " MB / " + $totalRamMb + " MB]") -ForegroundColor Green
+        Write-Host ("  DISK DRIVE C:  : " + $diskGauge + " " + $diskPercent + "% [" + $diskUsedGb + " GB / " + $diskTotalGb + " GB]") -ForegroundColor Cyan
+        Write-Host "  STATUS SISTEM  : NORMAL // BEKERJA 100%" -ForegroundColor Green
         Write-Host "  ----------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host ""
         Write-Host "  Tekan sembarang tombol di keyboard untuk kembali ke menu..." -ForegroundColor Yellow
@@ -313,23 +402,116 @@ function Run-CyberHudMonitor {
     Restore-Terminal
 }
 
+# --- MODEL 5: GANTI WARNA TERMINAL ---
+function Show-ThemeSelector {
+    Clear-Host
+    Write-Host "==================================================================" -ForegroundColor $global:themePrimary
+    Write-Host "  FOKUSKONTEN // GANTI WARNA TEMA TERMINAL" -ForegroundColor White
+    Write-Host "==================================================================" -ForegroundColor $global:themePrimary
+    Write-Host ""
+    Write-Host "  PILIHAN WARNA TAMPILAN:" -ForegroundColor White
+    Write-Host ""
+    Write-Host "      [1] Emerald Matrix (Hijau Matrix Klasik)" -ForegroundColor Green
+    Write-Host "      [2] Neon Cyberpunk (Cyan Biru Futuristik)" -ForegroundColor Cyan
+    Write-Host "      [3] Blood Red Alert (Merah Peringatan)" -ForegroundColor Red
+    Write-Host "      [4] Retro Amber (Kuning Oranye Komputer Jadul)" -ForegroundColor DarkYellow
+    Write-Host ""
+    Write-Host "      [0] Kembali ke Menu Utama" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host -NoNewline "  Pilih Warna [1, 2, 3, 4, 0] : " -ForegroundColor $global:themePrimary
+
+    try {
+        $t = [Console]::ReadKey($true).KeyChar.ToString()
+    } catch {
+        $t = Read-Host
+    }
+
+    switch ($t) {
+        "1" {
+            $global:themePrimary   = "Green"
+            $global:themeSecondary = "DarkGreen"
+            $global:themeHighlight = "White"
+            $global:themeAccent    = "Cyan"
+            $global:themeName      = "Emerald Matrix"
+        }
+        "2" {
+            $global:themePrimary   = "Cyan"
+            $global:themeSecondary = "DarkCyan"
+            $global:themeHighlight = "White"
+            $global:themeAccent    = "Magenta"
+            $global:themeName      = "Neon Cyberpunk"
+        }
+        "3" {
+            $global:themePrimary   = "Red"
+            $global:themeSecondary = "DarkRed"
+            $global:themeHighlight = "Yellow"
+            $global:themeAccent    = "White"
+            $global:themeName      = "Blood Red Alert"
+        }
+        "4" {
+            $global:themePrimary   = "Yellow"
+            $global:themeSecondary = "DarkYellow"
+            $global:themeHighlight = "White"
+            $global:themeAccent    = "Gray"
+            $global:themeName      = "Retro Amber"
+        }
+    }
+}
+
+# --- MODEL 6: MODE PUTAR OTOMATIS NONSTOP ---
+function Run-BroadcastLoop {
+    Clear-Host
+    Write-Host "==================================================================" -ForegroundColor Yellow
+    Write-Host "  MODE PUTAR OTOMATIS NONSTOP DIAKTIFKAN" -ForegroundColor Green
+    Write-Host "  Animasi akan otomatis berganti model setiap beberapa detik." -ForegroundColor White
+    Write-Host "  Sangat cocok untuk display layar meja, video konten, atau live." -ForegroundColor Gray
+    Write-Host "  Tekan sembarang tombol di keyboard kapan saja untuk berhenti." -ForegroundColor Yellow
+    Write-Host "==================================================================" -ForegroundColor Yellow
+    Start-Sleep -Seconds 2
+
+    while ($true) {
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        Run-MatrixRain -durationSeconds 25
+
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        Run-RedTeamC2Simulator -durationSeconds 35
+
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        Run-CyberpunkStream -durationSeconds 20
+
+        if ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true); break }
+        Run-CyberHudMonitor -durationSeconds 15
+    }
+}
+
 # --- MAIN CONTROLLER LOOP ---
+Show-CinematicOpening
+
 while ($true) {
-    Show-Header
+    Show-GrandBanner
     $choice = Get-UserChoice
 
     switch ($choice) {
         "1" { Run-MatrixRain }
-        "2" { Run-CyberpunkStream }
-        "3" { Run-RedAlertBreach }
+        "2" { Run-RedTeamC2Simulator }
+        "3" { Run-CyberpunkStream }
         "4" { Run-CyberHudMonitor }
+        "5" { Show-ThemeSelector }
+        "6" { Run-BroadcastLoop }
         "0" {
             Restore-Terminal
             Clear-Host
-            Write-Host "==================================================================" -ForegroundColor Green
-            Write-Host "  FokusKonten Cyber Terminal Suite ditutup secara bersih." -ForegroundColor Green
-            Write-Host "  Terima kasih telah menggunakan utilitas resmi FokusKonten!" -ForegroundColor Yellow
-            Write-Host "==================================================================" -ForegroundColor Green
+            Write-Host ""
+            Write-Host " ===========================================================================" -ForegroundColor Green
+            Write-Host "  THANKS ORDER BY FOKUSKONTEN" -ForegroundColor Yellow
+            Write-Host "  Terima kasih sudah menggunakan jasa FokusKonten." -ForegroundColor White
+            Write-Host "  Layanan Setup Tampilan Terminal Matrix telah selesai dengan sukses." -ForegroundColor Gray
+            Write-Host ""
+            Write-Host "  [SERAH TERIMA LAYANAN JASA]" -ForegroundColor White
+            Write-Host "  * Tiket Layanan  : [FK-PSH-101] SELESAI PARIPURNA" -ForegroundColor Green
+            Write-Host "  * Garansi Resmi  : Pendampingan Asistensi Bebas Risiko Sistem" -ForegroundColor Green
+            Write-Host "  * Kontak Bantuan : WhatsApp Layanan Resmi +62 858-6395-5347" -ForegroundColor Yellow
+            Write-Host " ===========================================================================" -ForegroundColor Green
             Write-Host ""
             return
         }

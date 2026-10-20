@@ -212,7 +212,8 @@ goto dk_done
 ::  Elevate script as admin and pass arguments and preventing loop
 
 %nul1% fltmc || (
-if not defined _elev %psc% "start cmd.exe -arg '/c \"!_PSarg!\"' -verb runas" && exit /b
+echo [!] Hak akses Administrator diperlukan. Jalankan PowerShell sebagai Administrator.
+exit /b 1
 %eline%
 echo This script needs admin rights.
 echo Right click on this script and select 'Run as administrator'.
@@ -326,11 +327,13 @@ reg query HKCU\Console /v QuickEdit %nul2% | find /i "0x0" %nul1% && set resetQE
 reg add HKCU\Console /v QuickEdit /t REG_DWORD /d 0 /f %nul1%
 
 if defined terminal (
-start conhost.exe "!_cmdf!" %_args% -qedit
+rem [FK-INPLACE] conhost spawn disabled
+goto :skipQE
 start reg add HKCU\Console /v QuickEdit /t REG_DWORD /d %resetQE% /f %nul1%
 exit /b
 ) else if %resetQE% EQU 1 (
-start cmd.exe /c ""!_cmdf!" %_args% -qedit"
+rem [FK-INPLACE] cmd spawn disabled
+goto :skipQE
 start reg add HKCU\Console /v QuickEdit /t REG_DWORD /d %resetQE% /f %nul1%
 exit /b
 )

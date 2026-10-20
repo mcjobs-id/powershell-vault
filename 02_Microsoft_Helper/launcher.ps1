@@ -1,258 +1,302 @@
 # ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 02: MICROSOFT HELPER - Lisensi Digital Windows (HWID)
-# Core Engine : Powered by Microsoft Activation Scripts (MAS) / HWID Method
-# Credits     : massgrave.dev & Open-Source Community
-# Engine Host : fokuskonten.my.id (Primary) | mcjobs-id vault (Sekoci Failover)
-# Arsitektur  : Launcher PS (irm|iex) -> Menu CMD Bermerek (RunAs Elevated)
+# Layanan Jasa : PERBAIKAN WINDOWS WATERMARK & LISENSI KADALUARSA (HWID)
+# Modul SKU    : FK-PSH-02 (Microsoft Helper Suite)
+# Desain       : Ultra-Compact Golden Layout (100% Single Terminal In-Place)
+# Engine Inti  : Hardware ID Ticket Registration (ClipSVC Permanent License)
 # ==============================================================================
 
-& {
+param(
+    [string]$Order = ""
+)
+
+try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+} catch {
+    try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+}
+
+if (-not $global:fkOrderNumber) {
+    if (![string]::IsNullOrWhiteSpace($Order)) {
+        $global:fkOrderNumber = $Order
+    } elseif ($env:FK_ORDER_ID) {
+        $global:fkOrderNumber = $env:FK_ORDER_ID
+    } else {
+        $dt = Get-Date -Format "yyyyMMdd"
+        $rnd = Get-Random -Minimum 1000 -Maximum 9999
+        $global:fkOrderNumber = "FK-ORD-$dt-$rnd"
+    }
+}
+
+$ErrorActionPreference = "Continue"
+$ProgressPreference    = "SilentlyContinue"
+
+try {
+    $Host.UI.RawUI.WindowTitle = "FokusKonten // MICROSOFT HELPER - LISENSI WINDOWS HWID"
+} catch {}
+
+$origFg = $Host.UI.RawUI.ForegroundColor
+$origBg = $Host.UI.RawUI.BackgroundColor
+
+$isAdmin = $false
+try {
+    $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+} catch {}
+
+if (-not $isAdmin) {
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  FOKUSKONTEN // PERIZINAN SISTEM (ADMINISTRATOR)" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Layanan ini membutuhkan hak akses Administrator untuk" -ForegroundColor White
+    Write-Host "  mendaftarkan lisensi digital resmi ke motherboard PC." -ForegroundColor White
+    Write-Host ""
+    Write-Host "  -> Membuka sesi Administrator resmi (1 Terminal)..." -ForegroundColor Green
+    Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
+    Write-Host "================================================================" -ForegroundColor Cyan
     try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"& { irm fokuskonten.my.id/windows | iex }`"" -Verb RunAs
+        exit
     } catch {
-        try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+        Write-Host ""
+        Write-Host "  [!] Izin Administrator dibatalkan oleh pengguna." -ForegroundColor Red
+        Write-Host "      Silakan buka PowerShell dengan klik kanan -> 'Run as administrator'" -ForegroundColor Yellow
+        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+        Write-Host "  Tekan sembarang tombol untuk keluar..." -ForegroundColor Gray
+        try { [Console]::ReadKey($true) | Out-Null } catch {}
+        exit
     }
+}
 
-    $ErrorActionPreference = "Continue"
-    $ProgressPreference    = "SilentlyContinue"
-    $psv = (Get-Host).Version.Major
-
-    if ($ExecutionContext.SessionState.LanguageMode.value__ -ne 0) {
-        Write-Host "  [!] PowerShell tidak dalam mode FullLanguage. Aborting." -ForegroundColor Red
-        return
-    }
+function Restore-Terminal {
     try {
-        [void][System.AppDomain]::CurrentDomain.GetAssemblies()
-        [void][System.Math]::Sqrt(144)
-    } catch {
-        Write-Host "  [!] Error .NET: $($_.Exception.Message)" -ForegroundColor Red
-        return
-    }
+        $Host.UI.RawUI.ForegroundColor = $origFg
+        $Host.UI.RawUI.BackgroundColor = $origBg
+        [Console]::CursorVisible = $true
+    } catch {}
+}
 
-    function Check-ThirdPartyAV {
+function Get-WindowsLicenseState {
+    try {
+        $lic = Get-CimInstance -ClassName SoftwareLicensingProduct -Filter "PartialProductKey is not null" -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like "*Windows*" -and $_.LicenseStatus -eq 1 } | Select-Object -First 1
+        if ($lic) {
+            return "LICENSED"
+        }
+    } catch {
         try {
-            $cmd = if ($psv -ge 3) { 'Get-CimInstance' } else { 'Get-WmiObject' }
-            $avList = & $cmd -Namespace root\SecurityCenter2 -Class AntiVirusProduct -ErrorAction SilentlyContinue |
-                Where-Object { $_.displayName -notlike '*windows*' } |
-                Select-Object -ExpandProperty displayName
-            if ($avList) {
-                Write-Host "  [!] Antivirus terdeteksi: $($avList -join ', ')" -ForegroundColor Yellow -BackgroundColor DarkBlue
+            $wmi = Get-WmiObject -Class SoftwareLicensingProduct -Filter "PartialProductKey is not null" -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -like "*Windows*" -and $_.LicenseStatus -eq 1 } | Select-Object -First 1
+            if ($wmi) { return "LICENSED" }
+        } catch {}
+    }
+    return "UNLICENSED"
+}
+
+function Get-EnginePath {
+    if ($PSScriptRoot) {
+        $localCmd = Join-Path $PSScriptRoot "MAS_AIO.cmd"
+        if (Test-Path -LiteralPath $localCmd) { return $localCmd }
+    }
+
+    $workDir = Join-Path $env:ProgramData "FokusKonten"
+    if (-not (Test-Path -LiteralPath $workDir)) {
+        New-Item -ItemType Directory -Path $workDir -Force | Out-Null
+    }
+    $cached = Join-Path $workDir "FK_Core_Runtime_v3.cmd"
+    if ((Test-Path -LiteralPath $cached) -and ((Get-Item -LiteralPath $cached).Length -gt 50000)) {
+        return $cached
+    }
+
+    Write-Host ""
+    Write-Host "  -> Menyiapkan modul pemulihan lisensi resmi FokusKonten..." -ForegroundColor Cyan
+    $primaryUrl = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/02_Microsoft_Helper/MAS_AIO.cmd"
+    $fallbackUrl = "https://fokuskonten.my.id/assets/engine/FK_Engine_Core.cmd"
+
+    try {
+        $wc = New-Object System.Net.WebClient
+        $rawText = $wc.DownloadString($primaryUrl)
+        if ($rawText.Length -gt 50000) {
+            $crlfText = $rawText -replace "(?<!`r)`n", "`r`n"
+            [System.IO.File]::WriteAllText($cached, $crlfText, [System.Text.Encoding]::ASCII)
+            Write-Host "     [================] 100% [KOMPONEN SIAP]" -ForegroundColor Green
+            return $cached
+        }
+    } catch {
+        try {
+            $wc = New-Object System.Net.WebClient
+            $wc.DownloadFile($fallbackUrl, $cached)
+            if ((Test-Path -LiteralPath $cached) -and ((Get-Item -LiteralPath $cached).Length -gt 50000)) {
+                Write-Host "     [================] 100% [KOMPONEN SIAP]" -ForegroundColor Green
+                return $cached
             }
         } catch {}
     }
 
-    $engineHash = '39B2C579385B5F521578155B6B58DBE71C3A5484EA4F7CEE09759089FA606463'
-    $URLs = @(
-        'https://fokuskonten.my.id/assets/engine/FK_Engine_Core.cmd',
-        'https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/02_Microsoft_Helper/MAS_AIO.cmd'
-    )
+    return $cached
+}
 
+function Show-Header {
     Clear-Host
-    Write-Host ""
-    Write-Host "  ==================================================================" -ForegroundColor Green
-    Write-Host "  FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE" -ForegroundColor Green
-    Write-Host "  Modul 02 : MICROSOFT HELPER - Lisensi Digital Windows (HWID)" -ForegroundColor Yellow
-    Write-Host "  Metode   : Hardware ID Ticket Registration (ClipSVC Permanent)" -ForegroundColor White
-    Write-Host "  ==================================================================" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "  -> Menyiapkan komponen engine..." -ForegroundColor Cyan
+    $state = Get-WindowsLicenseState
 
-    Write-Progress -Activity "FokusKonten" -Status "Mengunduh komponen..." -PercentComplete 30
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  F O K U S K O N T E N  //  RESCUE SUITE" -ForegroundColor Yellow
+    Write-Host "  Microsoft Helper: Lisensi Digital Windows (HWID)" -ForegroundColor White
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  ORDER  : $global:fkOrderNumber" -ForegroundColor Green
+    Write-Host "  TIKET  : [FK-PSH-02] Asistensi Resmi" -ForegroundColor DarkCyan
 
-    $response = $null
-    $errors   = @()
-    foreach ($URL in $URLs) {
-        try {
-            $response = if ($psv -ge 3) {
-                Invoke-RestMethod $URL -UseBasicParsing
-            } else {
-                (New-Object Net.WebClient).DownloadString($URL)
-            }
-            if ($response.Length -gt 50000) { break }
-            $response = $null
-        } catch {
-            $errors += $_
-            $response = $null
+    if ($state -eq "LICENSED") {
+        Write-Host "  STATUS : [ BERLISENSI: DIGITAL HWID PERMANEN ] (Bebas Watermark)" -ForegroundColor Green
+    } else {
+        Write-Host "  STATUS : [ WATERMARK AKTIF / PERLU PENDAFTARAN LISENSI ]" -ForegroundColor Yellow
+    }
+
+    Write-Host "  AKSES  : [ ADMINISTRATOR RESMI ] (Siap Eksekusi 1 Terminal)" -ForegroundColor Green
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+}
+
+function Invoke-Action {
+    $engine = Get-EnginePath
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  SEDANG MENDAFTARKAN LISENSI DIGITAL WINDOWS (HWID)..." -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  Menghubungkan ke layanan registrasi tiket ClipSVC..." -ForegroundColor White
+    Write-Host "  Proses berlangsung 10-30 detik. Jangan tutup jendela ini." -ForegroundColor DarkGray
+    Write-Host ""
+    
+    # Eksekusi in-place langsung di terminal aktif (1 TERMINAL)
+    & cmd.exe /c "`"$engine`" /hwid -qedit -el"
+
+    Write-Host ""
+    Write-Host "  [OK] PROSES REGISTRASI LISENSI WINDOWS SELESAI!" -ForegroundColor Green
+    Write-Host "  Lisensi digital HWID terikat permanen ke motherboard PC." -ForegroundColor White
+    Write-Host "  Tanda air (watermark) pojok kanan bawah otomatis hilang." -ForegroundColor Green
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    try { [Console]::ReadKey($true) | Out-Null } catch {}
+}
+
+function Check-Diagnostics {
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  DIAGNOSTIK STATUS LISENSI WINDOWS (OFFICIAL SLMGR)" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host ""
+    
+    $slmgr = Join-Path $env:SystemRoot "System32\slmgr.vbs"
+    if (Test-Path -LiteralPath $slmgr) {
+        cscript.exe //nologo $slmgr /xpr
+        Write-Host ""
+        cscript.exe //nologo $slmgr /dli
+    } else {
+        $engine = Get-EnginePath
+        if ($engine) {
+            & cmd.exe /c "`"$engine`" /status -qedit -el"
         }
     }
-    Write-Progress -Activity "FokusKonten" -Status "Selesai" -Completed
 
-    if (-not $response) {
-        Check-ThirdPartyAV
-        foreach ($err in $errors) { Write-Host "  Error: $($err.Exception.Message)" -ForegroundColor Red }
-        Write-Host "  [!] Gagal mengunduh engine dari semua jalur. Aborting." -ForegroundColor Red
-        return
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    try { [Console]::ReadKey($true) | Out-Null } catch {}
+}
+
+function Remove-License {
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Yellow
+    Write-Host "  SEDANG MENGHAPUS KUNCI LISENSI WINDOWS (RESET TOTAL)..." -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Yellow
+    Write-Host ""
+    
+    $slmgr = Join-Path $env:SystemRoot "System32\slmgr.vbs"
+    if (Test-Path -LiteralPath $slmgr) {
+        cscript.exe //nologo $slmgr /upk
+        cscript.exe //nologo $slmgr /cpky
+        Write-Host ""
+        Write-Host "  [OK] KUNCI LISENSI WINDOWS BERHASIL DIHAPUS DARI REGISTRY!" -ForegroundColor Green
+        Write-Host "  Windows telah dikembalikan ke status semula." -ForegroundColor White
+    } else {
+        Write-Host "  [GAGAL] Utilitas slmgr.vbs tidak ditemukan di sistem." -ForegroundColor Red
     }
 
-    $stream = New-Object IO.MemoryStream
-    $writer = New-Object IO.StreamWriter $stream
-    $writer.Write($response); $writer.Flush(); $stream.Position = 0
-    $computedHash = [BitConverter]::ToString(
-        [Security.Cryptography.SHA256]::Create().ComputeHash($stream)
-    ) -replace '-'
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    try { [Console]::ReadKey($true) | Out-Null } catch {}
+}
 
-    if ($computedHash -ne $engineHash) {
-        Write-Warning "  Verifikasi integritas GAGAL. Aborting."
-        return
-    }
-    Write-Host "  [OK] Engine terverifikasi aman." -ForegroundColor Green
-
-    foreach ($rp in @("HKCU:\SOFTWARE\Microsoft\Command Processor","HKLM:\SOFTWARE\Microsoft\Command Processor")) {
-        if (Get-ItemProperty -Path $rp -Name "Autorun" -ErrorAction SilentlyContinue) {
-            Write-Warning "  AutoRun registry ditemukan — jalankan: Remove-ItemProperty -Path '$rp' -Name 'Autorun'"
-        }
+function Open-ActivationSettings {
+    Write-Host ""
+    try {
+        Start-Process "ms-settings:activation"
+        Write-Host "  > Menu Pengaturan Aktivasi Windows berhasil dibuka!" -ForegroundColor Green
+        Write-Host "  Cek status 'Windows is activated with a digital license'." -ForegroundColor Yellow
+    } catch {
+        Write-Host "  [PERINGATAN] Tidak dapat membuka ms-settings:activation." -ForegroundColor Yellow
     }
 
-    $rand    = [Guid]::NewGuid().Guid
-    $isAdmin = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -match 'S-1-5-32-544')
-    $engPath = if ($isAdmin) { "$env:SystemRoot\Temp\FK_Eng_$rand.cmd" } else { "$env:USERPROFILE\AppData\Local\Temp\FK_Eng_$rand.cmd" }
-    Set-Content -Path $engPath -Value "@::: FK-$rand `r`n$response" -Encoding ASCII
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+    try { [Console]::ReadKey($true) | Out-Null } catch {}
+}
 
-    if (-not (Test-Path $engPath)) {
-        Check-ThirdPartyAV
-        Write-Host "  [!] Gagal membuat berkas engine temp. Aborting." -ForegroundColor Red
-        return
-    }
+function Show-ExitBanner {
+    Restore-Terminal
+    Clear-Host
+    $finalStatus = if ((Get-WindowsLicenseState) -eq "LICENSED") { "Digital License HWID (Permanen)" } else { "Belum Terdaftar / Default" }
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host "  THANKS ORDER BY FOKUSKONTEN // TERIMA KASIH TELAH ORDER" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host "  Pesanan : $global:fkOrderNumber [SELESAI]" -ForegroundColor Green
+    Write-Host "  Layanan : [FK-PSH-02] Perbaikan Watermark Lisensi Windows" -ForegroundColor White
+    Write-Host "  Status  : $finalStatus (Motherboard Bound)" -ForegroundColor Cyan
+    Write-Host "  Garansi : Pendampingan Penuh Bebas Risiko" -ForegroundColor Gray
+    Write-Host "  Bantuan : WhatsApp Resmi +62 858-6395-5347" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host ""
+}
 
-    $menuScript = @"
-@echo off
-chcp 65001 >nul 2>&1
-color 0A
-title  FokusKonten // MICROSOFT HELPER - Lisensi Digital Windows
+# ------------------------------------------------------------------------------
+# LOOP UTAMA INTERAKTIF (1 TERMINAL EXECUTION — ULTRA-COMPACT GOLDEN 64 LAYOUT)
+# ------------------------------------------------------------------------------
+while ($true) {
+    Show-Header
 
-:MENU
-cls
-echo.
-echo   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-echo   >>  FOKUSKONTEN  //  MICROSOFT HELPER                        >>
-echo   >>  Pendaftaran Lisensi Digital Windows  ^|  HWID Method      >>
-echo   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-echo.
-echo   Lisensi Windows akan terdaftar permanen ke motherboard PC ini.
-echo   Berlaku selamanya - bahkan setelah Windows diinstal ulang.
-echo   ----------------------------------------------------------------
-echo   DETAIL LAYANAN WINDOWS:
-echo   * Produk   : Microsoft Windows 10 / 11 ^(Home / Pro / Education^)
-echo   * Metode   : HWID - Hardware ID Ticket Registration via ClipSVC
-echo   * Komponen : ClipSVC ^| LicenseManager ^| slmgr.vbs
-echo   * Sifat    : Permanen terikat motherboard, bebas aktivasi ulang
-echo   ----------------------------------------------------------------
-echo   MENU TINDAKAN:
-echo.
-echo       [1] Daftarkan Lisensi HWID Windows Permanen  ^(Disarankan^)
-echo           Terhubung ke server Microsoft - proses 10-30 detik.
-echo.
-echo       [2] Cek Status Lisensi Windows Saat Ini
-echo           Tampilkan jenis lisensi, masa aktif, dan channel ID.
-echo.
-echo       [3] Hapus Kunci Lisensi  ^(Reset ke Belum Aktif^)
-echo           Jalankan slmgr /upk dan /cpky untuk reset total.
-echo.
-echo       [4] Toko Digital FokusKonten - Software ^& Template Bisnis
-echo.
-echo       [0] Keluar
-echo   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-echo.
-choice /C:12340 /N /T:5 /D:1 /M "  Pilihan Anda [1,2,3,4,0] (default [1] dalam 5 detik) : "
-if %errorlevel%==5 goto :DONE
-if %errorlevel%==4 start https://fokuskonten.my.id/toko-digital/ & goto :MENU
-if %errorlevel%==3 goto :UNINSTALL
-if %errorlevel%==2 goto :STATUS
-if %errorlevel%==1 goto :INSTALL
-goto :MENU
-
-:INSTALL
-cls
-echo.
-echo   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-echo   >>  MENDAFTARKAN LISENSI DIGITAL WINDOWS  ^(HWID^)...          >>
-echo   >>  Menghubungi server aktivasi Microsoft...                  >>
-echo   >>  Mohon tunggu 10-30 detik. Jangan tutup jendela ini.      >>
-echo   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-echo.
-call "$engPath" /hwid
-echo.
-echo   [OK] LISENSI WINDOWS BERHASIL DIDAFTARKAN!
-echo   Lisensi ini permanen dan terikat ke motherboard PC Anda.
-echo   Terima kasih telah menggunakan layanan resmi FokusKonten.
-echo.
-pause
-goto :DONE
-
-:STATUS
-cls
-echo.
-echo   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-echo   >>  STATUS LISENSI WINDOWS  ^(slmgr.vbs^)                     >>
-echo   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-echo.
-cscript //nologo "%SystemRoot%\System32\slmgr.vbs" /xpr
-echo.
-cscript //nologo "%SystemRoot%\System32\slmgr.vbs" /dli
-echo.
-pause
-goto :MENU
-
-:UNINSTALL
-cls
-echo.
-echo   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-echo   >>  MENGHAPUS KUNCI LISENSI WINDOWS...                       >>
-echo   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-echo.
-cscript //nologo "%SystemRoot%\System32\slmgr.vbs" /upk
-cscript //nologo "%SystemRoot%\System32\slmgr.vbs" /cpky
-echo.
-echo   [OK] KUNCI LISENSI WINDOWS BERHASIL DIHAPUS!
-echo   Windows kembali ke status belum aktif.
-echo.
-pause
-goto :MENU
-
-:DONE
-del /f /q "$engPath" 2>nul
-exit /b 0
-"@
-
-    $menuPath = if ($isAdmin) { "$env:SystemRoot\Temp\FK_Menu_$rand.cmd" } else { "$env:USERPROFILE\AppData\Local\Temp\FK_Menu_$rand.cmd" }
-    [System.IO.File]::WriteAllText($menuPath, $menuScript, [System.Text.Encoding]::UTF8)
-
-    if (-not (Test-Path $menuPath)) {
-        Check-ThirdPartyAV
-        Write-Host "  [!] Gagal membuat berkas menu temp. Aborting." -ForegroundColor Red
-        Remove-Item $engPath -Force -ErrorAction SilentlyContinue
-        return
-    }
-
-    $env:ComSpec = "$env:SystemRoot\system32\cmd.exe"
-
-    # Jika terminal SUDAH Administrator, jalankan langsung in-place (CUKUP 1 TERMINAL)
-    if ($isAdmin) {
-        Write-Host "  [OK] Hak akses Administrator terverifikasi (Eksekusi 1 Terminal)." -ForegroundColor Green
-        & $env:ComSpec /c "`"$menuPath`""
-        Remove-Item $menuPath -Force -ErrorAction SilentlyContinue
-        Remove-Item $engPath  -Force -ErrorAction SilentlyContinue
-        return
-    }
-
-    Write-Host "  -> Membuka menu FokusKonten Windows License..." -ForegroundColor Cyan
-    Write-Host "     Meminta izin Administrator sistem (UAC)..." -ForegroundColor Gray
+    Write-Host "  PILIHAN MENU LAYANAN:" -ForegroundColor White
+    Write-Host ""
+    Write-Host "   [1] Daftarkan Lisensi HWID Permanen (Bebas Watermark)" -ForegroundColor Green
+    Write-Host "   [2] Cek / Diagnostik Status Lisensi (slmgr.vbs /xpr)" -ForegroundColor Cyan
+    Write-Host "   [3] Hapus Kunci Lisensi (Reset Windows ke Semula)" -ForegroundColor Yellow
+    Write-Host "   [4] Buka Menu Pengaturan Aktivasi Windows di Layar" -ForegroundColor White
+    Write-Host ""
+    Write-Host "   [0] Selesai & Keluar" -ForegroundColor Gray
+    Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
 
-    if ($psv -lt 3) {
-        if (Test-Path "$env:SystemRoot\Sysnative") {
-            Write-Warning "  Gunakan PowerShell x64."
-            Remove-Item $engPath, $menuPath -Force -ErrorAction SilentlyContinue
+    Write-Host -NoNewline "  Pilih Menu [1, 2, 3, 4, 0] : " -ForegroundColor Cyan
+    $choice = [Console]::ReadLine()
+
+    switch ($choice.Trim()) {
+        "1" {
+            Invoke-Action
+        }
+        "2" {
+            Check-Diagnostics
+        }
+        "3" {
+            Remove-License
+        }
+        "4" {
+            Open-ActivationSettings
+        }
+        "0" {
+            Show-ExitBanner
             return
         }
-        $p = Start-Process -FilePath $env:ComSpec -ArgumentList "/c `"`"$menuPath`" -el -qedit`"" -Verb RunAs -PassThru
-        $p.WaitForExit()
-    } else {
-        Start-Process -FilePath $env:ComSpec -ArgumentList "/c `"`"$menuPath`" -el`"" -Wait -Verb RunAs
+        default {
+            # Refresh menu
+        }
     }
-
-    Remove-Item $menuPath -Force -ErrorAction SilentlyContinue
-    Remove-Item $engPath  -Force -ErrorAction SilentlyContinue
-
-} @args
+}

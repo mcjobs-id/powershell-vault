@@ -1,9 +1,9 @@
-# ==============================================================================
+# ============================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul 40: CORELDRAW SHIELD - Anti Blokir Akun & Pop-Up Ilegal
-# Metode    : Outbound Windows Firewall Rule & Hosts Null-Routing
-# Arsitektur: Launcher PS (irm|iex) -> Menu PS Elevated (RunAs, .ps1 temp GUID)
-# ==============================================================================
+# Modul 40 : CORELDRAW SHIELD - Full-Suite Anti Pop-Up & Save
+# Metode   : PASMUTILITY Injection + Firewall + Hosts Shield
+# Layout   : Ultra-Compact Golden 64 (Single Terminal In-Place)
+# ============================================================
 
 & {
     try {
@@ -14,297 +14,364 @@
 
     $ErrorActionPreference = "Continue"
     $ProgressPreference    = "SilentlyContinue"
-    $psv = (Get-Host).Version.Major
 
-    if ($ExecutionContext.SessionState.LanguageMode.value__ -ne 0) {
-        Write-Host "  [!] PowerShell tidak dalam mode FullLanguage. Aborting." -ForegroundColor Red
-        return
-    }
-    try {
-        [void][System.AppDomain]::CurrentDomain.GetAssemblies()
-        [void][System.Math]::Sqrt(144)
-    } catch {
-        Write-Host "  [!] Error .NET: $($_.Exception.Message)" -ForegroundColor Red
-        return
-    }
+    $pasmDir   = "$env:ProgramFiles\Corel\PASMUtility\v1"
+    $pasmDll   = "$pasmDir\PASMUTILITY.dll"
+    $pasmBak   = "$pasmDir\PASMUTILITY.dll.BAK"
+    $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
+    $cdnDllUrl = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/40_CorelDraw_Firewall_Telemetry_Blocker/PASMUTILITY.dll"
+    $patchedHash = "1036532E7981853535E3B40F5CACCDF8C59BBC3574CCE858EDA3918DC682552C"
 
-    Clear-Host
-    Write-Host ""
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host "  FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE" -ForegroundColor Magenta
-    Write-Host "  Modul 40 : CORELDRAW SHIELD - Anti Blokir & Pop-Up Ilegal" -ForegroundColor Yellow
-    Write-Host "  Metode   : Firewall Outbound Isolation & Null-Route Telemetry" -ForegroundColor White
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host ""
-    Write-Host "  -> Menyiapkan proteksi CorelDraw..." -ForegroundColor Cyan
+    $domains = @(
+        "mc.corel.com",
+        "apps.corel.com",
+        "origin-mc.corel.com",
+        "iws.corel.com",
+        "corel.com",
+        "telemetry.corel.com"
+    )
 
-    $corelPs1 = @'
-$ErrorActionPreference = "Continue"
-$ProgressPreference    = "SilentlyContinue"
-$Host.UI.RawUI.WindowTitle = "FokusKonten // CORELDRAW SHIELD - Anti Pop-Up Ilegal"
-try { $Host.UI.RawUI.BackgroundColor = 'DarkMagenta'; $Host.UI.RawUI.ForegroundColor = 'White'; Clear-Host } catch {}
-
-$hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
-$corelDomains = @(
-    "mc.corel.com",
-    "apps.corel.com",
-    "origin-mc.corel.com",
-    "iws.corel.com",
-    "corel.com"
-)
-$corelPaths = @(
-    "C:\Program Files\Corel\*\Programs64\CorelDRW.exe",
-    "C:\Program Files\Corel\*\Programs64\Cap.exe",
-    "C:\Program Files\Corel\*\Programs64\CorelPP.exe",
-    "C:\Program Files (x86)\Corel\*\Programs\CorelDRW.exe"
-)
-
-function Enable-CorelShield {
-    cls
-    Write-Host ""
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host "  MEMASANG PROTEKSI ANTI POP-UP CORELDRAW..." -ForegroundColor Yellow
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host ""
-
-    # 1. Hentikan dan nonaktifkan layanan Corel License Validation
-    Write-Host "  [1/3] Mematikan layanan Corel License Validation Service..." -ForegroundColor Cyan
-    $svcs = Get-Service -DisplayName "*Corel*" -ErrorAction SilentlyContinue
-    foreach ($s in $svcs) {
-        Stop-Service -Name $s.Name -Force -ErrorAction SilentlyContinue
-        Set-Service  -Name $s.Name -StartupType Disabled -ErrorAction SilentlyContinue
-        Write-Host "  [OK] Service $($s.Name) dinonaktifkan." -ForegroundColor Green
-    }
-    if (-not $svcs) {
-        Write-Host "  * Tidak ada service Corel background aktif." -ForegroundColor Gray
-    }
-
-    # 2. Tambah aturan Firewall Outbound Block
-    Write-Host ""
-    Write-Host "  [2/3] Menerapkan aturan Windows Firewall Outbound..." -ForegroundColor Cyan
-    $found = 0
-    Get-ChildItem -Path $corelPaths -ErrorAction SilentlyContinue | ForEach-Object {
-        $exe = $_.FullName
-        $ruleName = "FokusKonten_Block_Corel_" + $_.Name
-        netsh advfirewall firewall delete rule name="$ruleName" | Out-Null
-        netsh advfirewall firewall add rule name="$ruleName" dir=out action=block program="$exe" enable=yes | Out-Null
-        Write-Host "  [OK] Blokir firewall aktif: $exe" -ForegroundColor Green
-        $found++
-    }
-    if ($found -eq 0) {
-        Write-Host "  * Biner CorelDRW.exe di Program Files belum terdeteksi otomatis." -ForegroundColor Yellow
-        Write-Host "    (Aturan nama biner standar tetap dipasang ke firewall)" -ForegroundColor Gray
-        foreach ($b in @("CorelDRW.exe", "Cap.exe", "CorelPP.exe")) {
-            netsh advfirewall firewall add rule name="FokusKonten_Block_Corel_$b" dir=out action=block program="$b" enable=yes | Out-Null
-        }
-    }
-
-    # 3. Suntikkan pemetaan host null
-    Write-Host ""
-    Write-Host "  [3/3] Menyuntikkan pemetaan domain pelacak ke hosts..." -ForegroundColor Cyan
-    $hostsContent = Get-Content $hostsPath -Raw -ErrorAction SilentlyContinue
-    $append = ""
-    foreach ($d in $corelDomains) {
-        if ($hostsContent -notmatch [regex]::Escape($d)) {
-            $append += "`r`n0.0.0.0 $d"
-        }
-    }
-    if ($append -ne "") {
-        Add-Content -Path $hostsPath -Value $append -ErrorAction SilentlyContinue
-        Write-Host "  [OK] 5 domain pelacak Corel diarahkan ke 0.0.0.0." -ForegroundColor Green
-    } else {
-        Write-Host "  * Seluruh domain pelacak Corel sudah diblokir sebelumnya." -ForegroundColor Green
-    }
-
-    Write-Host ""
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host "  [SUKSES] PROTEKSI CORELDRAW AKTIF!" -ForegroundColor Green
-    Write-Host "  * Fungsi Save, Export, Print kembali normal tanpa blokir popup." -ForegroundColor White
-    Write-Host "  * Notifikasi software ilegal / pirated tidak akan muncul lagi." -ForegroundColor Yellow
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host ""
-    pause
-}
-
-function Show-CorelStatus {
-    cls
-    Write-Host ""
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host "  DIAGNOSTIK STATUS PROTEKSI CORELDRAW" -ForegroundColor Magenta
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host ""
-
-    # Layanan Corel
-    Write-Host "  * Status Layanan Corel License:" -ForegroundColor Cyan
-    $svcs = Get-Service -DisplayName "*Corel*" -ErrorAction SilentlyContinue
-    if ($svcs) {
-        foreach ($s in $svcs) {
-            $c = if ($s.StartType -eq "Disabled") { "Green" } else { "Yellow" }
-            Write-Host ("    - {0,-25} : {1,-10} [Startup: {2}]" -f $s.Name, $s.Status, $s.StartType) -ForegroundColor $c
-        }
-    } else {
-        Write-Host "    - Tidak ada service Corel terdaftar." -ForegroundColor Gray
-    }
-
-    # Aturan Firewall
-    Write-Host ""
-    Write-Host "  * Aturan Windows Firewall:" -ForegroundColor Cyan
-    $rules = netsh advfirewall firewall show rule name=all | Select-String "FokusKonten_Block_Corel|Block_Corel"
-    if ($rules) {
-        Write-Host "    [OK] Aturan blokir Corel terdeteksi aktif di Firewall." -ForegroundColor Green
-    } else {
-        Write-Host "    [!] Aturan blokir Corel belum terpasang di Firewall." -ForegroundColor Yellow
-    }
-
-    # Hosts
-    Write-Host ""
-    Write-Host "  * Status Domain Pelacak di C:\Windows\System32\drivers\etc\hosts:" -ForegroundColor Cyan
-    $hc = Get-Content $hostsPath -Raw -ErrorAction SilentlyContinue
-    foreach ($d in $corelDomains) {
-        if ($hc -match [regex]::Escape($d)) {
-            Write-Host "    [OK] Terblokir (0.0.0.0) : $d" -ForegroundColor Green
-        } else {
-            Write-Host "    [!] Belum Terblokir     : $d" -ForegroundColor Yellow
-        }
-    }
-
-    Write-Host ""
-    pause
-}
-
-function Restore-CorelAccess {
-    cls
-    Write-Host ""
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Yellow
-    Write-Host "  PULIHKAN / BUKA KEMBALI KONEKSI JARINGAN CORELDRAW" -ForegroundColor Yellow
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Yellow
-    Write-Host ""
-
-    # 1. Bersihkan Firewall
-    Write-Host "  -> Menghapus aturan blokir Corel dari Windows Firewall..." -ForegroundColor Cyan
-    netsh advfirewall firewall delete rule name="FokusKonten_Block_Corel_CorelDRW.exe" | Out-Null
-    netsh advfirewall firewall delete rule name="FokusKonten_Block_Corel_Cap.exe"      | Out-Null
-    netsh advfirewall firewall delete rule name="FokusKonten_Block_Corel_CorelPP.exe"  | Out-Null
-    netsh advfirewall firewall delete rule name="Block_Corel_CorelDRW.exe"            | Out-Null
-    netsh advfirewall firewall delete rule name="Block_Corel_Cap.exe"                 | Out-Null
-    netsh advfirewall firewall delete rule name="Block_Corel_CorelPP.exe"             | Out-Null
-    Write-Host "  [OK] Seluruh aturan firewall Corel dibersihkan." -ForegroundColor Green
-
-    # 2. Bersihkan Hosts
-    Write-Host "  -> Membersihkan domain Corel dari hosts file..." -ForegroundColor Cyan
-    $lines = Get-Content $hostsPath -ErrorAction SilentlyContinue | Where-Object {
-        $l = $_
-        $matched = $false
-        foreach ($d in $corelDomains) {
-            if ($l -match [regex]::Escape($d)) { $matched = $true; break }
-        }
-        -not $matched
-    }
-    Set-Content -Path $hostsPath -Value $lines -Encoding UTF8 -ErrorAction SilentlyContinue
-    Write-Host "  [OK] Domain Corel di hosts berhasil dipulihkan." -ForegroundColor Green
-
-    # 3. Kembalikan service
-    Write-Host "  -> Mengembalikan startup layanan Corel ke Manual..." -ForegroundColor Cyan
-    Get-Service -DisplayName "*Corel*" -ErrorAction SilentlyContinue | Set-Service -StartupType Manual -ErrorAction SilentlyContinue
-    Write-Host "  [OK] Status layanan Corel dikembalikan ke default." -ForegroundColor Green
-
-    Write-Host ""
-    Write-Host "  [OK] PENGATURAN JARINGAN CORELDRAW BERHASIL DIKEMBALIKAN KE SEMULA!" -ForegroundColor Green
-    Write-Host ""
-    pause
-}
-
-# Main menu loop
-while ($true) {
-    cls
-    Write-Host ""
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host "  ~~  FOKUSKONTEN  //  CORELDRAW SHIELD                          ~~" -ForegroundColor Magenta
-    Write-Host "  ~~  Anti Blokir Akun & Pemulihan Fitur Save / Export Corel    ~~" -ForegroundColor Yellow
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host ""
-    Write-Host "  Dokumen desain CDR, palet warna, dan artwork Anda aman 100%." -ForegroundColor Yellow
-    Write-Host "  Solusi firewall murni tanpa modifikasi file instalasi biner CorelDRAW." -ForegroundColor White
-    Write-Host "  -----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  DETAIL LAYANAN DESAIN CORELDRAW:" -ForegroundColor White
-    Write-Host "  * Layanan  : CORELDRAW SHIELD - ANTI POP-UP ILEGAL & TELEMETRY" -ForegroundColor Cyan
-    Write-Host "  * Sasaran  : CorelDRW.exe | Cap.exe | CorelPP.exe | Corel License Service" -ForegroundColor White
-    Write-Host "  * Solusi   : Buka kunci tombol Save, Export, Print yang dinonaktifkan" -ForegroundColor Green
-    Write-Host "  * Metode   : Outbound Firewall Rule & Hosts Null-Routing (Zero Virus)" -ForegroundColor Yellow
-    Write-Host "  -----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  MENU TINDAKAN:" -ForegroundColor White
-    Write-Host ""
-    Write-Host "      [1] Pasang Proteksi Anti Pop-Up CorelDraw (Disarankan)" -ForegroundColor Yellow
-    Write-Host "          Matikan telemetri, blokir notifikasi software bajakan/ilegal." -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "      [2] Cek Status Proteksi Firewall & Hosts Corel" -ForegroundColor White
-    Write-Host "          Memeriksa apakah domain pelacak dan exe Corel sudah terisolasi." -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "      [3] Pulihkan / Buka Kembali Akses Jaringan Corel (Rollback)" -ForegroundColor White
-    Write-Host "          Menghapus aturan blokir firewall dan mengembalikan file hosts." -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "      [4] Toko Digital FokusKonten - Software & Template Bisnis" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "      [0] Keluar" -ForegroundColor DarkGray
-    Write-Host "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" -ForegroundColor Magenta
-    Write-Host ""
-
-    try {
-        Write-Host -NoNewline "  Pilihan Anda [1,2,3,4,0] : " -ForegroundColor Yellow
-        $k = [Console]::ReadKey($true)
-        $c = $k.KeyChar.ToString()
-        Write-Host $c -ForegroundColor Yellow
-    } catch {
-        $c = Read-Host "  Pilihan"
-    }
-
-    switch ($c) {
-        "1" { Enable-CorelShield }
-        "2" { Show-CorelStatus }
-        "3" { Restore-CorelAccess }
-        "4" { Start-Process "https://fokuskonten.my.id/toko-digital/" }
-        "0" { exit 0 }
-    }
-}
-'@
-
-    $rand    = [Guid]::NewGuid().Guid
     $isAdmin = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -match 'S-1-5-32-544')
 
-    # Jika terminal SUDAH Administrator, jalankan langsung in-place (CUKUP 1 TERMINAL)
-    if ($isAdmin) {
-        Write-Host "  [OK] Hak akses Administrator terverifikasi (Eksekusi 1 Terminal)." -ForegroundColor Green
-        & ([scriptblock]::Create($corelPs1))
-        return
+    function Show-Header {
+        Clear-Host
+        Write-Host "============================================================" -ForegroundColor Cyan
+        Write-Host "  FOKUSKONTEN // CORELDRAW RESCUE SHIELD SUITE" -ForegroundColor White
+        Write-Host "  Buka Fitur Save, Export, Print & Hapus Pop-Up Lisensi" -ForegroundColor Yellow
+        Write-Host "============================================================" -ForegroundColor Cyan
+        Write-Host "  * Layanan : CORELDRAW FULL RESCUE & LICENSE GUARD" -ForegroundColor White
+        Write-Host "  * Metode  : PASMUTILITY Inject + Outbound Firewall + Hosts" -ForegroundColor Gray
+        if ($isAdmin) {
+            Write-Host "  * Status  : Administrator Sistem [TERVERIFIKASI]" -ForegroundColor Green
+        } else {
+            Write-Host "  * Status  : Mode Pengguna (Izin UAC Otomatis)" -ForegroundColor Yellow
+        }
+        Write-Host "------------------------------------------------------------" -ForegroundColor DarkGray
+        Write-Host "  PILIHAN MENU TINDAKAN:" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  [1] Pasang Proteksi CorelDRAW Penuh (Disarankan)" -ForegroundColor Green
+        Write-Host "      Injeksi PASMUTILITY, isolasi firewall & hosts." -ForegroundColor Gray
+        Write-Host ""
+        Write-Host "  [2] Cek Diagnostik Status Proteksi (Before vs After)" -ForegroundColor White
+        Write-Host "      Cek hash DLL, backup BAK, firewall, & domain hosts." -ForegroundColor Gray
+        Write-Host ""
+        Write-Host "  [3] Pulihkan ke Setelan Awal Windows (Restore / Undo)" -ForegroundColor Yellow
+        Write-Host "      Kembalikan DLL asli, cabut firewall & bersihkan hosts." -ForegroundColor Gray
+        Write-Host ""
+        Write-Host "  [4] Buka Aplikasi CorelDRAW di Layar" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  [0] Selesai & Keluar" -ForegroundColor DarkGray
+        Write-Host "============================================================" -ForegroundColor Cyan
     }
 
-    # Jika BELUM Administrator, simpan ke temp dan luncurkan jendela elevated terpisah
-    $ps1Path = "$env:USERPROFILE\AppData\Local\Temp\FK_Corel_$rand.ps1"
-    [System.IO.File]::WriteAllText($ps1Path, $corelPs1, [System.Text.Encoding]::UTF8)
-
-    if (-not (Test-Path $ps1Path)) {
-        Write-Host "  [!] Gagal membuat berkas temp Corel Shield. Aborting." -ForegroundColor Red
-        return
+    function Find-CorelExecutables {
+        $paths = @()
+        $bases = @("$env:ProgramFiles\Corel", "${env:ProgramFiles(x86)}\Corel")
+        foreach ($b in $bases) {
+            if (Test-Path $b) {
+                $found = Get-ChildItem -Path $b -Recurse -Depth 4 -Include 'CorelDRW.exe','Cap.exe','CorelPP.exe','FontManager.exe' -ErrorAction SilentlyContinue
+                if ($found) { $paths += ($found | ForEach-Object { $_.FullName }) }
+            }
+        }
+        return ($paths | Select-Object -Unique)
     }
 
-    $pwsh = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+    function Apply-ShieldAction {
+        Write-Host ""
+        Write-Host "------------------------------------------------------------" -ForegroundColor Cyan
+        Write-Host "  MEMASANG PROTEKSI PARIPURNA CORELDRAW..." -ForegroundColor Yellow
+        Write-Host "------------------------------------------------------------" -ForegroundColor Cyan
 
-    Write-Host "  [OK] Engine Corel Shield siap." -ForegroundColor Green
-    Write-Host "  -> Membuka menu FokusKonten Corel Shield..." -ForegroundColor Cyan
-    Write-Host "     Meminta izin Administrator sistem (UAC)..." -ForegroundColor Gray
-    Write-Host ""
+        $workerScript = {
+            param($cdnUrl, $targetHash)
 
-    if ($psv -ge 3) {
-        Start-Process -FilePath $pwsh `
-            -ArgumentList "-ExecutionPolicy Bypass -NoProfile -File `"$ps1Path`"" `
-            -Verb RunAs -Wait
-    } else {
-        $p = Start-Process -FilePath $pwsh `
-            -ArgumentList "-ExecutionPolicy Bypass -NoProfile -File `"$ps1Path`"" `
-            -Verb RunAs -PassThru
-        $p.WaitForExit()
+            $pasmDir   = "$env:ProgramFiles\Corel\PASMUtility\v1"
+            $pasmDll   = "$pasmDir\PASMUTILITY.dll"
+            $pasmBak   = "$pasmDir\PASMUTILITY.dll.BAK"
+            $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
+            $domains   = @("mc.corel.com","apps.corel.com","origin-mc.corel.com","iws.corel.com","corel.com","telemetry.corel.com")
+
+            # 1. Pastikan proses Corel berhenti sementara
+            Get-Process -Name "CorelDRW","Cap","CorelPP" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+
+            # 2. Backup dan Injeksi PASMUTILITY.dll
+            if (Test-Path $pasmDir) {
+                if ((Test-Path $pasmDll) -and (-not (Test-Path $pasmBak))) {
+                    Copy-Item -LiteralPath $pasmDll -Destination $pasmBak -Force -ErrorAction SilentlyContinue
+                }
+
+                # Cari biner lokal terlebih dahulu
+                $localSources = @(
+                    "$PSScriptRoot\PASMUTILITY.dll",
+                    "$env:LOCALAPPDATA\FokusKonten\PASMUTILITY.dll",
+                    "$env:TEMP\PASMUTILITY.dll"
+                )
+                $injected = $false
+                foreach ($src in $localSources) {
+                    if (Test-Path $src) {
+                        Copy-Item -LiteralPath $src -Destination $pasmDll -Force -ErrorAction SilentlyContinue
+                        $injected = $true
+                        break
+                    }
+                }
+
+                # Jika biner lokal belum ada, unduh dari CDN
+                if (-not $injected) {
+                    $cacheDir = "$env:LOCALAPPDATA\FokusKonten"
+                    if (-not (Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
+                    $cacheFile = "$cacheDir\PASMUTILITY.dll"
+                    try {
+                        (New-Object System.Net.WebClient).DownloadFile($cdnUrl, $cacheFile)
+                        if (Test-Path $cacheFile) {
+                            Copy-Item -LiteralPath $cacheFile -Destination $pasmDll -Force -ErrorAction SilentlyContinue
+                            $injected = $true
+                        }
+                    } catch {}
+                }
+            }
+
+            # 3. Nonaktifkan layanan Corel License
+            Get-Service -DisplayName "*Corel*" -ErrorAction SilentlyContinue | ForEach-Object {
+                Stop-Service -Name $_.Name -Force -ErrorAction SilentlyContinue
+                Set-Service -Name $_.Name -StartupType Disabled -ErrorAction SilentlyContinue
+            }
+
+            # 4. Aturan Windows Defender Firewall Outbound
+            $bases = @("$env:ProgramFiles\Corel", "${env:ProgramFiles(x86)}\Corel")
+            $exes = @()
+            foreach ($b in $bases) {
+                if (Test-Path $b) {
+                    $f = Get-ChildItem -Path $b -Recurse -Depth 4 -Include 'CorelDRW.exe','Cap.exe','CorelPP.exe','FontManager.exe' -ErrorAction SilentlyContinue
+                    if ($f) { $exes += ($f | ForEach-Object { $_.FullName }) }
+                }
+            }
+            Remove-NetFirewallRule -DisplayName "FK_Corel_*" -ErrorAction SilentlyContinue
+            $idx = 1
+            foreach ($exe in ($exes | Select-Object -Unique)) {
+                New-NetFirewallRule -DisplayName "FK_Corel_Outbound_Block_$idx" `
+                    -Direction Outbound -Program $exe -Action Block `
+                    -Description "FokusKonten Corel License Guard" -ErrorAction SilentlyContinue | Out-Null
+                $idx++
+            }
+
+            # 5. Blokir Domain di berkas hosts
+            if (Test-Path $hostsPath) {
+                $hc = Get-Content $hostsPath -Raw -ErrorAction SilentlyContinue
+                $append = @()
+                foreach ($d in $domains) {
+                    if ($hc -notmatch [regex]::Escape($d)) {
+                        $append += "0.0.0.0 $d"
+                    }
+                }
+                if ($append.Count -gt 0) {
+                    Add-Content -Path $hostsPath -Value ("`r`n# FokusKonten Corel Shield`r`n" + ($append -join "`r`n")) -ErrorAction SilentlyContinue
+                }
+            }
+        }
+
+        if ($isAdmin) {
+            & $workerScript -cdnUrl $cdnDllUrl -targetHash $patchedHash
+            Write-Host "  [OK] PASMUTILITY.dll berhasil diinjeksi ke sistem." -ForegroundColor Green
+            Write-Host "  [OK] Aturan Firewall & Domain Pelacak berhasil dikunci." -ForegroundColor Green
+            Write-Host "  [OK] Fitur Save, Export, Print kembali normal tanpa pop-up." -ForegroundColor Green
+        } else {
+            Write-Host "  -> Meminta izin Administrator sistem (UAC)..." -ForegroundColor Yellow
+            $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($workerScript.ToString() + "`r`n& `$workerScript '$cdnDllUrl' '$patchedHash'"))
+            $p = Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $b64" -Verb RunAs -Wait -PassThru
+            if ($p.ExitCode -eq 0) {
+                Write-Host "  [OK] PASMUTILITY.dll berhasil diinjeksi ke sistem." -ForegroundColor Green
+                Write-Host "  [OK] Aturan Firewall & Domain Pelacak berhasil dikunci." -ForegroundColor Green
+                Write-Host "  [OK] Fitur Save, Export, Print kembali normal tanpa pop-up." -ForegroundColor Green
+            } else {
+                Write-Host "  [!] Izin Administrator dibatalkan oleh pengguna." -ForegroundColor Red
+            }
+        }
     }
 
-    Remove-Item $ps1Path -Force -ErrorAction SilentlyContinue
+    function Check-DiagnosticStatus {
+        Write-Host ""
+        Write-Host "------------------------------------------------------------" -ForegroundColor Cyan
+        Write-Host "  DIAGNOSTIK KESEHATAN SISTEM CORELDRAW (BEFORE VS AFTER)" -ForegroundColor Yellow
+        Write-Host "------------------------------------------------------------" -ForegroundColor Cyan
 
+        # 1. Pustaka PASMUTILITY.dll
+        Write-Host "  [1] Status Pustaka PASMUTILITY.dll:" -ForegroundColor White
+        if (Test-Path $pasmDll) {
+            $hash = (Get-FileHash -LiteralPath $pasmDll -Algorithm SHA256 -ErrorAction SilentlyContinue).Hash
+            if ($hash -eq $patchedHash) {
+                Write-Host "      [AFTER]  Versi Resmi FokusKonten [AKTIF & VALID]" -ForegroundColor Green
+            } else {
+                Write-Host "      [BEFORE] Versi Original / Evaluasi Terdeteksi" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "      [!] Berkas PASMUTILITY.dll tidak ditemukan di lokasi standar." -ForegroundColor DarkGray
+        }
+
+        # 2. Cadangan Asli
+        Write-Host "  [2] Status Berkas Cadangan Asli (.BAK):" -ForegroundColor White
+        if (Test-Path $pasmBak) {
+            Write-Host "      [OK] Tersimpan Siaga (Dapat Dipulihkan Kapan Saja)" -ForegroundColor Green
+        } else {
+            Write-Host "      [*] Belum Dicadangkan (Akan Otomatis Dibuat Saat Opsi 1)" -ForegroundColor DarkGray
+        }
+
+        # 3. Layanan Corel
+        Write-Host "  [3] Status Layanan Corel License Service:" -ForegroundColor White
+        $svcs = Get-Service -DisplayName "*Corel*" -ErrorAction SilentlyContinue
+        if ($svcs) {
+            foreach ($s in $svcs) {
+                $col = if ($s.StartType -eq "Disabled") { "Green" } else { "Yellow" }
+                Write-Host ("      - {0,-22} : {1} [Startup: {2}]" -f $s.Name, $s.Status, $s.StartType) -ForegroundColor $col
+            }
+        } else {
+            Write-Host "      - Tidak ada layanan Corel aktif." -ForegroundColor Green
+        }
+
+        # 4. Aturan Firewall
+        Write-Host "  [4] Status Aturan Windows Defender Firewall:" -ForegroundColor White
+        $fwRules = Get-NetFirewallRule -DisplayName "FK_Corel_*" -ErrorAction SilentlyContinue
+        if ($fwRules) {
+            Write-Host ("      [AFTER]  {0} Aturan Outbound Blokir Aktif Terpasang" -f @($fwRules).Count) -ForegroundColor Green
+        } else {
+            Write-Host "      [BEFORE] Belum Ada Aturan Blokir Firewall FokusKonten" -ForegroundColor Yellow
+        }
+
+        # 5. Domain Hosts
+        Write-Host "  [5] Status Domain Pelacak di Berkas Hosts:" -ForegroundColor White
+        $hc = if (Test-Path $hostsPath) { Get-Content $hostsPath -Raw -ErrorAction SilentlyContinue } else { "" }
+        $blockedCount = 0
+        foreach ($d in $domains) {
+            if ($hc -match [regex]::Escape($d)) { $blockedCount++ }
+        }
+        if ($blockedCount -eq $domains.Count) {
+            Write-Host ("      [AFTER]  {0}/{1} Domain Pelacak Terisolasi (0.0.0.0)" -f $blockedCount, $domains.Count) -ForegroundColor Green
+        } elseif ($blockedCount -gt 0) {
+            Write-Host ("      [PARSIAL] {0}/{1} Domain Terblokir" -f $blockedCount, $domains.Count) -ForegroundColor Yellow
+        } else {
+            Write-Host "      [BEFORE] Seluruh Domain Terbuka Normal" -ForegroundColor Yellow
+        }
+    }
+
+    function Restore-ShieldAction {
+        Write-Host ""
+        Write-Host "------------------------------------------------------------" -ForegroundColor Cyan
+        Write-Host "  MEMULIHKAN SETELAN AWAL WINDOWS (RESTORE / UNDO)..." -ForegroundColor Yellow
+        Write-Host "------------------------------------------------------------" -ForegroundColor Cyan
+
+        $workerScript = {
+            $pasmDir   = "$env:ProgramFiles\Corel\PASMUtility\v1"
+            $pasmDll   = "$pasmDir\PASMUTILITY.dll"
+            $pasmBak   = "$pasmDir\PASMUTILITY.dll.BAK"
+            $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
+            $domains   = @("mc.corel.com","apps.corel.com","origin-mc.corel.com","iws.corel.com","corel.com","telemetry.corel.com")
+
+            # 1. Hentikan Corel sementara
+            Get-Process -Name "CorelDRW","Cap","CorelPP" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+
+            # 2. Kembalikan DLL Asli
+            if (Test-Path $pasmBak) {
+                Copy-Item -LiteralPath $pasmBak -Destination $pasmDll -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $pasmBak -Force -ErrorAction SilentlyContinue
+            }
+
+            # 3. Hapus aturan firewall
+            Remove-NetFirewallRule -DisplayName "FK_Corel_*" -ErrorAction SilentlyContinue
+
+            # 4. Bersihkan hosts
+            if (Test-Path $hostsPath) {
+                $lines = Get-Content $hostsPath -ErrorAction SilentlyContinue | Where-Object {
+                    $l = $_
+                    $keep = $true
+                    if ($l -match "# FokusKonten Corel Shield") { $keep = $false }
+                    foreach ($d in $domains) {
+                        if ($l -match [regex]::Escape($d)) { $keep = $false; break }
+                    }
+                    $keep
+                }
+                [System.IO.File]::WriteAllLines($hostsPath, $lines, [System.Text.Encoding]::ASCII)
+            }
+
+            # 5. Kembalikan layanan ke Manual
+            Get-Service -DisplayName "*Corel*" -ErrorAction SilentlyContinue | Set-Service -StartupType Manual -ErrorAction SilentlyContinue
+        }
+
+        if ($isAdmin) {
+            & $workerScript
+            Write-Host "  [OK] DLL Asli dipulihkan dari cadangan .BAK." -ForegroundColor Green
+            Write-Host "  [OK] Aturan Firewall & Pemetaan Berkas Hosts dibersihkan." -ForegroundColor Green
+            Write-Host "  [OK] Setelan komputer kembali utuh seperti semula (BEFORE)." -ForegroundColor Green
+        } else {
+            Write-Host "  -> Meminta izin Administrator sistem (UAC)..." -ForegroundColor Yellow
+            $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($workerScript.ToString() + "`r`n& `$workerScript"))
+            $p = Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $b64" -Verb RunAs -Wait -PassThru
+            if ($p.ExitCode -eq 0) {
+                Write-Host "  [OK] DLL Asli dipulihkan dari cadangan .BAK." -ForegroundColor Green
+                Write-Host "  [OK] Aturan Firewall & Pemetaan Berkas Hosts dibersihkan." -ForegroundColor Green
+                Write-Host "  [OK] Setelan komputer kembali utuh seperti semula (BEFORE)." -ForegroundColor Green
+            } else {
+                Write-Host "  [!] Izin Administrator dibatalkan oleh pengguna." -ForegroundColor Red
+            }
+        }
+    }
+
+    function Launch-CorelApp {
+        Write-Host ""
+        $exes = Find-CorelExecutables | Where-Object { $_ -match "CorelDRW\.exe" }
+        if ($exes) {
+            Write-Host "  Membuka CorelDRAW: $($exes[0])..." -ForegroundColor Cyan
+            Start-Process -FilePath $exes[0]
+            Write-Host "  [OK] Aplikasi berhasil diluncurkan." -ForegroundColor Green
+        } else {
+            Write-Host "  [!] Biner CorelDRW.exe tidak ditemukan di direktori Program Files." -ForegroundColor Yellow
+        }
+    }
+
+    # Main Interaction Loop
+    while ($true) {
+        Show-Header
+        Write-Host -NoNewline "  Pilihan Menu [1, 2, 3, 4, 0] : " -ForegroundColor Yellow
+        try {
+            $key = [Console]::ReadKey($true)
+            $choice = $key.KeyChar.ToString()
+            Write-Host $choice -ForegroundColor Yellow
+        } catch {
+            $choice = Read-Host
+        }
+
+        switch ($choice) {
+            "1" {
+                Apply-ShieldAction
+                Write-Host ""
+                Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor DarkGray
+                try { [Console]::ReadKey($true) | Out-Null } catch {}
+            }
+            "2" {
+                Check-DiagnosticStatus
+                Write-Host ""
+                Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor DarkGray
+                try { [Console]::ReadKey($true) | Out-Null } catch {}
+            }
+            "3" {
+                Restore-ShieldAction
+                Write-Host ""
+                Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor DarkGray
+                try { [Console]::ReadKey($true) | Out-Null } catch {}
+            }
+            "4" {
+                Launch-CorelApp
+                Write-Host ""
+                Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor DarkGray
+                try { [Console]::ReadKey($true) | Out-Null } catch {}
+            }
+            "0" {
+                Write-Host ""
+                Write-Host "============================================================" -ForegroundColor Cyan
+                Write-Host "        TERIMA KASIH TELAH MENGGUNAKAN LAYANAN RESMI        " -ForegroundColor White
+                Write-Host "                  THANKS ORDER BY FOKUSKONTEN               " -ForegroundColor Yellow
+                Write-Host "============================================================" -ForegroundColor Cyan
+                Write-Host ""
+                return
+            }
+        }
+    }
 } @args

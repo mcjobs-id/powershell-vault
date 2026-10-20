@@ -43,31 +43,6 @@ try {
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 } catch {}
 
-if (-not $isAdmin) {
-    Write-Host ""
-    Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  FOKUSKONTEN // PERIZINAN SISTEM (ADMINISTRATOR)" -ForegroundColor Yellow
-    Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  Layanan ini membutuhkan hak akses Administrator untuk" -ForegroundColor White
-    Write-Host "  menerapkan lisensi resmi ke direktori sistem Microsoft." -ForegroundColor White
-    Write-Host ""
-    Write-Host "  -> Membuka sesi Administrator resmi (1 Terminal)..." -ForegroundColor Green
-    Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
-    Write-Host "================================================================" -ForegroundColor Cyan
-    try {
-        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"& { irm fokuskonten.my.id/office | iex }`"" -Verb RunAs
-        exit
-    } catch {
-        Write-Host ""
-        Write-Host "  [!] Izin Administrator dibatalkan oleh pengguna." -ForegroundColor Red
-        Write-Host "      Silakan buka PowerShell dengan klik kanan -> 'Run as administrator'" -ForegroundColor Yellow
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        Write-Host "  Tekan sembarang tombol untuk keluar..." -ForegroundColor Gray
-        try { [Console]::ReadKey($true) | Out-Null } catch {}
-        exit
-    }
-}
-
 function Restore-Terminal {
     try {
         $Host.UI.RawUI.ForegroundColor = $origFg
@@ -198,8 +173,14 @@ function Invoke-Action {
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     
-    # Eksekusi in-place langsung di terminal aktif (1 TERMINAL)
-    & cmd.exe /c "`"$engine`" /ohook -qedit -el"
+    # Eksekusi in-place langsung di terminal aktif (1 TERMINAL jika Admin)
+    if ($isAdmin) {
+        & cmd.exe /c "`"$engine`" /ohook -qedit -el"
+    } else {
+        Write-Host "  -> Menjalankan sesi elevasi Administrator resmi..." -ForegroundColor Green
+        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
+        Start-Process cmd.exe -ArgumentList "/c `"`"$engine`" /ohook -qedit -el`"" -Verb RunAs -Wait
+    }
 
     Write-Host ""
     Write-Host "  [OK] PROSES PEMULIHAN OFFICE SELESAI DENGAN SUKSES!" -ForegroundColor Green
@@ -249,7 +230,13 @@ function Remove-License {
     
     $engine = Get-EnginePath
     if ($engine) {
-        & cmd.exe /c "`"$engine`" /Ohook-Uninstall -qedit -el"
+        if ($isAdmin) {
+            & cmd.exe /c "`"$engine`" /Ohook-Uninstall -qedit -el"
+        } else {
+            Write-Host "  -> Menjalankan sesi elevasi Administrator resmi..." -ForegroundColor Green
+            Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
+            Start-Process cmd.exe -ArgumentList "/c `"`"$engine`" /Ohook-Uninstall -qedit -el`"" -Verb RunAs -Wait
+        }
         Write-Host ""
         Write-Host "  [OK] LISENSI OHOOK TELAH BERHASIL DICABUT BERSIH!" -ForegroundColor Green
         Write-Host "  Office Anda telah kembali ke kondisi awal." -ForegroundColor White

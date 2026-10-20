@@ -43,31 +43,6 @@ try {
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 } catch {}
 
-if (-not $isAdmin) {
-    Write-Host ""
-    Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  FOKUSKONTEN // PERIZINAN SISTEM (ADMINISTRATOR)" -ForegroundColor Yellow
-    Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  Layanan ini membutuhkan hak akses Administrator untuk" -ForegroundColor White
-    Write-Host "  mendaftarkan lisensi digital resmi ke motherboard PC." -ForegroundColor White
-    Write-Host ""
-    Write-Host "  -> Membuka sesi Administrator resmi (1 Terminal)..." -ForegroundColor Green
-    Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
-    Write-Host "================================================================" -ForegroundColor Cyan
-    try {
-        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"& { irm fokuskonten.my.id/windows | iex }`"" -Verb RunAs
-        exit
-    } catch {
-        Write-Host ""
-        Write-Host "  [!] Izin Administrator dibatalkan oleh pengguna." -ForegroundColor Red
-        Write-Host "      Silakan buka PowerShell dengan klik kanan -> 'Run as administrator'" -ForegroundColor Yellow
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        Write-Host "  Tekan sembarang tombol untuk keluar..." -ForegroundColor Gray
-        try { [Console]::ReadKey($true) | Out-Null } catch {}
-        exit
-    }
-}
-
 function Restore-Terminal {
     try {
         $Host.UI.RawUI.ForegroundColor = $origFg
@@ -153,7 +128,11 @@ function Show-Header {
         Write-Host "  STATUS : [ WATERMARK AKTIF / PERLU PENDAFTARAN LISENSI ]" -ForegroundColor Yellow
     }
 
-    Write-Host "  AKSES  : [ ADMINISTRATOR RESMI ] (Siap Eksekusi 1 Terminal)" -ForegroundColor Green
+    if ($isAdmin) {
+        Write-Host "  AKSES  : [ ADMINISTRATOR RESMI ] (Siap Eksekusi 1 Terminal)" -ForegroundColor Green
+    } else {
+        Write-Host "  AKSES  : [ USER STANDAR ] (Mode In-Place 1 Terminal)" -ForegroundColor Yellow
+    }
     Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
 }
 
@@ -167,8 +146,14 @@ function Invoke-Action {
     Write-Host "  Proses berlangsung 10-30 detik. Jangan tutup jendela ini." -ForegroundColor DarkGray
     Write-Host ""
     
-    # Eksekusi in-place langsung di terminal aktif (1 TERMINAL)
-    & cmd.exe /c "`"$engine`" /hwid -qedit -el"
+    # Eksekusi in-place langsung di terminal aktif (1 TERMINAL jika Admin)
+    if ($isAdmin) {
+        & cmd.exe /c "`"$engine`" /hwid -qedit -el"
+    } else {
+        Write-Host "  -> Menjalankan sesi elevasi Administrator resmi..." -ForegroundColor Green
+        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
+        Start-Process cmd.exe -ArgumentList "/c `"`"$engine`" /hwid -qedit -el`"" -Verb RunAs -Wait
+    }
 
     Write-Host ""
     Write-Host "  [OK] PROSES REGISTRASI LISENSI WINDOWS SELESAI!" -ForegroundColor Green
@@ -212,8 +197,13 @@ function Remove-License {
     
     $slmgr = Join-Path $env:SystemRoot "System32\slmgr.vbs"
     if (Test-Path -LiteralPath $slmgr) {
-        cscript.exe //nologo $slmgr /upk
-        cscript.exe //nologo $slmgr /cpky
+        if ($isAdmin) {
+            cscript.exe //nologo $slmgr /upk
+            cscript.exe //nologo $slmgr /cpky
+        } else {
+            Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /upk" -Verb RunAs -Wait
+            Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /cpky" -Verb RunAs -Wait
+        }
         Write-Host ""
         Write-Host "  [OK] KUNCI LISENSI WINDOWS BERHASIL DIHAPUS DARI REGISTRY!" -ForegroundColor Green
         Write-Host "  Windows telah dikembalikan ke status semula." -ForegroundColor White

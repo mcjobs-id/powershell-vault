@@ -1,0 +1,112 @@
+================================================================================
+DRAFT RESMI POSTINGAN SHOPEE (STANDAR OPEN API V2) — POWERSHELL RESCUE SUITE
+================================================================================
+KODE SKU              : FK-PSH-06
+NAMA FOLDER KATALOG   : [FK-PSH-06] Jasa Optimasi PC Windows Laptop Lemot Hapus Bloatware 1-Klik
+PAYLOAD FULFILLMENT   : irm fokuskonten.my.id/winutil | iex
+CATATAN FULFILLMENT   : Perintah di atas HANYA dikirimkan via Chat Toko setelah buyer checkout!
+ARSITEKTUR PENGIRIMAN : Pure Command Stream (Zero Marginal Cost, Zero File Download)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. HARGA & STOK (SKEMA OPEN API V2)
+--------------------------------------------------------------------------------
+- original_price (Harga Coret) : Rp 49.000
+- current_price  (Harga Promo) : Rp 1.000 (Fase Pemantik / Saweria Milestone 10:20)
+- stock                        : 9999
+- currency                     : IDR
+- max_purchase_limit           : 1
+- min_purchase_limit           : 1
+
+--------------------------------------------------------------------------------
+2. JUDUL PRODUK (item_name — MAKSIMAL 120 KARAKTER)
+--------------------------------------------------------------------------------
+Jasa Optimasi PC Windows Laptop Lemot Hapus Bloatware - Bantuan Setting Performa Gaming & Kerja 1-Klik
+
+(Panjang Karakter: 102 / 120 karakter)
+
+--------------------------------------------------------------------------------
+3. KATEGORI SHOPEE (category_id)
+--------------------------------------------------------------------------------
+category_id : 101514
+Nama Jalur  : Layanan / Voucher / Jasa Digital (Kategori Standar SSOT FokusKonten 1.711 Produk)
+
+--------------------------------------------------------------------------------
+4. MEREK & ATRIBUT STANDAR SHOPEE (brand_name & attribute_list)
+--------------------------------------------------------------------------------
+brand_name  : "Fokus Konten"
+
+attribute_list:
+[
+  {
+    "attribute_id": 100670,
+    "original_attribute_name": "Region",
+    "attribute_value_list": [{ "value_id": 3572, "original_value_name": "Indonesia", "value_unit": "" }],
+    "is_mandatory": false
+  },
+  {
+    "attribute_id": 100703,
+    "original_attribute_name": "Validity",
+    "attribute_value_list": [{ "value_id": 0, "original_value_name": "Lifetime", "value_unit": "" }],
+    "is_mandatory": false
+  }
+]
+
+--------------------------------------------------------------------------------
+5. DESKRIPSI PRODUK (description — PLAIN TEXT RESMI SHOPEE — 100% BEBAS LINK)
+--------------------------------------------------------------------------------
+LAPTOP BARU DINYALAKAN SUDAH LEMOT, RAM SESAK 90%, DAN KIPAS BERISIK? JANGAN BURU-BURU KELUAR UANG JUTAAN BELI LAPTOP BARU ATAU RATUSAN RIBU KE TUKANG SERVIS!
+
+Pernahkah Anda kesal saat dikejar deadline kerja, meeting penting, atau sedang asyik bermain game, tiba-tiba laptop kesayangan patah-patah (lag), kursor macet berputar, dan aplikasi membeku lama?
+
+Saat membuka Task Manager, puluhan aplikasi bawaan pabrik (bloatware) yang tidak pernah dipakai berjalan diam-diam di background, menyedot habis memori RAM hingga 90% dan membebani prosesor secara sia-sia!
+
+Jangan biarkan laptop Anda tersiksa! Anda TIDAK PERLU membawa laptop ke tempat servis yang berisiko ditinggal berhari-hari dan file dokumen pribadi diintip orang lain. Anda juga TIDAK PERLU beli laptop baru jutaan rupiah.
+
+Kini hadir Layanan Optimasi PC & Laptop Windows Resmi FokusKonten — solusi rekayasa sistem modern 1-klik yang membersihkan aplikasi sampah background, melegakan RAM, dan melipatgandakan responsivitas laptop dalam hitungan detik via dasbor visual elegan!
+
+========================================
+MENGAPA LAYANAN INI SANGAT BERBEDA & AMAN?
+========================================
+1. HAPUS BLOATWARE SAMPAH 1-KLIK:
+Membersihkan aplikasi bawaan yang tidak terpakai, iklan sistem tersembunyi, dan pelacak background secara tuntas tanpa menyentuh file dokumen kerja berharga Anda.
+
+2. RAM LEGA & DISK BEBAS MACET (ZERO LAG):
+Memangkas proses sistem tidak penting dan menurunkan beban RAM drastis, sehingga laptop langsung terasa enteng, responsif, dan adem dipakai kerja seharian.
+
+3. PERFORMA GAMING & MULTITASKING MAKSIMAL:
+Membantu menstabilkan frame-rate (FPS), mengurangi drop mendadak, serta mempercepat buka-tutup aplikasi berat seperti desain grafis dan spreadsheet besar.
+
+4. 100% AMAN & ADA TITIK PEMULIHAN (RESTORE POINT):
+Bukan program modifikasi berbahaya. Sistem dilengkapi opsi pembuatan titik pemulihan, memberi kendali penuh mengembalikan setelan kapan saja.
+
+5. DASBOR VISUAL PRAKTIS & MANDIRI:
+Antarmuka grafis modern yang mudah dipahami pengguna awam. Cukup centang opsi yang diinginkan dan klik jalankan di layar komputer Anda.
+
+========================================
+CARA PENGGUNAAN KILAT (1 MENIT BERES):
+========================================
+1. Selesaikan pesanan di Shopee (Layanan siaga 24 jam nonstop).
+2. Perintah resmi bantuan teknis langsung terkirim ke Chat Toko Anda.
+3. Buka PowerShell di komputer Anda, salin perintah resmi, lalu tekan Enter.
+4. Dasbor optimasi terbuka di layar. Pilih opsi dan jalankan!
+5. Rasakan performa laptop kembali ngebut seperti pertama kali beli!
+
+========================================
+KOMPATIBILITAS SISTEM:
+========================================
+• Komputer / Laptop: Seluruh merek (Asus, Acer, Lenovo, HP, Dell, MSI, Axioo, dll.)
+• Sistem Operasi: Windows 10 & Windows 11 (Semua Edisi 64-bit)
+• Garansi: Didampingi panduan teknisi ramah sampai laptop Anda kembali lancar.
+
+--------------------------------------------------------------------------------
+6. DAFTAR BERKAS FOTO SLIDE SHOPEE (FOLDER SLIDES/)
+--------------------------------------------------------------------------------
+1. FK-PSH-06_cover.jpg    (Cover Utama Hero Studio Terang 3D Before vs After)
+2. FK-PSH-06_slide_03.jpg (Cara Pemesanan & Alur Checkout Instan Otomatis)
+3. FK-PSH-06_slide_04.jpg (Jaminan 100% Aman & Privasi File Terlindungi)
+4. FK-PSH-06_slide_05.jpg (Garansi Layanan & Pendampingan Teknisi Sampai Beres)
+5. FK-PSH-06_slide_06.jpg (Panduan Eksekusi Kilat 1 Menit via Chat Toko)
+6. FK-PSH-06_slide_07.jpg (Spesifikasi Kompatibilitas Windows 10 & Windows 11)
+7. FK-PSH-06_slide_08.jpg (Ulasan & Rating Bintang 5 Kepuasan Pengguna)
+================================================================================

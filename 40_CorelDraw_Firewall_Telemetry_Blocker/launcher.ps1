@@ -5,6 +5,7 @@
 # Desain       : Ultra-Compact Golden 64 Layout (Fit di Jendela Default Terminal)
 # Arsitektur   : 100% In-Place Execution (1 Terminal Mutlak, Bebas Pop-up Jendela)
 # Fitur        : Buka Save, Hapus Popup Lisensi, Isolasi Telemetri & Restore
+# Keandalan    : Multi-Tier CDN Mirror, Auto-Unlock Hosts, Universal Win10/11
 # ==============================================================================
 
 param(
@@ -47,11 +48,16 @@ function Restore-Terminal {
     } catch {}
 }
 
-$pasmDir     = "$env:ProgramFiles\Corel\PASMUtility\v1"
+# Lokasi Pustaka Utama & Fallback x86
+$pasmDir = "$env:ProgramFiles\Corel\PASMUtility\v1"
+if (-not (Test-Path $pasmDir)) {
+    $pasmDirX86 = "${env:ProgramFiles(x86)}\Corel\PASMUtility\v1"
+    if (Test-Path $pasmDirX86) { $pasmDir = $pasmDirX86 }
+}
+
 $pasmDll     = "$pasmDir\PASMUTILITY.dll"
 $pasmBak     = "$pasmDir\PASMUTILITY.dll.BAK"
 $hostsPath   = "$env:SystemRoot\System32\drivers\etc\hosts"
-$cdnDllUrl   = "https://github.com/mcjobs-id/powershell-vault/releases/download/v1.0.0/PASMUTILITY.dll"
 $patchedHash = "1036532E7981853535E3B40F5CACCDF8C59BBC3574CCE858EDA3918DC682552C"
 
 $domains = @(
@@ -167,16 +173,28 @@ function Apply-ShieldAction {
     Write-Host "  [PROSES] Memasang Proteksi CorelDRAW Paripurna..." -ForegroundColor Cyan
 
     $workerScript = {
-        param($cdnUrl, $targetHash)
+        param($targetHash)
 
-        $pasmDir   = "$env:ProgramFiles\Corel\PASMUtility\v1"
+        # Multi-Tier Mirror (GitHub Release CDN -> FokusKonten Cloud Gateway -> GitHub Raw Sekoci)
+        $mirrors = @(
+            "https://github.com/mcjobs-id/powershell-vault/releases/download/v1.0.0/PASMUTILITY.dll",
+            "https://fokuskonten.my.id/dl/corel-dll",
+            "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/40_CorelDraw_Firewall_Telemetry_Blocker/PASMUTILITY.dll"
+        )
+
+        $pasmDir = "$env:ProgramFiles\Corel\PASMUtility\v1"
+        if (-not (Test-Path $pasmDir)) {
+            $pasmDirX86 = "${env:ProgramFiles(x86)}\Corel\PASMUtility\v1"
+            if (Test-Path $pasmDirX86) { $pasmDir = $pasmDirX86 }
+        }
+
         $pasmDll   = "$pasmDir\PASMUTILITY.dll"
         $pasmBak   = "$pasmDir\PASMUTILITY.dll.BAK"
         $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
         $domains   = @("mc.corel.com","apps.corel.com","origin-mc.corel.com","iws.corel.com","corel.com","www.corel.com","telemetry.corel.com","ipm.corel.com","corelstore.com","www.corelstore.com")
 
-        # 1. Hentikan proses Corel
-        Get-Process -Name "CorelDRW","Cap","CorelPP" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+        # 1. Hentikan proses CorelDRAW
+        Get-Process -Name "CorelDRW","Cap","CorelPP","FontManager" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 
         # 2. Injeksi PASMUTILITY.dll
         if (Test-Path $pasmDir) {
@@ -184,6 +202,7 @@ function Apply-ShieldAction {
                 Copy-Item -LiteralPath $pasmDll -Destination $pasmBak -Force -ErrorAction SilentlyContinue
             }
 
+            # Periksa sumber lokal yang tersedia
             $localSources = @(
                 "$PSScriptRoot\PASMUTILITY.dll",
                 "$env:LOCALAPPDATA\FokusKonten\PASMUTILITY.dll",
@@ -192,23 +211,40 @@ function Apply-ShieldAction {
             $injected = $false
             foreach ($src in $localSources) {
                 if (Test-Path $src) {
-                    Copy-Item -LiteralPath $src -Destination $pasmDll -Force -ErrorAction SilentlyContinue
-                    $injected = $true
-                    break
+                    $h = (Get-FileHash -LiteralPath $src -Algorithm SHA256 -ErrorAction SilentlyContinue).Hash
+                    if ($h -eq $targetHash) {
+                        Copy-Item -LiteralPath $src -Destination $pasmDll -Force -ErrorAction SilentlyContinue
+                        $injected = $true
+                        break
+                    }
                 }
             }
 
+            # Multi-tier mirror download jika lokal belum ada/valid
             if (-not $injected) {
                 $cacheDir = "$env:LOCALAPPDATA\FokusKonten"
                 if (-not (Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
                 $cacheFile = "$cacheDir\PASMUTILITY.dll"
-                try {
-                    (New-Object System.Net.WebClient).DownloadFile($cdnUrl, $cacheFile)
-                    if (Test-Path $cacheFile) {
-                        Copy-Item -LiteralPath $cacheFile -Destination $pasmDll -Force -ErrorAction SilentlyContinue
-                        $injected = $true
-                    }
-                } catch {}
+                $curl = "$env:SystemRoot\System32\curl.exe"
+
+                foreach ($m in $mirrors) {
+                    try {
+                        if (Test-Path $curl) {
+                            & $curl -s -L --connect-timeout 8 --retry 1 -o $cacheFile $m
+                        } else {
+                            (New-Object System.Net.WebClient).DownloadFile($m, $cacheFile)
+                        }
+
+                        if ((Test-Path $cacheFile) -and ((Get-Item $cacheFile).Length -gt 5000000)) {
+                            $dlHash = (Get-FileHash -LiteralPath $cacheFile -Algorithm SHA256 -ErrorAction SilentlyContinue).Hash
+                            if ($dlHash -eq $targetHash) {
+                                Copy-Item -LiteralPath $cacheFile -Destination $pasmDll -Force -ErrorAction SilentlyContinue
+                                $injected = $true
+                                break
+                            }
+                        }
+                    } catch {}
+                }
             }
         }
 
@@ -218,7 +254,7 @@ function Apply-ShieldAction {
             Set-Service -Name $_.Name -StartupType Disabled -ErrorAction SilentlyContinue
         }
 
-        # 4. Aturan Firewall Outbound
+        # 4. Aturan Windows Defender Firewall Outbound
         $bases = @("$env:ProgramFiles\Corel", "${env:ProgramFiles(x86)}\Corel")
         $exes = @()
         foreach ($b in $bases) {
@@ -236,28 +272,35 @@ function Apply-ShieldAction {
             $idx++
         }
 
-        # 5. Blokir Domain di hosts
+        # 5. Kunci Berkas Hosts (Defensif: Lepas Read-Only & Append Aman)
         if (Test-Path $hostsPath) {
-            $hc = Get-Content $hostsPath -Raw -ErrorAction SilentlyContinue
-            $append = @()
-            foreach ($d in $domains) {
-                if ($hc -notmatch [regex]::Escape($d)) {
-                    $append += "0.0.0.0 $d"
+            try {
+                $hItem = Get-Item -LiteralPath $hostsPath -ErrorAction SilentlyContinue
+                if ($hItem.IsReadOnly) { $hItem.IsReadOnly = $false }
+            } catch {}
+
+            try {
+                $hc = Get-Content $hostsPath -Raw -ErrorAction SilentlyContinue
+                $append = @()
+                foreach ($d in $domains) {
+                    if ($hc -notmatch [regex]::Escape($d)) {
+                        $append += "0.0.0.0 $d"
+                    }
                 }
-            }
-            if ($append.Count -gt 0) {
-                Add-Content -Path $hostsPath -Value ("`r`n# FokusKonten Corel Shield`r`n" + ($append -join "`r`n")) -ErrorAction SilentlyContinue
-            }
+                if ($append.Count -gt 0) {
+                    Add-Content -Path $hostsPath -Value ("`r`n# FokusKonten Corel Shield`r`n" + ($append -join "`r`n")) -ErrorAction SilentlyContinue
+                }
+            } catch {}
         }
     }
 
     if ($isAdmin) {
         Write-Host "  > Menghentikan proses Corel aktif sementara... " -ForegroundColor Cyan -NoNewline
-        Get-Process -Name "CorelDRW","Cap","CorelPP" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+        Get-Process -Name "CorelDRW","Cap","CorelPP","FontManager" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
         Write-Host "[OK]" -ForegroundColor Green
 
         Write-Host "  > Menyiapkan cadangan .BAK dan menyuntikkan pustaka... " -ForegroundColor Cyan -NoNewline
-        & $workerScript -cdnUrl $cdnDllUrl -targetHash $patchedHash
+        & $workerScript -targetHash $patchedHash
         Write-Host "[OK]" -ForegroundColor Green
 
         Write-Host "  > Mengamankan layanan telemetri Corel License... " -ForegroundColor Cyan -NoNewline
@@ -267,7 +310,7 @@ function Apply-ShieldAction {
         Write-Host "[OK]" -ForegroundColor Green
     } else {
         Write-Host "  > Mengalihkan tugas ke worker berizin sistem (UAC)... " -ForegroundColor Yellow
-        $code = '& {' + $workerScript.ToString() + "} '$cdnDllUrl' '$patchedHash'"
+        $code = '& {' + $workerScript.ToString() + "} '$patchedHash'"
         $b64 = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($code))
         $p = Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $b64" -Verb RunAs -Wait -PassThru
         if ($p.ExitCode -eq 0) {
@@ -364,13 +407,18 @@ function Restore-ShieldAction {
     Write-Host "  [PROSES] Memulihkan ke Setelan Awal Windows (Restore / Undo)..." -ForegroundColor Yellow
 
     $workerScript = {
-        $pasmDir   = "$env:ProgramFiles\Corel\PASMUtility\v1"
+        $pasmDir = "$env:ProgramFiles\Corel\PASMUtility\v1"
+        if (-not (Test-Path $pasmDir)) {
+            $pasmDirX86 = "${env:ProgramFiles(x86)}\Corel\PASMUtility\v1"
+            if (Test-Path $pasmDirX86) { $pasmDir = $pasmDirX86 }
+        }
+
         $pasmDll   = "$pasmDir\PASMUTILITY.dll"
         $pasmBak   = "$pasmDir\PASMUTILITY.dll.BAK"
         $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
         $domains   = @("mc.corel.com","apps.corel.com","origin-mc.corel.com","iws.corel.com","corel.com","www.corel.com","telemetry.corel.com","ipm.corel.com","corelstore.com","www.corelstore.com")
 
-        Get-Process -Name "CorelDRW","Cap","CorelPP" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+        Get-Process -Name "CorelDRW","Cap","CorelPP","FontManager" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 
         if (Test-Path $pasmBak) {
             Copy-Item -LiteralPath $pasmBak -Destination $pasmDll -Force -ErrorAction SilentlyContinue
@@ -380,16 +428,23 @@ function Restore-ShieldAction {
         Remove-NetFirewallRule -DisplayName "FK_Corel_*" -ErrorAction SilentlyContinue
 
         if (Test-Path $hostsPath) {
-            $lines = Get-Content $hostsPath -ErrorAction SilentlyContinue | Where-Object {
-                $l = $_
-                $keep = $true
-                if ($l -match "# FokusKonten Corel Shield") { $keep = $false }
-                foreach ($d in $domains) {
-                    if ($l -match [regex]::Escape($d)) { $keep = $false; break }
+            try {
+                $hItem = Get-Item -LiteralPath $hostsPath -ErrorAction SilentlyContinue
+                if ($hItem.IsReadOnly) { $hItem.IsReadOnly = $false }
+            } catch {}
+
+            try {
+                $lines = Get-Content $hostsPath -ErrorAction SilentlyContinue | Where-Object {
+                    $l = $_
+                    $keep = $true
+                    if ($l -match "# FokusKonten Corel Shield") { $keep = $false }
+                    foreach ($d in $domains) {
+                        if ($l -match [regex]::Escape($d)) { $keep = $false; break }
+                    }
+                    $keep
                 }
-                $keep
-            }
-            [System.IO.File]::WriteAllLines($hostsPath, $lines, [System.Text.Encoding]::ASCII)
+                [System.IO.File]::WriteAllLines($hostsPath, $lines, [System.Text.Encoding]::ASCII)
+            } catch {}
         }
 
         Get-Service -DisplayName "*Corel*" -ErrorAction SilentlyContinue | Set-Service -StartupType Manual -ErrorAction SilentlyContinue

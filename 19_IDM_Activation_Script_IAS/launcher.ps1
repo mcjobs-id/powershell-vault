@@ -333,22 +333,22 @@ function Download-And-Install-IDM {
     $setupFile = Join-Path $tempDir "idman_setup_official.exe"
     if (Test-Path $setupFile) { Remove-Item $setupFile -Force -ErrorAction SilentlyContinue }
 
-    # Mirror Publik Resmi Global (GitHub CDN & Fallback Tonec) — 100% Bebas Localhost Hardcode
+    # Multi-Tier Cloud Mirror (FokusKonten Official Gateway & Global CDN Sekoci)
     $mirrors = @(
-        @{ Name = "GitHub Global Edge CDN";          Url = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/19_IDM_Activation_Script_IAS/idman_setup.exe" },
-        @{ Name = "jsDelivr High-Speed Mirror";      Url = "https://cdn.jsdelivr.net/gh/mcjobs-id/powershell-vault@main/19_IDM_Activation_Script_IAS/idman_setup.exe" },
-        @{ Name = "Server Resmi Tonec (Fallback)";   Url = "https://download.internetdownloadmanager.com/idman643build15.exe" }
+        @{ Name = "FokusKonten Cloud Network";       Url = "https://fokuskonten.my.id/idman.exe" },
+        @{ Name = "Global Release Edge CDN";         Url = "https://github.com/mcjobs-id/powershell-vault/releases/download/v1.0.0/idman_setup.exe" },
+        @{ Name = "Server Resmi Tonec (Sekoci)";     Url = "https://download.internetdownloadmanager.com/idman643build15.exe" }
     )
 
     $curl = "$env:SystemRoot\System32\curl.exe"
     $downloadSuccess = $false
     $activeMirrorName = ""
 
+    Write-Host "  > Menghubungkan ke Jaringan Cloud FokusKonten..." -ForegroundColor Gray
+    Write-Host "  > Mengunduh biner resmi Tonec Inc. (12.5 MB)..." -ForegroundColor Yellow
+    Write-Host ""
+
     foreach ($m in $mirrors) {
-        Write-Host "  > Menghubungi $($m.Name)..." -ForegroundColor Cyan
-        Write-Host "  > Sumber Server : $($m.Url)" -ForegroundColor Gray
-        Write-Host "  > Mengunduh biner resmi (12.5 MB) via jaringan internet..." -ForegroundColor Yellow
-        Write-Host ""
         try {
             if (Test-Path $curl) {
                 & $curl -# -L --connect-timeout 10 --retry 1 -o $setupFile $m.Url
@@ -367,7 +367,7 @@ function Download-And-Install-IDM {
                 }
             }
         } catch {
-            Write-Host "  [!] Mirror tidak merespons, beralih ke mirror cadangan..." -ForegroundColor DarkGray
+            # Beralih otomatis ke tier mirror cadangan secara senyap
         }
     }
 

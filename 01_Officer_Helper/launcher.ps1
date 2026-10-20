@@ -152,29 +152,139 @@ function Show-Header {
     Write-Host "----------------------------------------------------------------" -ForegroundColor DarkCyan
 }
 
-function Invoke-Action {
-    Clear-Host
+function Invoke-EngineWithLiveLog {
+    param(
+        [string]$Arguments,
+        [string]$ActionTitle
+    )
+
     $engine = Get-EnginePath
+    if (-not $engine -or -not (Test-Path -LiteralPath $engine)) {
+        Write-Host "  [GAGAL] Komponen engine tidak ditemukan." -ForegroundColor Red
+        return $false
+    }
+
+    $workDir = Join-Path $env:ProgramData "FokusKonten"
+    if (-not (Test-Path -LiteralPath $workDir)) {
+        New-Item -ItemType Directory -Path $workDir -Force | Out-Null
+    }
+    $logFile = Join-Path $workDir "fk_exec.log"
+    if (Test-Path -LiteralPath $logFile) {
+        Remove-Item -LiteralPath $logFile -Force -ErrorAction SilentlyContinue
+    }
+
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  FOKUSKONTEN // PEMASANGAN LISENSI PERMANEN OFFICE" -ForegroundColor Yellow
+    Write-Host "  FOKUSKONTEN // $ActionTitle" -ForegroundColor Yellow
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
-    
-    $arg = "/c `"`"$engine`" /ohook -qedit -el`""
-    if ($isAdmin) {
-        Write-Host "  -> Memasang hook lisensi Office di latar belakang..." -ForegroundColor Cyan
-        $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Wait -WindowStyle Hidden -PassThru
-    } else {
-        Write-Host "  -> Izin Sistem: Klik 'Yes' pada dialog konfirmasi Windows..." -ForegroundColor Yellow
-        $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Verb RunAs -Wait -WindowStyle Hidden -PassThru
+
+    $cmdStr = "/c `"`"$engine`" $Arguments > `"$logFile`" 2>&1`""
+
+    try {
+        if ($isAdmin) {
+            Write-Host "  -> Memulai injeksi hook lisensi di latar belakang..." -ForegroundColor Cyan
+            $proc = Start-Process -FilePath "$env:ComSpec" -ArgumentList $cmdStr -WindowStyle Hidden -PassThru
+        } else {
+            Write-Host "  -> Izin Sistem: Klik 'Yes' pada dialog konfirmasi Windows..." -ForegroundColor Yellow
+            $proc = Start-Process -FilePath "$env:ComSpec" -ArgumentList $cmdStr -Verb RunAs -WindowStyle Hidden -PassThru
+        }
+    } catch {
+        Write-Host ""
+        Write-Host "  [!] Izin Administrator dibatalkan oleh pengguna." -ForegroundColor Yellow
+        Write-Host "  Tips: Klik 'Yes' pada jendela konfirmasi untuk melanjutkan." -ForegroundColor White
+        return $false
     }
+
+    $lastIdx = 0
+    $spin = @('|', '/', '-', '\')
+    $s = 0
+    $elapsed = 0
+    $hasStartedLog = $false
+
+    while (-not $proc.HasExited) {
+        if (Test-Path -LiteralPath $logFile) {
+            try {
+                $stream = [System.IO.File]::Open($logFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+                $reader = New-Object System.IO.StreamReader($stream)
+                $allLines = @()
+                while (-not $reader.EndOfStream) {
+                    $allLines += $reader.ReadLine()
+                }
+                $reader.Close()
+                $stream.Close()
+
+                if ($allLines.Count -gt $lastIdx) {
+                    for ($i = $lastIdx; $i -lt $allLines.Count; $i++) {
+                        $raw = $allLines[$i].Trim()
+                        $clean = $raw -replace '[\x00-\x08\x0B\x0C\x0E-\x1F]', ''
+                        if ($clean -and -not ($clean -match '^[=\-_~*#]{3,}$')) {
+                            $hasStartedLog = $true
+                            if ($clean -match 'permanently activated|Successfully|Installed|Activated|Licensed') {
+                                Write-Host "`r  [OK] $clean                                                 " -ForegroundColor Green
+                            } elseif ($clean -match 'error|failed|abort' -and -not ($clean -match '0 error')) {
+                                Write-Host "`r  [!] $clean                                                  " -ForegroundColor Yellow
+                            } else {
+                                Write-Host "`r  -> $clean                                                   " -ForegroundColor Cyan
+                            }
+                        }
+                    }
+                    $lastIdx = $allLines.Count
+                }
+            } catch {}
+        }
+
+        $char = $spin[$s % 4]
+        if ($hasStartedLog) {
+            Write-Host -NoNewline "`r  [*] Sedang mengaplikasikan hook ke Office... [$char] ($elapsed dtk) "
+        } else {
+            Write-Host -NoNewline "`r  [*] Menunggu konfirmasi UAC & inisialisasi... [$char] ($elapsed dtk) "
+        }
+        
+        $s++
+        Start-Sleep -Milliseconds 250
+        if ($s % 4 -eq 0) { $elapsed++ }
+    }
+
+    Write-Host -NoNewline "`r                                                                     `r"
+
+    if (Test-Path -LiteralPath $logFile) {
+        try {
+            $stream = [System.IO.File]::Open($logFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+            $reader = New-Object System.IO.StreamReader($stream)
+            $allLines = @()
+            while (-not $reader.EndOfStream) { $allLines += $reader.ReadLine() }
+            $reader.Close(); $stream.Close()
+
+            for ($i = $lastIdx; $i -lt $allLines.Count; $i++) {
+                $raw = $allLines[$i].Trim()
+                $clean = $raw -replace '[\x00-\x08\x0B\x0C\x0E-\x1F]', ''
+                if ($clean -and -not ($clean -match '^[=\-_~*#]{3,}$')) {
+                    if ($clean -match 'permanently activated|Successfully|Installed|Activated|Licensed') {
+                        Write-Host "  [OK] $clean" -ForegroundColor Green
+                    } elseif ($clean -match 'error|failed|abort' -and -not ($clean -match '0 error')) {
+                        Write-Host "  [!] $clean" -ForegroundColor Yellow
+                    } else {
+                        Write-Host "  -> $clean" -ForegroundColor Cyan
+                    }
+                }
+            }
+        } catch {}
+        Remove-Item -LiteralPath $logFile -Force -ErrorAction SilentlyContinue
+    }
+
+    return $true
+}
+
+function Invoke-Action {
+    Clear-Host
+    $res = Invoke-EngineWithLiveLog -Arguments "/ohook -qedit -el" -ActionTitle "PEMASANGAN LISENSI PERMANEN OFFICE"
 
     Write-Host ""
     $state = Get-OfficeState
     if ($state -eq "LICENSED") {
         Write-Host "  [OK] LISENSI OFFICE BERHASIL DIPASANG PERMANEN!" -ForegroundColor Green
         Write-Host "  Status : Berlisensi Penuh (Bebas Notifikasi Selamanya)" -ForegroundColor White
-    } else {
+    } elseif ($res) {
         Write-Host "  [OK] PROSES PEMULIHAN OFFICE SELESAI DIEKSEKUSI!" -ForegroundColor Green
         Write-Host "  Status : Silakan buka Word / Excel untuk memastikan lisensi." -ForegroundColor White
     }
@@ -214,28 +324,13 @@ function Check-Diagnostics {
 
 function Remove-License {
     Clear-Host
-    Write-Host "================================================================" -ForegroundColor Yellow
-    Write-Host "  SEDANG MENCABUT LISENSI OHOOK (KEMBALIKAN KE SEMULA)..." -ForegroundColor Yellow
-    Write-Host "================================================================" -ForegroundColor Yellow
+    $res = Invoke-EngineWithLiveLog -Arguments "/Ohook-Uninstall -qedit -el" -ActionTitle "PENCABUTAN LISENSI OHOOK (KEMBALIKAN KE SEMULA)"
+
     Write-Host ""
-    
-    $engine = Get-EnginePath
-    if ($engine) {
-        $arg = "/c `"`"$engine`" /Ohook-Uninstall -qedit -el`""
-        if ($isAdmin) {
-            Write-Host "  -> Mencabut lisensi di latar belakang..." -ForegroundColor Cyan
-            $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Wait -WindowStyle Hidden -PassThru
-        } else {
-            Write-Host "  -> Izin Sistem: Klik 'Yes' pada dialog konfirmasi Windows..." -ForegroundColor Yellow
-            $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Verb RunAs -Wait -WindowStyle Hidden -PassThru
-        }
-        Write-Host ""
+    if ($res) {
         Write-Host "  [OK] LISENSI OHOOK TELAH BERHASIL DICABUT BERSIH!" -ForegroundColor Green
         Write-Host "  Office Anda telah kembali ke kondisi awal." -ForegroundColor White
-    } else {
-        Write-Host "  [GAGAL] Komponen engine tidak ditemukan." -ForegroundColor Red
     }
-
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
     try { [Console]::ReadKey($true) | Out-Null } catch {}

@@ -6,10 +6,26 @@
 # Arsitektur   : Native In-Memory Dynamic Terminal Simulation (Zero Binary Risk)
 # ==============================================================================
 
+param(
+    [string]$Order = ""
+)
+
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
 } catch {
     try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+}
+
+if (-not $global:fkOrderNumber) {
+    if (![string]::IsNullOrWhiteSpace($Order)) {
+        $global:fkOrderNumber = $Order
+    } elseif ($env:FK_ORDER_ID) {
+        $global:fkOrderNumber = $env:FK_ORDER_ID
+    } else {
+        $dt = Get-Date -Format "yyyyMMdd"
+        $rnd = Get-Random -Minimum 1000 -Maximum 9999
+        $global:fkOrderNumber = "FK-ORD-$dt-$rnd"
+    }
 }
 
 $ErrorActionPreference = "Continue"
@@ -42,13 +58,17 @@ function Show-CinematicOpening {
     try { [Console]::CursorVisible = $false } catch {}
 
     Write-Host ""
-    Write-Host " [BOOT] Inisialisasi Terminal Cyber Enterprise FokusKonten..." -ForegroundColor DarkGray
+    Write-Host " [BOOT]   Inisialisasi Terminal Cyber Enterprise FokusKonten..." -ForegroundColor DarkGray
     Start-Sleep -Milliseconds 80
-    Write-Host " [HOST] Arsitektur Sistem : $([System.Environment]::OSVersion.VersionString) (x64 Native)" -ForegroundColor DarkGray
+    Write-Host " [THANKS] Terima kasih sudah menggunakan jasa layanan FokusKonten!" -ForegroundColor Yellow
     Start-Sleep -Milliseconds 80
-    Write-Host " [AUTH] Verifikasi Tiket  : VALID // ID TIKET: [FK-PSH-101]" -ForegroundColor DarkGray
+    Write-Host " [ORDER]  Verifikasi Pesanan : $global:fkOrderNumber [VERIFIED RESMI]" -ForegroundColor Green
     Start-Sleep -Milliseconds 80
-    Write-Host " [NET]  Jalur Terhubung   : http://127.0.0.1:8090" -ForegroundColor DarkGray
+    Write-Host " [TIKET]  Nomor Tiket Jasa   : [FK-PSH-101] (Matrix Cyberpunk Suite)" -ForegroundColor DarkGray
+    Start-Sleep -Milliseconds 80
+    Write-Host " [HOST]   Arsitektur Sistem  : $([System.Environment]::OSVersion.VersionString) (x64 Native)" -ForegroundColor DarkGray
+    Start-Sleep -Milliseconds 80
+    Write-Host " [NET]    Jalur Terhubung    : http://127.0.0.1:8090" -ForegroundColor DarkGray
     Start-Sleep -Milliseconds 100
 
     Write-Host ""
@@ -89,10 +109,13 @@ function Show-GrandBanner {
     Write-Host "  ╚═╝     ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚══╝   ╚═╝   ╚══════╝╚═╝  ╚══╝" -ForegroundColor $global:themeSecondary
     Write-Host "               ENTERPRISE CYBERSECURITY & TERMINAL RESCUE INFRASTRUCTURE               " -ForegroundColor $global:themeAccent
     Write-Host " ========================================================================================" -ForegroundColor $global:themeSecondary
-    Write-Host "  LAYANAN JASA : SETUP TAMPILAN TERMINAL MATRIX & CYBER SIMULATOR                         " -ForegroundColor White
-    Write-Host "  NOMOR TIKET  : [FK-PSH-101] (ASISTENSI RESMI FOKUSKONTEN)                               " -ForegroundColor Yellow
-    Write-Host "  STATUS JASA  : AKTIF // PENGERJAAN MANDIRI BERBANTUAN OTOMASI RESMI                     " -ForegroundColor $global:themePrimary
-    Write-Host "  TEMA AKTIF   : $global:themeName                                                       " -ForegroundColor Cyan
+    Write-Host "  THANKS ORDER BY FOKUSKONTEN // TERIMA KASIH TELAH MENGGUNAKAN JASA FOKUSKONTEN          " -ForegroundColor Yellow
+    Write-Host " ----------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  NOMOR PESANAN : $global:fkOrderNumber (VERIFIED ORDER // ASISTENSI RESMI)        " -ForegroundColor Green
+    Write-Host "  LAYANAN JASA  : SETUP TAMPILAN TERMINAL MATRIX & CYBER SIMULATOR                        " -ForegroundColor White
+    Write-Host "  NOMOR TIKET   : [FK-PSH-101] (ASISTENSI RESMI FOKUSKONTEN)                              " -ForegroundColor Cyan
+    Write-Host "  STATUS JASA   : AKTIF // PENGERJAAN MANDIRI BERBANTUAN OTOMASI RESMI                    " -ForegroundColor $global:themePrimary
+    Write-Host "  TEMA AKTIF    : $global:themeName                                                       " -ForegroundColor Magenta
     Write-Host " ========================================================================================" -ForegroundColor $global:themeSecondary
     Write-Host "  PILIHAN MENU LAYANAN:" -ForegroundColor White
     Write-Host ""
@@ -508,6 +531,7 @@ while ($true) {
             Write-Host "  Layanan Setup Tampilan Terminal Matrix telah selesai dengan sukses." -ForegroundColor Gray
             Write-Host ""
             Write-Host "  [SERAH TERIMA LAYANAN JASA]" -ForegroundColor White
+            Write-Host "  * Nomor Pesanan  : $global:fkOrderNumber [SELESAI PARIPURNA]" -ForegroundColor Green
             Write-Host "  * Tiket Layanan  : [FK-PSH-101] SELESAI PARIPURNA" -ForegroundColor Green
             Write-Host "  * Garansi Resmi  : Pendampingan Asistensi Bebas Risiko Sistem" -ForegroundColor Green
             Write-Host "  * Kontak Bantuan : WhatsApp Layanan Resmi +62 858-6395-5347" -ForegroundColor Yellow

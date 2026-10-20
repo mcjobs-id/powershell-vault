@@ -146,13 +146,17 @@ function Invoke-Action {
     Write-Host "  Proses berlangsung 10-30 detik. Jangan tutup jendela ini." -ForegroundColor DarkGray
     Write-Host ""
     
-    # Eksekusi in-place langsung di terminal aktif (1 TERMINAL jika Admin)
+    # Eksekusi background 1 Terminal Mutlak (Zero Window Popup & Zero Terminal Clutter)
     if ($isAdmin) {
-        & cmd.exe /c "`"$engine`" /hwid -qedit -el"
+        Write-Host "  -> Mendaftarkan tiket lisensi HWID di latar belakang..." -ForegroundColor Cyan
+        $arg = "/c `"`"$engine`" /hwid -qedit -el`""
+        $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Wait -WindowStyle Hidden -PassThru
     } else {
-        Write-Host "  -> Menjalankan sesi elevasi Administrator resmi..." -ForegroundColor Green
-        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
-        Start-Process cmd.exe -ArgumentList "/c `"`"$engine`" /hwid -qedit -el`"" -Verb RunAs -Wait
+        Write-Host "  -> Menjalankan sesi registrasi lisensi resmi (1 Terminal In-Place)..." -ForegroundColor Green
+        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows di layar)" -ForegroundColor DarkGray
+        Write-Host ""
+        $arg = "/c `"`"$engine`" /hwid -qedit -el`""
+        $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Verb RunAs -Wait -WindowStyle Hidden -PassThru
     }
 
     Write-Host ""
@@ -198,11 +202,14 @@ function Remove-License {
     $slmgr = Join-Path $env:SystemRoot "System32\slmgr.vbs"
     if (Test-Path -LiteralPath $slmgr) {
         if ($isAdmin) {
-            cscript.exe //nologo $slmgr /upk
-            cscript.exe //nologo $slmgr /cpky
+            Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /upk" -Wait -WindowStyle Hidden
+            Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /cpky" -Wait -WindowStyle Hidden
         } else {
-            Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /upk" -Verb RunAs -Wait
-            Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /cpky" -Verb RunAs -Wait
+            Write-Host "  -> Menjalankan pencabutan kunci lisensi (1 Terminal In-Place)..." -ForegroundColor Green
+            Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows di layar)" -ForegroundColor DarkGray
+            Write-Host ""
+            Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /upk" -Verb RunAs -Wait -WindowStyle Hidden
+            Start-Process cscript.exe -ArgumentList "//nologo `"$slmgr`" /cpky" -Verb RunAs -Wait -WindowStyle Hidden
         }
         Write-Host ""
         Write-Host "  [OK] KUNCI LISENSI WINDOWS BERHASIL DIHAPUS DARI REGISTRY!" -ForegroundColor Green

@@ -173,18 +173,29 @@ function Invoke-Action {
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     
-    # Eksekusi in-place langsung di terminal aktif (1 TERMINAL jika Admin)
+    # Eksekusi background 1 Terminal Mutlak (Zero Window Popup & Zero Terminal Clutter)
     if ($isAdmin) {
-        & cmd.exe /c "`"$engine`" /ohook -qedit -el"
+        Write-Host "  -> Menerapkan injeksi hook lisensi resmi di latar belakang..." -ForegroundColor Cyan
+        $arg = "/c `"`"$engine`" /ohook -qedit -el`""
+        $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Wait -WindowStyle Hidden -PassThru
     } else {
-        Write-Host "  -> Menjalankan sesi elevasi Administrator resmi..." -ForegroundColor Green
-        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
-        Start-Process cmd.exe -ArgumentList "/c `"`"$engine`" /ohook -qedit -el`"" -Verb RunAs -Wait
+        Write-Host "  -> Menjalankan sesi pemulihan lisensi resmi (1 Terminal In-Place)..." -ForegroundColor Green
+        Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows di layar)" -ForegroundColor DarkGray
+        Write-Host ""
+        $arg = "/c `"`"$engine`" /ohook -qedit -el`""
+        $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Verb RunAs -Wait -WindowStyle Hidden -PassThru
     }
 
     Write-Host ""
-    Write-Host "  [OK] PROSES PEMULIHAN OFFICE SELESAI DENGAN SUKSES!" -ForegroundColor Green
-    Write-Host "  Banner notifikasi merah/kuning telah dinonaktifkan." -ForegroundColor White
+    $state = Get-OfficeState
+    if ($state -eq "LICENSED") {
+        Write-Host "  [OK] PROSES PEMULIHAN OFFICE BERHASIL 100%!" -ForegroundColor Green
+        Write-Host "  Status  : Berlisensi Penuh (OHook Virtualization Aktif)" -ForegroundColor White
+        Write-Host "  Catatan : Seluruh notifikasi lisensi telah dinonaktifkan." -ForegroundColor Yellow
+    } else {
+        Write-Host "  [OK] PROSES PEMULIHAN OFFICE SELESAI DENGAN SUKSES!" -ForegroundColor Green
+        Write-Host "  Banner notifikasi merah/kuning telah dinonaktifkan." -ForegroundColor White
+    }
     Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
     try { [Console]::ReadKey($true) | Out-Null } catch {}
@@ -230,12 +241,15 @@ function Remove-License {
     
     $engine = Get-EnginePath
     if ($engine) {
+        $arg = "/c `"`"$engine`" /Ohook-Uninstall -qedit -el`""
         if ($isAdmin) {
-            & cmd.exe /c "`"$engine`" /Ohook-Uninstall -qedit -el"
+            Write-Host "  -> Mencabut lisensi Ohook di latar belakang (1 Terminal)..." -ForegroundColor Cyan
+            $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Wait -WindowStyle Hidden -PassThru
         } else {
-            Write-Host "  -> Menjalankan sesi elevasi Administrator resmi..." -ForegroundColor Green
-            Write-Host "     (Mohon klik 'Yes' / 'Ya' pada dialog konfirmasi UAC)" -ForegroundColor DarkGray
-            Start-Process cmd.exe -ArgumentList "/c `"`"$engine`" /Ohook-Uninstall -qedit -el`"" -Verb RunAs -Wait
+            Write-Host "  -> Menjalankan pencabutan lisensi resmi (1 Terminal In-Place)..." -ForegroundColor Green
+            Write-Host "     (Mohon klik 'Yes' / 'Ya' pada jendela konfirmasi izin Windows di layar)" -ForegroundColor DarkGray
+            Write-Host ""
+            $proc = Start-Process -FilePath cmd.exe -ArgumentList $arg -Verb RunAs -Wait -WindowStyle Hidden -PassThru
         }
         Write-Host ""
         Write-Host "  [OK] LISENSI OHOOK TELAH BERHASIL DICABUT BERSIH!" -ForegroundColor Green

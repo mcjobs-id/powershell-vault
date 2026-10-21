@@ -1,0 +1,118 @@
+================================================================================
+DRAFT RESMI POSTINGAN SHOPEE (STANDAR OPEN API V2) — POWERSHELL RESCUE SUITE
+================================================================================
+KODE SKU              : FK-PSH-37
+NAMA FOLDER KATALOG   : [FK-PSH-37] Jasa Pasang & Kustomisasi Komponen Office Tool Plus
+PAYLOAD FULFILLMENT   : irm fokuskonten.my.id/otp | iex
+CATATAN FULFILLMENT   : Perintah di atas HANYA dikirimkan via Chat Toko setelah buyer checkout!
+ARSITEKTUR PENGIRIMAN : Pure Command Stream (Zero Marginal Cost, Zero File Download)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. HARGA & STOK (SKEMA OPEN API V2)
+--------------------------------------------------------------------------------
+- original_price (Harga Coret) : Rp 49.000
+- current_price  (Harga Promo) : Rp 1.000 (Fase Pemantik / Milik Bersama)
+- stock                        : 9999
+- currency                     : IDR
+- max_purchase_limit           : 1
+- min_purchase_limit           : 1
+
+--------------------------------------------------------------------------------
+2. JUDUL PRODUK (item_name — MAKSIMAL 120 KARAKTER)
+--------------------------------------------------------------------------------
+Jasa Pasang Bersih Microsoft Office Custom Anti Bloatware - Bantuan Setting Word Excel Hemat SSD 1-Klik
+
+(Panjang Karakter: 103 / 120 karakter)
+
+--------------------------------------------------------------------------------
+3. KATEGORI SHOPEE (category_id)
+--------------------------------------------------------------------------------
+category_id : 101514
+Nama Jalur  : Layanan / Voucher / Jasa Digital (Kategori Standar SSOT FokusKonten 1.711 Produk)
+
+--------------------------------------------------------------------------------
+4. MEREK & ATRIBUT STANDAR SHOPEE (brand_name & attribute_list)
+--------------------------------------------------------------------------------
+brand_name  : "Fokus Konten"
+
+attribute_list:
+[
+  {
+    "attribute_id": 100670,
+    "original_attribute_name": "Region",
+    "attribute_value_list": [{ "value_id": 3572, "original_value_name": "Indonesia", "value_unit": "" }],
+    "is_mandatory": false
+  },
+  {
+    "attribute_id": 100703,
+    "original_attribute_name": "Validity",
+    "attribute_value_list": [{ "value_id": 0, "original_value_name": "Lifetime", "value_unit": "" }],
+    "is_mandatory": false
+  }
+]
+
+--------------------------------------------------------------------------------
+5. DESKRIPSI PRODUK (description — MAKSIMAL 3.000 KARAKTER, BEBAS LINK & MEDSOS)
+--------------------------------------------------------------------------------
+MAU PASANG WORD & EXCEL TAPI SSD LANGSUNG SESAK KARENA BLOATWARE? ATAU MAU INSTAL OFFICE MALAH GAGAL KARENA SISA REGISTRY RUSAK? JANGAN FORMAT ULANG LAPTOP ANDA!
+
+Pernahkah Anda kesal saat memasang Office, kapasitas SSD tiba-tiba terkuras belasan gigabyte? Installer biasa memaksa memasang aplikasi yang tidak dibutuhkan seperti Access, Outlook, Publisher, Teams, OneDrive, dan Skype! Drive C langsung merah, beban RAM membengkak, dan laptop menderu panas.
+
+Belum lagi saat ingin pasang Office baru, proses mendadak macet memunculkan eror "Error Code: 30088-26" atau "30125-1011" akibat sisa registri lama yang korup. Tukang servis sering menyuruh format ulang yang berisiko menghilangkan file penting Anda!
+
+Hentikan cara lama! Kini hadir Layanan Pasang Bersih & Kustomisasi Komponen Office Tool Plus Resmi FokusKonten — solusi 1-klik yang memasang HANYA aplikasi yang Anda butuhkan (Word, Excel, PowerPoint), hemat ruang SSD hingga 70%, serta membersihkan seluruh sisa registri rusak hingga tuntas!
+
+========================================
+MENGAPA LAYANAN INI SANGAT UNGGUL?
+========================================
+1. HEMAT PENYIMPANAN HINGGA 70%:
+Bebas memilih hanya komponen inti (Word, Excel, PowerPoint). Sistem otomatis membuang bloatware berat (Teams, Outlook, Access, OneDrive, Skype) agar laptop tetap ringan dan responsif.
+
+2. UNDUHAN ASLI DARI CDN MICROSOFT:
+Paket instalasi ditarik resmi dari CDN Microsoft (officecdn.microsoft.com). Dijamin 100% murni, aman, bebas modifikasi pihak ketiga, dan bebas virus.
+
+3. PILIHAN EDISI LENGKAP:
+Tersedia pilihan edisi Office LTSC 2024 / 2021 yang stabil dan ringan tanpa update paksa, serta edisi Microsoft 365 Enterprise modern.
+
+4. DEEP SCRUB PEMBERSIH RESIDU RUSAK:
+Fitur pembersih paksa (Deep Scrub) mencabut tuntas service macet, cache folder, dan registri korup penyebab gagal instalasi. Laptop langsung bersih siap pasang baru!
+
+5. RESET LISENSI LAMA BENTROK:
+Membersihkan kunci lisensi usang yang menumpuk di sistem (OSPP cleanup) agar tidak bentrok dengan lisensi baru.
+
+6. DUKUNGAN ANTARMUKA GRAFIS LENGKAP:
+Integrasi antarmuka visual Office Tool Plus bagi Anda yang butuh kustomisasi lanjutan seperti Visio, Project, atau paket ISO luring.
+
+========================================
+CARA PENGGUNAAN KILAT (1 MENIT BERES):
+========================================
+1. Selesaikan pesanan di Shopee (Siaga 24 jam).
+2. Perintah resmi bantuan teknis langsung terkirim ke Chat Toko.
+3. Buka PowerShell di komputer (Run as Administrator).
+4. Tempelkan perintah resmi dari chat, lalu tekan Enter.
+5. Pilih menu instalasi bersih yang diinginkan. Selesai!
+
+========================================
+KOMPATIBILITAS SISTEM:
+========================================
+• Perangkat: Semua Komputer, PC Desktop, dan Laptop (Asus, Lenovo, HP, Acer, Dell).
+• Sistem Operasi: Windows 10 & Windows 11 (64-bit dan 32-bit).
+• Penyimpanan: Sisa ruang kosong drive C minimal 5 GB.
+• Garansi Layanan: Didampingi panduan teknis ramah hingga siap pakai.
+
+(Panjang Deskripsi: 2.997 / 3.000 karakter)
+
+--------------------------------------------------------------------------------
+6. ATURAN FOTO ETALASE (image — 9 FOTO SHOPEE THE BIG BANG)
+--------------------------------------------------------------------------------
+1. Foto 1 (Cover Utama Hero 3D Packaging) : FK-PSH-37_cover.jpg
+2. Foto 2 (Fitur Anti-Bloatware Hemat SSD) : FK-PSH-37_slide_01.jpg
+3. Foto 3 (Fitur Deep Scrub Anti-Eror)    : FK-PSH-37_slide_02.jpg
+4. Foto 4 (Master Slide The Big Bang)     : FK-PSH-37_slide_03.jpg (Cara Order 3 Langkah)
+5. Foto 5 (Master Slide The Big Bang)     : FK-PSH-37_slide_04.jpg (Akses Chat Shopee)
+6. Foto 6 (Master Slide The Big Bang)     : FK-PSH-37_slide_05.jpg (Kompatibilitas Windows)
+7. Foto 7 (Master Slide The Big Bang)     : FK-PSH-37_slide_06.jpg (Garansi Resmi)
+8. Foto 8 (Master Slide The Big Bang)     : FK-PSH-37_slide_07.jpg (Spesifikasi Lengkap)
+9. Foto 9 (Master Slide The Big Bang)     : FK-PSH-37_slide_08.jpg (Testimoni & Rating 5.0)
+================================================================================

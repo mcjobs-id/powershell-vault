@@ -1,0 +1,45 @@
+﻿MAU PASANG WORD & EXCEL TAPI SSD LANGSUNG SESAK KARENA BLOATWARE? ATAU MAU INSTAL OFFICE MALAH GAGAL KARENA SISA REGISTRY RUSAK? JANGAN FORMAT ULANG LAPTOP ANDA!
+
+Pernahkah Anda kesal saat memasang Office, kapasitas SSD tiba-tiba terkuras belasan gigabyte? Installer biasa memaksa memasang aplikasi yang tidak dibutuhkan seperti Access, Outlook, Publisher, Teams, OneDrive, dan Skype! Drive C langsung merah, beban RAM membengkak, dan laptop menderu panas.
+
+Belum lagi saat ingin pasang Office baru, proses mendadak macet memunculkan eror "Error Code: 30088-26" atau "30125-1011" akibat sisa registri lama yang korup. Tukang servis sering menyuruh format ulang yang berisiko menghilangkan file penting Anda!
+
+Hentikan cara lama! Kini hadir Layanan Pasang Bersih & Kustomisasi Komponen Office Tool Plus Resmi FokusKonten â€” solusi 1-klik yang memasang HANYA aplikasi yang Anda butuhkan (Word, Excel, PowerPoint), hemat ruang SSD hingga 70%, serta membersihkan seluruh sisa registri rusak hingga tuntas!
+
+========================================
+MENGAPA LAYANAN INI SANGAT UNGGUL?
+========================================
+1. HEMAT PENYIMPANAN HINGGA 70%:
+Bebas memilih hanya komponen inti (Word, Excel, PowerPoint). Sistem otomatis membuang bloatware berat (Teams, Outlook, Access, OneDrive, Skype) agar laptop tetap ringan dan responsif.
+
+2. UNDUHAN ASLI DARI CDN MICROSOFT:
+Paket instalasi ditarik resmi dari CDN Microsoft (officecdn.microsoft.com). Dijamin 100% murni, aman, bebas modifikasi pihak ketiga, dan bebas virus.
+
+3. PILIHAN EDISI LENGKAP:
+Tersedia pilihan edisi Office LTSC 2024 / 2021 yang stabil dan ringan tanpa update paksa, serta edisi Microsoft 365 Enterprise modern.
+
+4. DEEP SCRUB PEMBERSIH RESIDU RUSAK:
+Fitur pembersih paksa (Deep Scrub) mencabut tuntas service macet, cache folder, dan registri korup penyebab gagal instalasi. Laptop langsung bersih siap pasang baru!
+
+5. RESET LISENSI LAMA BENTROK:
+Membersihkan kunci lisensi usang yang menumpuk di sistem (OSPP cleanup) agar tidak bentrok dengan lisensi baru.
+
+6. DUKUNGAN ANTARMUKA GRAFIS LENGKAP:
+Integrasi antarmuka visual Office Tool Plus bagi Anda yang butuh kustomisasi lanjutan seperti Visio, Project, atau paket ISO luring.
+
+========================================
+CARA PENGGUNAAN KILAT (1 MENIT BERES):
+========================================
+1. Selesaikan pesanan di Shopee (Siaga 24 jam).
+2. Perintah resmi bantuan teknis langsung terkirim ke Chat Toko.
+3. Buka PowerShell di komputer (Run as Administrator).
+4. Tempelkan perintah resmi dari chat, lalu tekan Enter.
+5. Pilih menu instalasi bersih yang diinginkan. Selesai!
+
+========================================
+KOMPATIBILITAS SISTEM:
+========================================
+â€¢ Perangkat: Semua Komputer, PC Desktop, dan Laptop (Asus, Lenovo, HP, Acer, Dell).
+â€¢ Sistem Operasi: Windows 10 & Windows 11 (64-bit dan 32-bit).
+â€¢ Penyimpanan: Sisa ruang kosong drive C minimal 5 GB.
+â€¢ Garansi Layanan: Didampingi panduan teknis ramah hingga siap pakai.

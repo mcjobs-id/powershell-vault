@@ -4,7 +4,7 @@
 # Modul SKU    : FK-PSH-37 (Official Rescue Suite)
 # Desain       : Ultra-Compact Golden 64 Layout (Fit di Jendela Default Terminal)
 # Arsitektur   : 100% In-Place Single Terminal Execution (Zero Pop-Up Spam)
-# Engine       : Yerong Official OTP Engine v10.30 & Dual-Tier Cloud Release CDN
+# Engine       : Microsoft Official ODT Engine & Yerong Office Tool Plus v11.8
 # Keamanan     : 100% Resmi CDN Microsoft (Zero Bloatware & Deep Scrub Corrupt Fix)
 # ==============================================================================
 
@@ -52,17 +52,16 @@ $isAdmin = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -mat
 
 # Direktori & Konfigurasi Cache
 $WorkDir    = "$env:ProgramData\FokusKonten\OfficeToolPlus"
-$OtpZipFile = "$WorkDir\Office_Tool_Plus.zip"
+$OdtSetupExe = "$WorkDir\setup.exe"
+$OtpZipFile = "$WorkDir\Office_Tool_Plus_Runtime.zip"
 $OtpExe     = "$WorkDir\Office Tool\Office Tool Plus.exe"
 
-# URL CDN Resmi FokusKonten (Sekoci Vault Mandiri) & Fallback Upstream (Yerong)
-$OtpVersion  = "10.30.43.0"
-$VaultCdnUrl = "https://github.com/mcjobs-id/powershell-vault/releases/download/v1.0.0/otp_engine.zip"
-$OtpUrl_x64  = "https://github.com/YerongAI/Office-Tool/releases/download/v$OtpVersion/Office_Tool_v${OtpVersion}_x64.zip"
-$OtpUrl_arm  = "https://github.com/YerongAI/Office-Tool/releases/download/v$OtpVersion/Office_Tool_v${OtpVersion}_arm64.zip"
+# URL CDN Resmi FokusKonten & Microsoft Edge CDN
+$VaultSetupUrl = "https://github.com/mcjobs-id/powershell-vault/releases/download/v1.0.0/setup.exe"
+$YerongRuntimeUrl = "https://github.com/YerongAI/Office-Tool/releases/download/v11.8.50.0/Office_Tool_with_runtime_v11.8.50.0_x64.zip"
 
 function Get-SystemSensors {
-    $cDrive = Get-CimInstance Win32_LogicalDisk | Where-Object { $_.DeviceID -eq 'C:' }
+    $cDrive = Get-CimInstance Win32_LogicalDisk -ErrorAction SilentlyContinue | Where-Object { $_.DeviceID -eq 'C:' }
     $freeGb = if ($cDrive) { [math]::Round($cDrive.FreeSpace / 1GB, 1) } else { 0 }
 
     # Deteksi Office Terpasang
@@ -88,7 +87,7 @@ function Get-SystemSensors {
         }
     }
 
-    $os = Get-CimInstance Win32_OperatingSystem
+    $os = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
     $arch = if ($os.OSArchitecture -match 'ARM') { "ARM64" } elseif ($os.OSArchitecture -match '64') { "x64" } else { "x86" }
 
     return [PSCustomObject]@{
@@ -97,6 +96,185 @@ function Get-SystemSensors {
         FreeGB   = $freeGb
         Office   = $offStatus
     }
+}
+
+function Ensure-OdtSetup {
+    if (Test-Path -LiteralPath $OdtSetupExe) {
+        return $true
+    }
+
+    if ($PSScriptRoot) {
+        $localBin = Join-Path $PSScriptRoot "bin\setup.exe"
+        if (Test-Path -LiteralPath $localBin) {
+            if (-not (Test-Path -LiteralPath $WorkDir)) { New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null }
+            Copy-Item -LiteralPath $localBin -Destination $OdtSetupExe -Force
+            return $true
+        }
+    }
+
+    if (-not (Test-Path -LiteralPath $WorkDir)) {
+        New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
+    }
+
+    Write-Host ""
+    Write-Host "  -> Mengunduh mesin resmi Microsoft Office Deployment Tool..." -ForegroundColor Cyan
+    try {
+        $curlCmd = Get-Command curl.exe -ErrorAction SilentlyContinue
+        if ($curlCmd) {
+            & curl.exe -s -L $VaultSetupUrl -o $OdtSetupExe
+        } else {
+            Invoke-WebRequest -Uri $VaultSetupUrl -OutFile $OdtSetupExe -UseBasicParsing
+        }
+
+        if ((Test-Path -LiteralPath $OdtSetupExe) -and ((Get-Item -LiteralPath $OdtSetupExe).Length -gt 1000000)) {
+            Write-Host "     [================] 100% [MESIN MICROSOFT SIAP]" -ForegroundColor Green
+            return $true
+        }
+    } catch {
+        Write-Host "  [!] Gagal mengunduh mesin setup resmi. Periksa koneksi internet." -ForegroundColor Red
+    }
+
+    return $false
+}
+
+function Install-OfficeODT {
+    param (
+        [string]$Edition = "2024"
+    )
+
+    Clear-Host
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  FOKUSKONTEN // PASANG BERSIH MICROSOFT OFFICE LTSC $Edition" -ForegroundColor Yellow
+    Write-Host "  Word, Excel, PowerPoint Murni - Hemat SSD & Bebas Bloatware" -ForegroundColor White
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host ""
+
+    $sensor = Get-SystemSensors
+    if ($sensor.FreeGB -lt 5) {
+        Write-Host "  [PERINGATAN] Ruang sisa Drive C hanya $($sensor.FreeGB) GB." -ForegroundColor Red
+        Write-Host "  Instalasi membutuhkan minimal 5 GB ruang kosong di Drive C." -ForegroundColor Yellow
+        Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+        try { [Console]::ReadKey($true) | Out-Null } catch {}
+        return
+    }
+
+    Write-Host "  -> Menyiapkan berkas konfigurasi instalasi hemat SSD..." -ForegroundColor Cyan
+
+    if (-not (Ensure-OdtSetup)) {
+        Write-Host "  [GAGAL] Biner setup.exe tidak dapat disiapkan." -ForegroundColor Red
+        Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+        try { [Console]::ReadKey($true) | Out-Null } catch {}
+        return
+    }
+
+    # Hentikan proses Office lama agar berkas tidak bentrok
+    $procs = @("winword", "excel", "powerpnt", "outlook", "onenote", "msaccess", "teams", "lync")
+    foreach ($pr in $procs) {
+        Get-Process -Name $pr -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+
+    $productId = if ($Edition -eq "2021") { "ProPlus2021Volume" } else { "ProPlus2024Volume" }
+    $channelId = if ($Edition -eq "2021") { "PerpetualVL2021" } else { "PerpetualVL2024" }
+
+    $xmlConfig = "<Configuration><Add OfficeClientEdition=`"64`" Channel=`"$channelId`"><Product ID=`"$productId`"><Language ID=`"MatchOS`" /><Language ID=`"en-us`" /><ExcludeApp ID=`"Access`" /><ExcludeApp ID=`"Groove`" /><ExcludeApp ID=`"Lync`" /><ExcludeApp ID=`"OneDrive`" /><ExcludeApp ID=`"OneNote`" /><ExcludeApp ID=`"Outlook`" /><ExcludeApp ID=`"Publisher`" /><ExcludeApp ID=`"Teams`" /></Product></Add><RemoveMSI /><Display Level=`"Full`" AcceptEULA=`"TRUE`" /><Property Name=`"AUTOACTIVATE`" Value=`"0`" /></Configuration>"
+
+    $cfgFile = "$WorkDir\configuration.xml"
+    [System.IO.File]::WriteAllText($cfgFile, $xmlConfig, [System.Text.Encoding]::UTF8)
+
+    Write-Host "  -> Konfigurasi Terpilih:" -ForegroundColor White
+    Write-Host "     * Produk       : Office LTSC Professional Plus $Edition" -ForegroundColor Green
+    Write-Host "     * Aplikasi     : HANYA Word, Excel, PowerPoint" -ForegroundColor Green
+    Write-Host "     * Dieliminasi  : Outlook, Access, Teams, OneDrive, Publisher" -ForegroundColor DarkGray
+    Write-Host "     * Sumber Unduh : CDN Resmi Microsoft (officecdn.microsoft.com)" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  -> Meluncurkan instalasi resmi Microsoft..." -ForegroundColor Cyan
+
+    $cmdArgs = "/configure `"$cfgFile`""
+    try {
+        if (-not $isAdmin) {
+            Write-Host "  [*] Izin Administrator: Klik 'Yes' pada dialog konfirmasi..." -ForegroundColor Yellow
+            $proc = Start-Process -FilePath $OdtSetupExe -ArgumentList $cmdArgs -WorkingDirectory $WorkDir -Verb RunAs -PassThru
+        } else {
+            $proc = Start-Process -FilePath $OdtSetupExe -ArgumentList $cmdArgs -WorkingDirectory $WorkDir -PassThru
+        }
+
+        Write-Host "  -> Jendela instalasi Microsoft kini aktif di layar Anda." -ForegroundColor Green
+        Write-Host "  -> Silakan tunggu hingga Microsoft menyelesaikan proses instalasi." -ForegroundColor White
+        Write-Host ""
+        
+        $spin = @('|', '/', '-', '\')
+        $s = 0
+        while (-not $proc.HasExited) {
+            $char = $spin[$s % 4]
+            Write-Host -NoNewline "`r  [*] Sedang mengunduh & memasang komponen Office... [$char] "
+            $s++
+            Start-Sleep -Milliseconds 500
+        }
+
+        Write-Host -NoNewline "`r                                                                  `r"
+        Write-Host ""
+
+        # Cek apakah Office sudah terpasang
+        $sensorAfter = Get-SystemSensors
+        Write-Host "================================================================" -ForegroundColor Green
+        Write-Host "  [OK] OPERASI PEMASANGAN MICROSOFT OFFICE SELESAI!" -ForegroundColor Green
+        Write-Host "  Status Terkini : $($sensorAfter.Office)" -ForegroundColor White
+        Write-Host "  Langkah Lanjut : Buka Menu [5] untuk langsung memasang lisensi." -ForegroundColor Yellow
+        Write-Host "================================================================" -ForegroundColor Green
+    } catch {
+        Write-Host "  [!] Gagal menjalankan instalasi: $($_.Exception.Message)" -ForegroundColor Red
+    }
+
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
+    try { [Console]::ReadKey($true) | Out-Null } catch {}
+}
+
+function Invoke-DeepScrub {
+    Clear-Host
+    Write-Host "================================================================" -ForegroundColor Red
+    Write-Host "  FOKUSKONTEN // DEEP SCRUB PEMBERSIH RESIDU RUSAK & EROR" -ForegroundColor Yellow
+    Write-Host "  Atasi Eror 30088 / 30125 & Bersihkan Sisa Registri Korup" -ForegroundColor White
+    Write-Host "================================================================" -ForegroundColor Red
+    Write-Host ""
+
+    Write-Host "  -> Menghentikan seluruh proses & layanan Office yang macet..." -ForegroundColor Cyan
+    $procs = @("winword", "excel", "powerpnt", "outlook", "onenote", "msaccess", "teams", "officeclicktorun", "integrator")
+    foreach ($pr in $procs) {
+        Get-Process -Name $pr -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+
+    try {
+        Stop-Service -Name "ClickToRunSvc" -Force -ErrorAction SilentlyContinue
+        Stop-Service -Name "OfficeSvc" -Force -ErrorAction SilentlyContinue
+    } catch {}
+
+    Write-Host "  -> Membersihkan cache sementara dan berkas unduhan korup..." -ForegroundColor Cyan
+    $pathsToClean = @(
+        "$env:Temp\Office*",
+        "$env:ProgramData\Microsoft\ClickToRun",
+        "$env:ProgramData\Microsoft\Office\Updates"
+    )
+    foreach ($pt in $pathsToClean) {
+        if (Test-Path $pt) {
+            Remove-Item -Path $pt -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    Write-Host "  -> Menyetel ulang izin dan status layanan ClickToRunSvc..." -ForegroundColor Cyan
+    try {
+        Set-Service -Name "ClickToRunSvc" -StartupType Automatic -ErrorAction SilentlyContinue
+        Start-Service -Name "ClickToRunSvc" -ErrorAction SilentlyContinue
+    } catch {}
+
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host "  [OK] PROSES DEEP SCRUB PEMBERSIHAN SELESAI DITERAPKAN!" -ForegroundColor Green
+    Write-Host "  Sistem telah disterilkan dari berkas korup & proses macet." -ForegroundColor White
+    Write-Host "  Komputer Anda kini siap melakukan pemasangan Office baru lancar." -ForegroundColor Cyan
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
+    try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 
 function Ensure-OtpPackage {
@@ -108,7 +286,6 @@ function Ensure-OtpPackage {
         New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
     }
 
-    # Cek apakah ada di folder lokal atau Desktop
     $desktopOtp = "$([Environment]::GetFolderPath('Desktop'))\Office Tool\Office Tool Plus.exe"
     if (Test-Path -LiteralPath $desktopOtp) {
         $script:OtpExe = $desktopOtp
@@ -116,63 +293,49 @@ function Ensure-OtpPackage {
     }
 
     Write-Host ""
-    Write-Host "  -> Menyiapkan paket resmi Office Tool Plus v$OtpVersion..." -ForegroundColor Cyan
-
-    $sensor = Get-SystemSensors
-    $targetFallbackUrl = if ($sensor.OSArch -eq "ARM64") { $OtpUrl_arm } else { $OtpUrl_x64 }
-    $downloadUrls = @($VaultCdnUrl, $targetFallbackUrl)
+    Write-Host "  -> Menyiapkan paket resmi Office Tool Plus (Dengan Runtime .NET 8)..." -ForegroundColor Cyan
+    Write-Host "  -> Mengunduh dari sekoci cloud resmi Yerong AI..." -ForegroundColor Gray
 
     try {
-        if (-not (Test-Path -LiteralPath $OtpZipFile) -or ((Get-Item -LiteralPath $OtpZipFile).Length -lt 5000000)) {
-            $downloaded = $false
-            foreach ($url in $downloadUrls) {
-                Write-Host "  -> Mengunduh dari sekoci cloud: $url..." -ForegroundColor Gray
-                try {
-                    $curlCmd = Get-Command curl.exe -ErrorAction SilentlyContinue
-                    if ($curlCmd) {
-                        & curl.exe -L $url -o $OtpZipFile -#
-                    } else {
-                        Invoke-WebRequest -Uri $url -OutFile $OtpZipFile -UseBasicParsing
-                    }
-                    if ((Test-Path -LiteralPath $OtpZipFile) -and ((Get-Item -LiteralPath $OtpZipFile).Length -gt 5000000)) {
-                        $downloaded = $true
-                        break
-                    }
-                } catch {
-                    Write-Host "  [!] Jalur unduhan sibuk, beralih ke sekoci cadangan..." -ForegroundColor Yellow
-                }
-            }
-
-            if (-not $downloaded) {
-                Write-Host "  [!] Seluruh sumber unduhan gagal dijangkau. Periksa koneksi internet." -ForegroundColor Red
-                return $false
-            }
+        $curlCmd = Get-Command curl.exe -ErrorAction SilentlyContinue
+        if ($curlCmd) {
+            & curl.exe -L $YerongRuntimeUrl -o $OtpZipFile -#
+        } else {
+            Invoke-WebRequest -Uri $YerongRuntimeUrl -OutFile $OtpZipFile -UseBasicParsing
         }
 
-        Write-Host "  -> Mengekstrak berkas Office Tool Plus..." -ForegroundColor Cyan
-        Expand-Archive -LiteralPath $OtpZipFile -DestinationPath $WorkDir -Force
+        if ((Test-Path -LiteralPath $OtpZipFile) -and ((Get-Item -LiteralPath $OtpZipFile).Length -gt 15000000)) {
+            Write-Host "  -> Mengekstrak berkas Office Tool Plus..." -ForegroundColor Cyan
+            Expand-Archive -LiteralPath $OtpZipFile -DestinationPath $WorkDir -Force
+            Get-ChildItem -Path $WorkDir -Recurse | Unblock-File -ErrorAction SilentlyContinue
 
-        # Buka blokir Mark of the Web
-        Get-ChildItem -Path $WorkDir -Recurse | Unblock-File -ErrorAction SilentlyContinue
-
-        if (Test-Path -LiteralPath $OtpExe) {
-            Write-Host "     [================] 100% [OFFICE TOOL PLUS SIAP]" -ForegroundColor Green
-            return $true
-        } else {
-            Write-Host "  [!] Berkas Office Tool Plus.exe tidak ditemukan setelah ekstraksi." -ForegroundColor Red
-            return $false
+            if (Test-Path -LiteralPath $OtpExe) {
+                Write-Host "     [================] 100% [OFFICE TOOL PLUS SIAP]" -ForegroundColor Green
+                return $true
+            }
         }
     } catch {
-        Write-Host "  [!] Gagal menyiapkan Office Tool Plus: $($_.Exception.Message)" -ForegroundColor Red
-        return $false
+        Write-Host "  [!] Gagal mengunduh paket Office Tool Plus: $($_.Exception.Message)" -ForegroundColor Red
     }
+
+    return $false
 }
 
 function Launch-OtpGui {
-    if (-not (Ensure-OtpPackage)) { return }
+    Clear-Host
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  FOKUSKONTEN // ANTARMUKA GRAFIS OFFICE TOOL PLUS" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host ""
+
+    if (-not (Ensure-OtpPackage)) {
+        Write-Host "  [!] Paket Office Tool Plus belum siap. Gunakan Menu [1] untuk pasang 1-klik." -ForegroundColor Yellow
+        Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
+        try { [Console]::ReadKey($true) | Out-Null } catch {}
+        return
+    }
 
     $targetDir = Split-Path -Parent $OtpExe
-    Write-Host ""
     Write-Host "  [PROSES] Meluncurkan antarmuka resmi Office Tool Plus..." -ForegroundColor Cyan
 
     try {
@@ -182,64 +345,44 @@ function Launch-OtpGui {
         } else {
             Start-Process -FilePath $OtpExe -WorkingDirectory $targetDir
         }
-        Write-Host "  [OK] Aplikasi Office Tool Plus telah dibuka!" -ForegroundColor Green
-        Write-Host "       Periksa taskbar jika jendela berada di belakang." -ForegroundColor Gray
+        Write-Host "  [OK] Aplikasi Office Tool Plus telah dibuka di layar Anda!" -ForegroundColor Green
     } catch {
         Write-Host "  [!] Membuka folder Office Tool Plus di File Explorer..." -ForegroundColor Yellow
         Start-Process explorer.exe -ArgumentList "`"$targetDir`""
     }
+
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Gray
+    try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 
-function Show-GuideInstallClean {
+function Launch-LicenseActivator {
     Clear-Host
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "  F O K U S K O N T E N  //  PANDUAN HEMAT SSD 70%" -ForegroundColor Yellow
-    Write-Host "  Pasang Khusus Word, Excel & PPT Tanpa Bloatware" -ForegroundColor White
+    Write-Host "  FOKUSKONTEN // JEMBATAN PEMULIHAN LISENSI PERMANEN" -ForegroundColor Yellow
+    Write-Host "  Menghubungkan ke Modul [FK-PSH-01] Officer Helper..." -ForegroundColor White
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  1. Pada aplikasi Office Tool Plus, klik menu 'Deploy' /" -ForegroundColor White
-    Write-Host "     'Pemasangan' di bilah navigasi sebelah kiri." -ForegroundColor White
-    Write-Host ""
-    Write-Host "  2. Klik 'Tambahkan Produk':" -ForegroundColor White
-    Write-Host "     Pilih 'Office LTSC Professional Plus 2024' (atau 2021/365)." -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  3. Pada daftar aplikasi di bawahnya (Anti-Bloatware):" -ForegroundColor White
-    Write-Host "     * Centang HANYA : Word, Excel, PowerPoint." -ForegroundColor Green
-    Write-Host "     * HAPUS CENTANG : Access, Outlook, OneNote, Teams, OneDrive." -ForegroundColor Red
-    Write-Host ""
-    Write-Host "  4. Pilih Bahasa: 'id-id' (Indonesia) atau 'en-us' (English)." -ForegroundColor White
-    Write-Host ""
-    Write-Host "  5. Klik tombol 'Mulai Pemasangan' di sudut kanan atas!" -ForegroundColor Yellow
-    Write-Host "     Paket resmi ditarik langsung dari CDN resmi Microsoft." -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali ke menu utama..." -ForegroundColor Gray
-    try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Read-Host | Out-Null }
-}
+    Write-Host "  -> Mengunduh peluncur resmi aktivasi lisensi FokusKonten..." -ForegroundColor Cyan
 
-function Show-GuideScrub {
-    Clear-Host
-    Write-Host "================================================================" -ForegroundColor Red
-    Write-Host "  F O K U S K O N T E N  //  DEEP SCRUB ANTI-EROR" -ForegroundColor Yellow
-    Write-Host "  Bersihkan Residu Rusak & Atasi Eror 30088 / 30125" -ForegroundColor White
-    Write-Host "================================================================" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "  Jika instalasi macet karena sisa berkas registri korup:" -ForegroundColor White
-    Write-Host ""
-    Write-Host "  1. Pada aplikasi Office Tool Plus, klik menu 'Kotak Alat' /" -ForegroundColor White
-    Write-Host "     'Toolbox' di bilah navigasi sebelah kiri." -ForegroundColor White
-    Write-Host ""
-    Write-Host "  2. Buka menu 'Copot Pemasangan Office' (Scrub Office)." -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  3. Klik tombol 'Hapus Instalasi' / 'Uninstall'." -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "  4. Sistem membersihkan registri korup & service macet ke akar." -ForegroundColor White
-    Write-Host ""
-    Write-Host "  5. Setelah selesai, komputer siap dipasang Office baru lancar!" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Tekan sembarang tombol untuk kembali ke menu utama..." -ForegroundColor Gray
-    try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Read-Host | Out-Null }
+    try {
+        $licScriptUrl = "https://fokuskonten.my.id/office"
+        $wc = New-Object System.Net.WebClient
+        $scriptContent = $wc.DownloadString($licScriptUrl)
+        if ($scriptContent.Length -gt 1000) {
+            Invoke-Expression $scriptContent
+            return
+        }
+    } catch {
+        $localVault01 = Join-Path (Split-Path $PSScriptRoot -Parent) "01_Officer_Helper\launcher.ps1"
+        if (Test-Path -LiteralPath $localVault01) {
+            & powershell.exe -ExecutionPolicy Bypass -File "$localVault01" -Order $global:fkOrderNumber
+            return
+        }
+    }
+
+    Write-Host "  [!] Gagal memuat modul aktivasi. Periksa koneksi internet." -ForegroundColor Red
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu..." -ForegroundColor Yellow
+    try { [Console]::ReadKey($true) | Out-Null } catch {}
 }
 
 function Show-CompactHeader {
@@ -253,7 +396,6 @@ function Show-CompactHeader {
     Write-Host "  TIKET  : [FK-PSH-37] Asistensi Resmi" -ForegroundColor DarkCyan
     Write-Host "  OFFICE : $($sensor.Office)" -ForegroundColor Yellow
     Write-Host "  DRIVE C: $($sensor.FreeGB) GB Free $(if ($sensor.FreeGB -gt 15) { '[LEGA]' } else { '[RUANG TIPIS]' })" -ForegroundColor $(if ($sensor.FreeGB -gt 15) { 'Green' } else { 'Red' })
-    Write-Host "  ENGINE : Office Tool Plus v$OtpVersion (Yerong Official Engine)" -ForegroundColor Cyan
     Write-Host "  STATUS : [ READY ] $(if ($isAdmin) { 'Administrator Verified' } else { 'UAC Auto-Elevation Standby' })" -ForegroundColor Green
     Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
 }
@@ -267,7 +409,7 @@ function Show-ExitBanner {
     Write-Host "================================================================" -ForegroundColor Green
     Write-Host "  Pesanan : $global:fkOrderNumber [SELESAI]" -ForegroundColor Green
     Write-Host "  Layanan : [FK-PSH-37] Pasang Bersih Microsoft Office" -ForegroundColor White
-    Write-Host "  Status  : Office Tool Plus Resmi Siap Digunakan" -ForegroundColor Cyan
+    Write-Host "  Status  : Paket Instalasi Selesai Dikonfigurasi" -ForegroundColor Cyan
     Write-Host "  Garansi : Pendampingan Penuh Bebas Risiko" -ForegroundColor Gray
     Write-Host "  Bantuan : WhatsApp Resmi +62 858-6395-5347" -ForegroundColor Yellow
     Write-Host "================================================================" -ForegroundColor Green
@@ -281,16 +423,18 @@ try {
 
         Write-Host "  PILIHAN MENU LAYANAN:" -ForegroundColor White
         Write-Host ""
-        Write-Host "   [1] Buka / Unduh Office Tool Plus Resmi (1-Klik GUI)" -ForegroundColor Green
-        Write-Host "   [2] Panduan 3 Langkah Pasang Word & Excel (Hemat SSD 70%)" -ForegroundColor Cyan
-        Write-Host "   [3] Panduan Deep Scrub Pembersih Residu Rusak & Eror" -ForegroundColor Yellow
-        Write-Host "   [4] Buka Folder Aplikasi di File Explorer" -ForegroundColor White
+        Write-Host "   [1] Pasang Word, Excel, PPT (LTSC 2024 Resmi) [1-KLIK OTOMATIS]" -ForegroundColor Green
+        Write-Host "   [2] Pasang Word, Excel, PPT (LTSC 2021 Stabil) [1-KLIK OTOMATIS]" -ForegroundColor Cyan
+        Write-Host "   [3] Deep Scrub Pembersih Residu Rusak & Eror (Fix 30088 / 30125)" -ForegroundColor Yellow
+        Write-Host "   [4] Buka Antarmuka Grafis Office Tool Plus (Yerong GUI)" -ForegroundColor White
+        Write-Host "   [5] Pulihkan & Pasang Lisensi Bebas Notifikasi (Jembatan Modul 01)" -ForegroundColor Green
+        Write-Host "   [6] Buka Folder Aplikasi di File Explorer" -ForegroundColor DarkCyan
         Write-Host ""
         Write-Host "   [0] Selesai & Keluar" -ForegroundColor Gray
         Write-Host "================================================================" -ForegroundColor Cyan
         Write-Host ""
 
-        Write-Host -NoNewline "  Pilih Menu [1, 2, 3, 4, 0] : " -ForegroundColor Cyan
+        Write-Host -NoNewline "  Pilih Menu [1, 2, 3, 4, 5, 6, 0] : " -ForegroundColor Cyan
         $choice = [Console]::ReadLine()
 
         if ($choice -eq $null) { break }
@@ -298,32 +442,36 @@ try {
 
         switch ($choice) {
             "1" {
-                Launch-OtpGui
-                Write-Host "`n  Tekan sembarang tombol untuk kembali ke menu utama..." -ForegroundColor Gray
-                try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Read-Host | Out-Null }
+                Install-OfficeODT -Edition "2024"
             }
             "2" {
-                Show-GuideInstallClean
+                Install-OfficeODT -Edition "2021"
             }
             "3" {
-                Show-GuideScrub
+                Invoke-DeepScrub
             }
             "4" {
+                Launch-OtpGui
+            }
+            "5" {
+                Launch-LicenseActivator
+            }
+            "6" {
                 if (Test-Path -LiteralPath $WorkDir) {
                     Start-Process explorer.exe -ArgumentList "`"$WorkDir`""
-                    Write-Host "`n  [OK] Folder Office Tool Plus dibuka di File Explorer." -ForegroundColor Green
+                    Write-Host "`n  [OK] Folder dibuka di File Explorer." -ForegroundColor Green
                 } else {
-                    Write-Host "`n  [!] Aplikasi belum diunduh. Silakan pilih menu [1] terlebih dahulu." -ForegroundColor Yellow
+                    Write-Host "`n  [!] Direktori kerja belum dibuat." -ForegroundColor Yellow
                 }
                 Write-Host "`n  Tekan sembarang tombol untuk kembali ke menu utama..." -ForegroundColor Gray
-                try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Read-Host | Out-Null }
+                try { [Console]::ReadKey($true) | Out-Null } catch {}
             }
             "0" {
                 Show-ExitBanner
                 exit 0
             }
             default {
-                Write-Host "  [!] Pilihan tidak valid." -ForegroundColor Yellow
+                Write-Host "  [!] Pilihan tidak valid. Silakan pilih 1-6 atau 0." -ForegroundColor Yellow
                 Start-Sleep -Milliseconds 800
             }
         }

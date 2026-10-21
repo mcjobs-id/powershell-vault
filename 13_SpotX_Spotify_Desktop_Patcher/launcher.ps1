@@ -163,18 +163,25 @@ function Invoke-SpotXPatch {
     Write-Host "           Mohon tunggu beberapa detik hingga proses selesai." -ForegroundColor Gray
     Write-Host ""
 
-    $argsList = @(
-        "-confirm_uninstall_ms_spoti",
-        "-confirm_spoti_recomended_over",
-        "-block_update_on",
-        "-start_spoti"
-    )
+    # Pastikan Spotify ditutup terlebih dahulu agar file tidak terkunci
+    Get-Process -Name Spotify -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Milliseconds 600
+
+    # Gunakan hashtable splatting agar parameter switch di PowerShell terikat dengan benar
+    $splatParams = @{
+        confirm_uninstall_ms_spoti    = $true
+        confirm_spoti_recomended_over = $true
+        block_update_on               = $true
+        start_spoti                   = $true
+        defender_exclusions_off       = $true
+        no_pause                      = $true
+    }
     if (-not $KeepPodcasts) {
-        $argsList += "-podcasts_off"
+        $splatParams['podcasts_off'] = $true
     }
 
     try {
-        & $engine @argsList
+        & $engine @splatParams
         Write-Host ""
         Write-Host "  [OK] Optimasi Spotify Desktop berhasil diselesaikan 100%!" -ForegroundColor Green
         Write-Host "       Aplikasi Spotify telah siap digunakan tanpa gangguan iklan." -ForegroundColor Cyan

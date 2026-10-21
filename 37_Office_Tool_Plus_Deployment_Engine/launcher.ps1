@@ -1,9 +1,13 @@
-# ================================================================
+# ==============================================================================
 # FOKUSKONTEN // OFFICIAL RESCUE INFRASTRUCTURE
-# Modul [FK-PSH-37] : OFFICE TOOL PLUS & CUSTOM DEPLOYMENT SUITE
-# Engine            : Official Office Tool Plus Engine (Yerong)
-# Standard          : Ultra-Compact Golden 64 Layout // In-Place Terminal
-# ================================================================
+# Layanan Jasa : JASA PASANG & KUSTOMISASI KOMPONEN OFFICE TOOL PLUS
+# Modul SKU    : FK-PSH-37 (Official Rescue Suite)
+# Desain       : Ultra-Compact Golden 64 Layout (Fit di Jendela Default Terminal)
+# Arsitektur   : 100% In-Place Single Terminal Execution (Zero Pop-Up Spam)
+# Engine       : Yerong Official OTP Engine v10.30 & Dual-Tier Cloud Release CDN
+# Keamanan     : 100% Resmi CDN Microsoft (Zero Bloatware & Deep Scrub Corrupt Fix)
+# ==============================================================================
+
 param (
     [string]$Order = ""
 )
@@ -30,7 +34,7 @@ $ErrorActionPreference = "SilentlyContinue"
 $ProgressPreference    = "SilentlyContinue"
 
 try {
-    $Host.UI.RawUI.WindowTitle = "FokusKonten // OFFICE TOOL PLUS RESCUE SUITE"
+    $Host.UI.RawUI.WindowTitle = "FOKUSKONTEN // RESCUE SUITE [FK-PSH-37]"
 } catch {}
 
 $origFg = $Host.UI.RawUI.ForegroundColor
@@ -169,17 +173,17 @@ function Launch-OtpGui {
 
     $targetDir = Split-Path -Parent $OtpExe
     Write-Host ""
-    Write-Host "  -> Meluncurkan antarmuka grafis resmi Office Tool Plus..." -ForegroundColor Cyan
+    Write-Host "  [PROSES] Meluncurkan antarmuka resmi Office Tool Plus..." -ForegroundColor Cyan
 
     try {
         if (-not $isAdmin) {
-            Write-Host " [*] Meminta izin Administrator Windows (UAC) untuk akses penuh..." -ForegroundColor Yellow
+            Write-Host "  [*] Meminta izin Administrator Windows (UAC)..." -ForegroundColor Yellow
             Start-Process -FilePath $OtpExe -WorkingDirectory $targetDir -Verb RunAs
         } else {
             Start-Process -FilePath $OtpExe -WorkingDirectory $targetDir
         }
-        Write-Host "  [OK] Aplikasi Office Tool Plus telah diluncurkan di layar Anda!" -ForegroundColor Green
-        Write-Host "       Silakan periksa taskbar Windows Anda jika jendela berada di belakang." -ForegroundColor Gray
+        Write-Host "  [OK] Aplikasi Office Tool Plus telah dibuka!" -ForegroundColor Green
+        Write-Host "       Periksa taskbar jika jendela berada di belakang." -ForegroundColor Gray
     } catch {
         Write-Host "  [!] Membuka folder Office Tool Plus di File Explorer..." -ForegroundColor Yellow
         Start-Process explorer.exe -ArgumentList "`"$targetDir`""
@@ -187,119 +191,142 @@ function Launch-OtpGui {
 }
 
 function Show-GuideInstallClean {
-    Write-Host ""
+    Clear-Host
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host " PANDUAN CEPAT: PASANG HANYA WORD, EXCEL & PPT (HEMAT SSD 70%)  " -ForegroundColor Yellow
+    Write-Host "  F O K U S K O N T E N  //  PANDUAN HEMAT SSD 70%" -ForegroundColor Yellow
+    Write-Host "  Pasang Khusus Word, Excel & PPT Tanpa Bloatware" -ForegroundColor White
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host " 1. Pada antarmuka Office Tool Plus, klik menu 'Deploy' /       " -ForegroundColor White
-    Write-Host "    'Pemasangan' di bilah navigasi sebelah kiri.                " -ForegroundColor White
+    Write-Host "  1. Pada aplikasi Office Tool Plus, klik menu 'Deploy' /" -ForegroundColor White
+    Write-Host "     'Pemasangan' di bilah navigasi sebelah kiri." -ForegroundColor White
     Write-Host ""
-    Write-Host " 2. Pada kolom 'Produk', klik 'Tambahkan Produk':               " -ForegroundColor White
-    Write-Host "    Pilih 'Office LTSC Professional Plus 2024' (atau 2021/365). " -ForegroundColor Cyan
+    Write-Host "  2. Klik 'Tambahkan Produk':" -ForegroundColor White
+    Write-Host "     Pilih 'Office LTSC Professional Plus 2024' (atau 2021/365)." -ForegroundColor Cyan
     Write-Host ""
-    Write-Host " 3. Pada daftar aplikasi di bawahnya (Anti-Bloatware):          " -ForegroundColor White
-    Write-Host "    * Tetap CENTANG : Word, Excel, PowerPoint.                  " -ForegroundColor Green
-    Write-Host "    * HAPUS CENTANG : Access, Outlook, OneNote, Teams, OneDrive " -ForegroundColor Red
+    Write-Host "  3. Pada daftar aplikasi di bawahnya (Anti-Bloatware):" -ForegroundColor White
+    Write-Host "     * Centang HANYA : Word, Excel, PowerPoint." -ForegroundColor Green
+    Write-Host "     * HAPUS CENTANG : Access, Outlook, OneNote, Teams, OneDrive." -ForegroundColor Red
     Write-Host ""
-    Write-Host " 4. Pilih Bahasa: 'id-id' (Indonesia) atau 'en-us' (English).   " -ForegroundColor White
+    Write-Host "  4. Pilih Bahasa: 'id-id' (Indonesia) atau 'en-us' (English)." -ForegroundColor White
     Write-Host ""
-    Write-Host " 5. Klik tombol 'Mulai Pemasangan' di sudut kanan atas!         " -ForegroundColor Yellow
-    Write-Host "    Proses unduh & pasang resmi Microsoft akan berjalan lancar. " -ForegroundColor Gray
-    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  5. Klik tombol 'Mulai Pemasangan' di sudut kanan atas!" -ForegroundColor Yellow
+    Write-Host "     Paket resmi ditarik langsung dari CDN resmi Microsoft." -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu utama..." -ForegroundColor Gray
+    try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Read-Host | Out-Null }
 }
 
 function Show-GuideScrub {
-    Write-Host ""
+    Clear-Host
     Write-Host "================================================================" -ForegroundColor Red
-    Write-Host " PANDUAN DEEP SCRUB: BERSIHKAN RESIDU OFFICE KORUP (ANTI EROR)  " -ForegroundColor Yellow
+    Write-Host "  F O K U S K O N T E N  //  DEEP SCRUB ANTI-EROR" -ForegroundColor Yellow
+    Write-Host "  Bersihkan Residu Rusak & Atasi Eror 30088 / 30125" -ForegroundColor White
     Write-Host "================================================================" -ForegroundColor Red
     Write-Host ""
-    Write-Host " Jika Anda mengalami eror gagal pasang (30088-26 atau 30125-1011)" -ForegroundColor White
-    Write-Host " akibat sisa-sisa Office lama yang rusak, ikuti langkah ini:    " -ForegroundColor White
+    Write-Host "  Jika instalasi macet karena sisa berkas registri korup:" -ForegroundColor White
     Write-Host ""
-    Write-Host " 1. Pada aplikasi Office Tool Plus, klik menu 'Kotak Alat' /    " -ForegroundColor White
-    Write-Host "    'Toolbox' di bilah navigasi sebelah kiri.                   " -ForegroundColor White
+    Write-Host "  1. Pada aplikasi Office Tool Plus, klik menu 'Kotak Alat' /" -ForegroundColor White
+    Write-Host "     'Toolbox' di bilah navigasi sebelah kiri." -ForegroundColor White
     Write-Host ""
-    Write-Host " 2. Cari bagian 'Copot Pemasangan Office' (Scrub Office).       " -ForegroundColor Cyan
+    Write-Host "  2. Buka menu 'Copot Pemasangan Office' (Scrub Office)." -ForegroundColor Cyan
     Write-Host ""
-    Write-Host " 3. Klik tombol 'Hapus Instalasi' / 'Uninstall'.                " -ForegroundColor Yellow
+    Write-Host "  3. Klik tombol 'Hapus Instalasi' / 'Uninstall'." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host " 4. Biarkan sistem membersihkan seluruh registri korup, service " -ForegroundColor White
-    Write-Host "    macet, dan cache berkas lama hingga 100% bersih ke akar.    " -ForegroundColor White
+    Write-Host "  4. Sistem membersihkan registri korup & service macet ke akar." -ForegroundColor White
     Write-Host ""
-    Write-Host " 5. Setelah selesai, komputer siap dipasang Office baru lancar! " -ForegroundColor Green
-    Write-Host "================================================================" -ForegroundColor Red
+    Write-Host "  5. Setelah selesai, komputer siap dipasang Office baru lancar!" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Tekan sembarang tombol untuk kembali ke menu utama..." -ForegroundColor Gray
+    try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Read-Host | Out-Null }
 }
 
-function Show-Header {
-    $sensor = Get-SystemSensors
+function Show-CompactHeader {
     Clear-Host
+    $sensor = Get-SystemSensors
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host " FOKUSKONTEN // OFFICE TOOL PLUS & CUSTOM DEPLOYMENT SUITE      " -ForegroundColor White
-    Write-Host " Kustomisasi Komponen Office, Anti-Bloatware & Deep Scrub       " -ForegroundColor Gray
+    Write-Host "  F O K U S K O N T E N  //  RESCUE SUITE" -ForegroundColor Yellow
+    Write-Host "  Pasang Bersih Microsoft Office Custom Anti-Bloatware" -ForegroundColor White
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host " TIKET ORDER   : " -NoNewline -ForegroundColor Gray
-    Write-Host "$($global:fkOrderNumber)" -ForegroundColor Yellow
-    Write-Host " SISTEM OPERASI: " -NoNewline -ForegroundColor Gray
-    Write-Host "$($sensor.OSName) ($($sensor.OSArch))" -ForegroundColor White
-    Write-Host " STATUS OFFICE : " -NoNewline -ForegroundColor Gray
-    Write-Host "$($sensor.Office)" -ForegroundColor Yellow
-    Write-Host " DRIVE C: SISA : " -NoNewline -ForegroundColor Gray
-    if ($sensor.FreeGB -gt 15) {
-        Write-Host "$($sensor.FreeGB) GB Tersedia [SANGAT CUKUP]" -ForegroundColor Green
-    } else {
-        Write-Host "$($sensor.FreeGB) GB Tersedia [PERHATIAN: RUANG TERSISA SEDIKIT]" -ForegroundColor Red
-    }
-    Write-Host " MESIN RESMI   : " -NoNewline -ForegroundColor Gray
-    Write-Host "Office Tool Plus v$OtpVersion (Built-in Yerong Engine)" -ForegroundColor White
-    Write-Host " HAK AKSES     : " -NoNewline -ForegroundColor Gray
-    if ($isAdmin) {
-        Write-Host "ADMINISTRATOR RESMI [TERVERIFIKASI]" -ForegroundColor Green
-    } else {
-        Write-Host "User Standar [UAC Elevasi Otomatis Siaga]" -ForegroundColor Yellow
-    }
-    Write-Host "----------------------------------------------------------------" -ForegroundColor Cyan
-    Write-Host " PILIHAN MENU TINDAKAN:" -ForegroundColor White
-    Write-Host "   [1] Buka / Unduh Office Tool Plus Resmi (1-Klik GUI Lengkap) " -ForegroundColor Green
-    Write-Host "   [2] Panduan 3 Langkah Pasang Word & Excel Saja (Hemat SSD 70%)" -ForegroundColor Cyan
-    Write-Host "   [3] Panduan Deep Scrub Bersihkan Sisa Office Rusak / Eror    " -ForegroundColor Yellow
-    Write-Host "   [4] Buka Folder Aplikasi Office Tool Plus di File Explorer   " -ForegroundColor White
-    Write-Host "   [0] Selesai & Keluar                                         " -ForegroundColor Gray
-    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "  ORDER  : $global:fkOrderNumber" -ForegroundColor Green
+    Write-Host "  TIKET  : [FK-PSH-37] Asistensi Resmi" -ForegroundColor DarkCyan
+    Write-Host "  OFFICE : $($sensor.Office)" -ForegroundColor Yellow
+    Write-Host "  DRIVE C: $($sensor.FreeGB) GB Free $(if ($sensor.FreeGB -gt 15) { '[LEGA]' } else { '[RUANG TIPIS]' })" -ForegroundColor $(if ($sensor.FreeGB -gt 15) { 'Green' } else { 'Red' })
+    Write-Host "  ENGINE : Office Tool Plus v$OtpVersion (Yerong Official Engine)" -ForegroundColor Cyan
+    Write-Host "  STATUS : [ READY ] $(if ($isAdmin) { 'Administrator Verified' } else { 'UAC Auto-Elevation Standby' })" -ForegroundColor Green
+    Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+}
+
+function Show-ExitBanner {
+    Restore-Terminal
+    Clear-Host
+    Write-Host ""
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host "  THANKS ORDER BY FOKUSKONTEN // TERIMA KASIH TELAH ORDER" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host "  Pesanan : $global:fkOrderNumber [SELESAI]" -ForegroundColor Green
+    Write-Host "  Layanan : [FK-PSH-37] Pasang Bersih Microsoft Office" -ForegroundColor White
+    Write-Host "  Status  : Office Tool Plus Resmi Siap Digunakan" -ForegroundColor Cyan
+    Write-Host "  Garansi : Pendampingan Penuh Bebas Risiko" -ForegroundColor Gray
+    Write-Host "  Bantuan : WhatsApp Resmi +62 858-6395-5347" -ForegroundColor Yellow
+    Write-Host "================================================================" -ForegroundColor Green
+    Write-Host ""
 }
 
 # Main Application Loop
 try {
     while ($true) {
-        Show-Header
-        Write-Host -NoNewline " Pilihan Anda [1, 2, 3, 4, 0] : " -ForegroundColor Green
-        $choice = (Read-Host).Trim()
+        Show-CompactHeader
+
+        Write-Host "  PILIHAN MENU LAYANAN:" -ForegroundColor White
+        Write-Host ""
+        Write-Host "   [1] Buka / Unduh Office Tool Plus Resmi (1-Klik GUI)" -ForegroundColor Green
+        Write-Host "   [2] Panduan 3 Langkah Pasang Word & Excel (Hemat SSD 70%)" -ForegroundColor Cyan
+        Write-Host "   [3] Panduan Deep Scrub Pembersih Residu Rusak & Eror" -ForegroundColor Yellow
+        Write-Host "   [4] Buka Folder Aplikasi di File Explorer" -ForegroundColor White
+        Write-Host ""
+        Write-Host "   [0] Selesai & Keluar" -ForegroundColor Gray
+        Write-Host "================================================================" -ForegroundColor Cyan
+        Write-Host ""
+
+        Write-Host -NoNewline "  Pilih Menu [1, 2, 3, 4, 0] : " -ForegroundColor Cyan
+        $choice = [Console]::ReadLine()
+
+        if ($choice -eq $null) { break }
+        $choice = $choice.Trim()
 
         switch ($choice) {
-            "1" { Launch-OtpGui }
-            "2" { Show-GuideInstallClean }
-            "3" { Show-GuideScrub }
+            "1" {
+                Launch-OtpGui
+                Write-Host "`n  Tekan sembarang tombol untuk kembali ke menu utama..." -ForegroundColor Gray
+                try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Read-Host | Out-Null }
+            }
+            "2" {
+                Show-GuideInstallClean
+            }
+            "3" {
+                Show-GuideScrub
+            }
             "4" {
                 if (Test-Path -LiteralPath $WorkDir) {
                     Start-Process explorer.exe -ArgumentList "`"$WorkDir`""
-                    Write-Host "`n [OK] Folder Office Tool Plus dibuka di File Explorer." -ForegroundColor Green
+                    Write-Host "`n  [OK] Folder Office Tool Plus dibuka di File Explorer." -ForegroundColor Green
                 } else {
-                    Write-Host "`n [!] Aplikasi belum diunduh. Silakan pilih menu [1] terlebih dahulu." -ForegroundColor Yellow
+                    Write-Host "`n  [!] Aplikasi belum diunduh. Silakan pilih menu [1] terlebih dahulu." -ForegroundColor Yellow
                 }
+                Write-Host "`n  Tekan sembarang tombol untuk kembali ke menu utama..." -ForegroundColor Gray
+                try { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") } catch { Read-Host | Out-Null }
             }
             "0" {
-                Write-Host "`n Terima kasih telah menggunakan layanan resmi FokusKonten.`n" -ForegroundColor Green
-                Restore-Terminal
+                Show-ExitBanner
                 exit 0
             }
             default {
-                Write-Host " Pilihan tidak valid." -ForegroundColor Yellow
+                Write-Host "  [!] Pilihan tidak valid." -ForegroundColor Yellow
+                Start-Sleep -Milliseconds 800
             }
         }
-
-        Write-Host "`n Tekan Enter untuk kembali ke menu utama..." -ForegroundColor White
-        Read-Host | Out-Null
     }
 } finally {
     Restore-Terminal

@@ -169,6 +169,7 @@ function Invoke-SpotXPatch {
 
     # Gunakan hashtable splatting agar parameter switch di PowerShell terikat dengan benar
     $splatParams = @{
+        language                      = 'id'
         confirm_uninstall_ms_spoti    = $true
         confirm_spoti_recomended_over = $true
         block_update_on               = $true

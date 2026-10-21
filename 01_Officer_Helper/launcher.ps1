@@ -52,10 +52,36 @@ function Restore-Terminal {
 }
 
 function Find-OfficePaths {
-    return @(
-        (Join-Path $env:ProgramFiles "Microsoft Office"),
-        (Join-Path ${env:ProgramFiles(x86)} "Microsoft Office")
+    $paths = [System.Collections.Generic.List[string]]::new()
+    if ($env:ProgramFiles) {
+        $paths.Add((Join-Path $env:ProgramFiles "Microsoft Office"))
+    }
+    if (${env:ProgramFiles(x86)}) {
+        $paths.Add((Join-Path ${env:ProgramFiles(x86)} "Microsoft Office"))
+    }
+
+    # Deteksi lokasi instalasi kustom dari registri sistem
+    $regPaths = @(
+        "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration",
+        "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Office\ClickToRun\Configuration",
+        "HKLM:\SOFTWARE\Microsoft\Office\16.0\Common\InstallRoot",
+        "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Office\16.0\Common\InstallRoot"
     )
+    foreach ($r in $regPaths) {
+        if (Test-Path -LiteralPath $r) {
+            $val = (Get-ItemProperty -LiteralPath $r -ErrorAction SilentlyContinue).InstallationPath
+            if (-not $val) {
+                $val = (Get-ItemProperty -LiteralPath $r -ErrorAction SilentlyContinue).Path
+            }
+            if ($val -and (Test-Path -LiteralPath $val)) {
+                $parent = Split-Path -Path $val -Parent
+                if ($parent -and -not $paths.Contains($parent)) { $paths.Add($parent) }
+                if (-not $paths.Contains($val)) { $paths.Add($val) }
+            }
+        }
+    }
+
+    return $paths.ToArray()
 }
 
 function Get-OfficeInstallType {
@@ -68,14 +94,16 @@ function Get-OfficeInstallType {
         $hasC2R = $true
     }
 
-    $c2rLicPath = "C:\Program Files\Microsoft Office\root\Licenses16"
-    if (Test-Path $c2rLicPath) { $hasC2R = $true }
-
-    $appxManifest = "C:\Program Files\Microsoft Office\AppXManifest.xml"
-    if (Test-Path $appxManifest) {
-        $uwpPkg = Get-AppxPackage -Name "*Office.Desktop*" -ErrorAction SilentlyContinue
-        if ($uwpPkg) {
-            $hasUwp = $true
+    foreach ($p in (Find-OfficePaths)) {
+        if (-not (Test-Path -LiteralPath $p)) { continue }
+        if (Test-Path (Join-Path $p "root\Licenses16")) { $hasC2R = $true }
+        if (Test-Path (Join-Path $p "root\Licenses")) { $hasC2R = $true }
+        if (Test-Path (Join-Path $p "root\integration\integrator.exe")) { $hasC2R = $true }
+        if (Test-Path (Join-Path $p "AppXManifest.xml")) {
+            $uwpPkg = Get-AppxPackage -Name "*Office.Desktop*" -ErrorAction SilentlyContinue
+            if ($uwpPkg) {
+                $hasUwp = $true
+            }
         }
     }
 
@@ -129,6 +157,21 @@ function Close-OfficeApps {
     Start-Sleep -Milliseconds 400
 }
 
+function Get-FkWorkDir {
+    $base = if ($env:ProgramData -and (Test-Path -LiteralPath $env:ProgramData)) {
+        $env:ProgramData
+    } elseif ($env:LOCALAPPDATA -and (Test-Path -LiteralPath $env:LOCALAPPDATA)) {
+        $env:LOCALAPPDATA
+    } else {
+        $env:TEMP
+    }
+    $target = Join-Path $base "FokusKonten"
+    if (-not (Test-Path -LiteralPath $target)) {
+        New-Item -ItemType Directory -Path $target -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+    return $target
+}
+
 function Get-EnginePath {
     if ($PSScriptRoot) {
         $localCmd = Join-Path $PSScriptRoot "MAS_AIO.cmd"
@@ -137,10 +180,7 @@ function Get-EnginePath {
         if (Test-Path -LiteralPath $separate) { return $separate }
     }
 
-    $workDir = Join-Path $env:ProgramData "FokusKonten"
-    if (-not (Test-Path -LiteralPath $workDir)) {
-        New-Item -ItemType Directory -Path $workDir -Force | Out-Null
-    }
+    $workDir = Get-FkWorkDir
     $cached = Join-Path $workDir "FK_Core_Runtime_v3.cmd"
     if ((Test-Path -LiteralPath $cached) -and ((Get-Item -LiteralPath $cached).Length -gt 50000)) {
         return $cached
@@ -148,23 +188,20 @@ function Get-EnginePath {
 
     Write-Host ""
     Write-Host "  -> Menyiapkan modul pemulihan lisensi resmi FokusKonten..." -ForegroundColor Cyan
-    $primaryUrl = "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/01_Officer_Helper/MAS_AIO.cmd"
-    $fallbackUrl = "https://fokuskonten.my.id/assets/engine/FK_Engine_Core.cmd"
+    $urls = @(
+        "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/01_Officer_Helper/MAS_AIO.cmd",
+        "https://raw.githubusercontent.com/massgravel/Microsoft-Activation-Scripts/master/MAS/Separate-Files-Version/Activators/Ohook_Activation_AIO.cmd",
+        "https://cdn.jsdelivr.net/gh/massgravel/Microsoft-Activation-Scripts@master/MAS/Separate-Files-Version/Activators/Ohook_Activation_AIO.cmd",
+        "https://fokuskonten.my.id/assets/engine/FK_Engine_Core.cmd"
+    )
 
-    try {
-        $wc = New-Object System.Net.WebClient
-        $rawText = $wc.DownloadString($primaryUrl)
-        if ($rawText.Length -gt 50000) {
-            $crlfText = $rawText -replace "(?<!`r)`n", "`r`n"
-            [System.IO.File]::WriteAllText($cached, $crlfText, [System.Text.Encoding]::ASCII)
-            Write-Host "     [================] 100% [KOMPONEN SIAP]" -ForegroundColor Green
-            return $cached
-        }
-    } catch {
+    $wc = New-Object System.Net.WebClient
+    foreach ($u in $urls) {
         try {
-            $wc = New-Object System.Net.WebClient
-            $wc.DownloadFile($fallbackUrl, $cached)
-            if ((Test-Path -LiteralPath $cached) -and ((Get-Item -LiteralPath $cached).Length -gt 50000)) {
+            $rawText = $wc.DownloadString($u)
+            if ($rawText.Length -gt 50000) {
+                $crlfText = $rawText -replace "(?<!`r)`n", "`r`n"
+                [System.IO.File]::WriteAllText($cached, $crlfText, [System.Text.Encoding]::ASCII)
                 Write-Host "     [================] 100% [KOMPONEN SIAP]" -ForegroundColor Green
                 return $cached
             }
@@ -216,10 +253,7 @@ function Invoke-EngineWithLiveLog {
         return $false
     }
 
-    $workDir = Join-Path $env:ProgramData "FokusKonten"
-    if (-not (Test-Path -LiteralPath $workDir)) {
-        New-Item -ItemType Directory -Path $workDir -Force | Out-Null
-    }
+    $workDir = Get-FkWorkDir
     $logFile = Join-Path $workDir "fk_exec.log"
     if (Test-Path -LiteralPath $logFile) {
         Remove-Item -LiteralPath $logFile -Force -ErrorAction SilentlyContinue
@@ -515,23 +549,36 @@ function Launch-CleanInstallC2R {
     Write-Host "  Menghubungkan ke Modul [FK-PSH-37] Office Tool Plus..." -ForegroundColor White
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  -> Mengunduh peluncur resmi pasang bersih C2R FokusKonten..." -ForegroundColor Cyan
+    Write-Host "  -> Menghubungkan ke modul pasang bersih C2R FokusKonten..." -ForegroundColor Cyan
 
-    try {
-        $c2rScriptUrl = "https://fokuskonten.my.id/otp"
-        $wc = New-Object System.Net.WebClient
-        $scriptContent = $wc.DownloadString($c2rScriptUrl)
-        if ($scriptContent.Length -gt 1000) {
-            Invoke-Expression $scriptContent
-            return
+    # 1. Cek repositori lokal jika dijalankan offline
+    if ($PSScriptRoot) {
+        $parent = Split-Path -Path $PSScriptRoot -Parent
+        if ($parent) {
+            $localVault37 = Join-Path $parent "37_Office_Tool_Plus_Deployment_Engine\launcher.ps1"
+            if (Test-Path -LiteralPath $localVault37) {
+                & powershell.exe -ExecutionPolicy Bypass -File "$localVault37" -Order $global:fkOrderNumber
+                return
+            }
         }
-    } catch {
-        Write-Host "  [!] Beralih ke sekoci direktori internal..." -ForegroundColor Yellow
-        $localVault37 = Join-Path (Split-Path $PSScriptRoot -Parent) "37_Office_Tool_Plus_Deployment_Engine\launcher.ps1"
-        if (Test-Path -LiteralPath $localVault37) {
-            & powershell.exe -ExecutionPolicy Bypass -File "$localVault37" -Order $global:fkOrderNumber
-            return
-        }
+    }
+
+    # 2. Unduh dinamis via Multi-CDN Edge
+    $c2rUrls = @(
+        "https://fokuskonten.my.id/otp",
+        "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/37_Office_Tool_Plus_Deployment_Engine/launcher.ps1",
+        "https://cdn.jsdelivr.net/gh/mcjobs-id/powershell-vault@main/37_Office_Tool_Plus_Deployment_Engine/launcher.ps1"
+    )
+
+    $wc = New-Object System.Net.WebClient
+    foreach ($u in $c2rUrls) {
+        try {
+            $scriptContent = $wc.DownloadString($u)
+            if ($scriptContent -and $scriptContent.Length -gt 1000 -and -not ($scriptContent -match "error code: 1027|Too Many Requests")) {
+                Invoke-Expression $scriptContent
+                return
+            }
+        } catch {}
     }
 
     Write-Host "  [!] Gagal memuat modul pasang bersih. Periksa koneksi internet." -ForegroundColor Red

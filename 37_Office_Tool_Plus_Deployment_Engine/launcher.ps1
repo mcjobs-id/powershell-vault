@@ -50,33 +50,47 @@ function Restore-Terminal {
 
 $isAdmin = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -match 'S-1-5-32-544')
 
-# Direktori & Konfigurasi Cache
-$WorkDir    = "$env:ProgramData\FokusKonten\OfficeToolPlus"
-$OdtSetupExe = "$WorkDir\setup.exe"
-$OtpZipFile = "$WorkDir\Office_Tool_Plus_Runtime.zip"
-$OtpExe     = "$WorkDir\Office Tool\Office Tool Plus.exe"
+# Direktori & Konfigurasi Cache Dinamis
+$baseData = if ($env:ProgramData -and (Test-Path -LiteralPath $env:ProgramData)) {
+    $env:ProgramData
+} elseif ($env:LOCALAPPDATA -and (Test-Path -LiteralPath $env:LOCALAPPDATA)) {
+    $env:LOCALAPPDATA
+} else {
+    $env:TEMP
+}
+$WorkDir     = Join-Path $baseData "FokusKonten\OfficeToolPlus"
+$OdtSetupExe = Join-Path $WorkDir "setup.exe"
+$OtpZipFile  = Join-Path $WorkDir "Office_Tool_Plus_Runtime.zip"
+$OtpExe      = Join-Path $WorkDir "Office Tool\Office Tool Plus.exe"
 
 # URL CDN Resmi FokusKonten & Microsoft Edge CDN
-$VaultSetupUrl = "https://github.com/mcjobs-id/powershell-vault/releases/download/v1.0.0/setup.exe"
-$YerongRuntimeUrl = "https://github.com/YerongAI/Office-Tool/releases/download/v11.8.50.0/Office_Tool_with_runtime_v11.8.50.0_x64.zip"
+$VaultSetupUrls = @(
+    "https://github.com/mcjobs-id/powershell-vault/releases/download/v1.0.0/setup.exe",
+    "https://fokuskonten.my.id/dl/setup.exe"
+)
 
 function Get-SystemSensors {
-    $cDrive = Get-CimInstance Win32_LogicalDisk -ErrorAction SilentlyContinue | Where-Object { $_.DeviceID -eq 'C:' }
-    $freeGb = if ($cDrive) { [math]::Round($cDrive.FreeSpace / 1GB, 1) } else { 0 }
+    $sysDrive = if ($env:SystemDrive) { $env:SystemDrive } else { 'C:' }
+    $targetDrive = Get-CimInstance Win32_LogicalDisk -ErrorAction SilentlyContinue | Where-Object { $_.DeviceID -eq $sysDrive }
+    $freeGb = if ($targetDrive) { [math]::Round($targetDrive.FreeSpace / 1GB, 1) } else { 0 }
 
     # Deteksi Office Terpasang
     $offStatus = "Belum Terdeteksi (Siap Pasang Bersih)"
     $c2rPath = "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
-    if (Test-Path $c2rPath) {
-        $prod = (Get-ItemProperty -Path $c2rPath -Name "ProductReleaseIds" -ErrorAction SilentlyContinue).ProductReleaseIds
-        $ver  = (Get-ItemProperty -Path $c2rPath -Name "VersionToReport" -ErrorAction SilentlyContinue).VersionToReport
-        $arch = (Get-ItemProperty -Path $c2rPath -Name "Platform" -ErrorAction SilentlyContinue).Platform
+    $c2rPath86 = "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Office\ClickToRun\Configuration"
+    $targetC2R = if (Test-Path $c2rPath) { $c2rPath } elseif (Test-Path $c2rPath86) { $c2rPath86 } else { $null }
+
+    if ($targetC2R) {
+        $prod = (Get-ItemProperty -Path $targetC2R -Name "ProductReleaseIds" -ErrorAction SilentlyContinue).ProductReleaseIds
+        $ver  = (Get-ItemProperty -Path $targetC2R -Name "VersionToReport" -ErrorAction SilentlyContinue).VersionToReport
+        $arch = (Get-ItemProperty -Path $targetC2R -Name "Platform" -ErrorAction SilentlyContinue).Platform
         if ($prod) {
             $offStatus = "$prod [$arch] (v$ver)"
         }
     } else {
         $regPaths = @(
             "HKLM:\SOFTWARE\Microsoft\Office\16.0\Common\InstallRoot",
+            "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Office\16.0\Common\InstallRoot",
             "HKLM:\SOFTWARE\Microsoft\Office\15.0\Common\InstallRoot"
         )
         foreach ($rp in $regPaths) {
@@ -91,10 +105,11 @@ function Get-SystemSensors {
     $arch = if ($os.OSArchitecture -match 'ARM') { "ARM64" } elseif ($os.OSArchitecture -match '64') { "x64" } else { "x86" }
 
     return [PSCustomObject]@{
-        OSName   = $os.Caption.Trim()
-        OSArch   = $arch
-        FreeGB   = $freeGb
-        Office   = $offStatus
+        OSName      = $os.Caption.Trim()
+        OSArch      = $arch
+        SystemDrive = $sysDrive
+        FreeGB      = $freeGb
+        Office      = $offStatus
     }
 }
 
@@ -118,22 +133,24 @@ function Ensure-OdtSetup {
 
     Write-Host ""
     Write-Host "  -> Mengunduh mesin resmi Microsoft Office Deployment Tool..." -ForegroundColor Cyan
-    try {
-        $curlCmd = Get-Command curl.exe -ErrorAction SilentlyContinue
-        if ($curlCmd) {
-            & curl.exe -s -L $VaultSetupUrl -o $OdtSetupExe
-        } else {
-            Invoke-WebRequest -Uri $VaultSetupUrl -OutFile $OdtSetupExe -UseBasicParsing
-        }
+    $curlCmd = Get-Command curl.exe -ErrorAction SilentlyContinue
 
-        if ((Test-Path -LiteralPath $OdtSetupExe) -and ((Get-Item -LiteralPath $OdtSetupExe).Length -gt 1000000)) {
-            Write-Host "     [================] 100% [MESIN MICROSOFT SIAP]" -ForegroundColor Green
-            return $true
-        }
-    } catch {
-        Write-Host "  [!] Gagal mengunduh mesin setup resmi. Periksa koneksi internet." -ForegroundColor Red
+    foreach ($url in $VaultSetupUrls) {
+        try {
+            if ($curlCmd) {
+                & curl.exe -s -L $url -o $OdtSetupExe
+            } else {
+                Invoke-WebRequest -Uri $url -OutFile $OdtSetupExe -UseBasicParsing
+            }
+
+            if ((Test-Path -LiteralPath $OdtSetupExe) -and ((Get-Item -LiteralPath $OdtSetupExe).Length -gt 1000000)) {
+                Write-Host "     [================] 100% [MESIN MICROSOFT SIAP]" -ForegroundColor Green
+                return $true
+            }
+        } catch {}
     }
 
+    Write-Host "  [!] Gagal mengunduh mesin setup resmi. Periksa koneksi internet." -ForegroundColor Red
     return $false
 }
 
@@ -150,9 +167,10 @@ function Install-OfficeODT {
     Write-Host ""
 
     $sensor = Get-SystemSensors
+    $driveLabel = $sensor.SystemDrive
     if ($sensor.FreeGB -lt 5) {
-        Write-Host "  [PERINGATAN] Ruang sisa Drive C hanya $($sensor.FreeGB) GB." -ForegroundColor Red
-        Write-Host "  Instalasi membutuhkan minimal 5 GB ruang kosong di Drive C." -ForegroundColor Yellow
+        Write-Host "  [PERINGATAN] Ruang sisa Drive $driveLabel hanya $($sensor.FreeGB) GB." -ForegroundColor Red
+        Write-Host "  Instalasi membutuhkan minimal 5 GB ruang kosong di Drive $driveLabel." -ForegroundColor Yellow
         Write-Host "  Tekan sembarang tombol untuk kembali..." -ForegroundColor Gray
         try { [Console]::ReadKey($true) | Out-Null } catch {}
         return
@@ -173,16 +191,18 @@ function Install-OfficeODT {
         Get-Process -Name $pr -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     }
 
+    $is64 = [Environment]::Is64BitOperatingSystem
+    $archEdition = if ($is64) { "64" } else { "32" }
     $productId = if ($Edition -eq "2021") { "ProPlus2021Volume" } else { "ProPlus2024Volume" }
     $channelId = if ($Edition -eq "2021") { "PerpetualVL2021" } else { "PerpetualVL2024" }
 
-    $xmlConfig = "<Configuration><Add OfficeClientEdition=`"64`" Channel=`"$channelId`"><Product ID=`"$productId`"><Language ID=`"MatchOS`" /><Language ID=`"en-us`" /><ExcludeApp ID=`"Access`" /><ExcludeApp ID=`"Groove`" /><ExcludeApp ID=`"Lync`" /><ExcludeApp ID=`"OneDrive`" /><ExcludeApp ID=`"OneNote`" /><ExcludeApp ID=`"Outlook`" /><ExcludeApp ID=`"Publisher`" /><ExcludeApp ID=`"Teams`" /></Product></Add><RemoveMSI /><Display Level=`"Full`" AcceptEULA=`"TRUE`" /><Property Name=`"AUTOACTIVATE`" Value=`"0`" /></Configuration>"
+    $xmlConfig = "<Configuration><Add OfficeClientEdition=`"$archEdition`" Channel=`"$channelId`"><Product ID=`"$productId`"><Language ID=`"MatchOS`" /><Language ID=`"en-us`" /><ExcludeApp ID=`"Access`" /><ExcludeApp ID=`"Groove`" /><ExcludeApp ID=`"Lync`" /><ExcludeApp ID=`"OneDrive`" /><ExcludeApp ID=`"OneNote`" /><ExcludeApp ID=`"Outlook`" /><ExcludeApp ID=`"Publisher`" /><ExcludeApp ID=`"Teams`" /></Product></Add><RemoveMSI /><Display Level=`"Full`" AcceptEULA=`"TRUE`" /><Property Name=`"AUTOACTIVATE`" Value=`"0`" /></Configuration>"
 
     $cfgFile = "$WorkDir\configuration.xml"
     [System.IO.File]::WriteAllText($cfgFile, $xmlConfig, [System.Text.Encoding]::UTF8)
 
     Write-Host "  -> Konfigurasi Terpilih:" -ForegroundColor White
-    Write-Host "     * Produk       : Office LTSC Professional Plus $Edition" -ForegroundColor Green
+    Write-Host "     * Produk       : Office LTSC Professional Plus $Edition [$archEdition-bit]" -ForegroundColor Green
     Write-Host "     * Aplikasi     : HANYA Word, Excel, PowerPoint" -ForegroundColor Green
     Write-Host "     * Dieliminasi  : Outlook, Access, Teams, OneDrive, Publisher" -ForegroundColor DarkGray
     Write-Host "     * Sumber Unduh : CDN Resmi Microsoft (officecdn.microsoft.com)" -ForegroundColor Cyan
@@ -292,16 +312,25 @@ function Ensure-OtpPackage {
         return $true
     }
 
+    $sensor = Get-SystemSensors
+    $yerongUrl = if ($sensor.OSArch -eq "ARM64") {
+        "https://github.com/YerongAI/Office-Tool/releases/download/v11.8.50.0/Office_Tool_with_runtime_v11.8.50.0_arm64.zip"
+    } elseif ($sensor.OSArch -eq "x86") {
+        "https://github.com/YerongAI/Office-Tool/releases/download/v11.8.50.0/Office_Tool_with_runtime_v11.8.50.0_x86.zip"
+    } else {
+        "https://github.com/YerongAI/Office-Tool/releases/download/v11.8.50.0/Office_Tool_with_runtime_v11.8.50.0_x64.zip"
+    }
+
     Write-Host ""
     Write-Host "  -> Menyiapkan paket resmi Office Tool Plus (Dengan Runtime .NET 8)..." -ForegroundColor Cyan
-    Write-Host "  -> Mengunduh dari sekoci cloud resmi Yerong AI..." -ForegroundColor Gray
+    Write-Host "  -> Mengunduh dari sekoci cloud resmi Yerong AI [$($sensor.OSArch)]..." -ForegroundColor Gray
 
     try {
         $curlCmd = Get-Command curl.exe -ErrorAction SilentlyContinue
         if ($curlCmd) {
-            & curl.exe -L $YerongRuntimeUrl -o $OtpZipFile -#
+            & curl.exe -L $yerongUrl -o $OtpZipFile -#
         } else {
-            Invoke-WebRequest -Uri $YerongRuntimeUrl -OutFile $OtpZipFile -UseBasicParsing
+            Invoke-WebRequest -Uri $yerongUrl -OutFile $OtpZipFile -UseBasicParsing
         }
 
         if ((Test-Path -LiteralPath $OtpZipFile) -and ((Get-Item -LiteralPath $OtpZipFile).Length -gt 15000000)) {
@@ -362,22 +391,36 @@ function Launch-LicenseActivator {
     Write-Host "  Menghubungkan ke Modul [FK-PSH-01] Officer Helper..." -ForegroundColor White
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  -> Mengunduh peluncur resmi aktivasi lisensi FokusKonten..." -ForegroundColor Cyan
+    Write-Host "  -> Menghubungkan ke modul aktivasi lisensi FokusKonten..." -ForegroundColor Cyan
 
-    try {
-        $licScriptUrl = "https://fokuskonten.my.id/office"
-        $wc = New-Object System.Net.WebClient
-        $scriptContent = $wc.DownloadString($licScriptUrl)
-        if ($scriptContent.Length -gt 1000) {
-            Invoke-Expression $scriptContent
-            return
+    # 1. Cek repositori lokal jika offline
+    if ($PSScriptRoot) {
+        $parent = Split-Path -Path $PSScriptRoot -Parent
+        if ($parent) {
+            $localVault01 = Join-Path $parent "01_Officer_Helper\launcher.ps1"
+            if (Test-Path -LiteralPath $localVault01) {
+                & powershell.exe -ExecutionPolicy Bypass -File "$localVault01" -Order $global:fkOrderNumber
+                return
+            }
         }
-    } catch {
-        $localVault01 = Join-Path (Split-Path $PSScriptRoot -Parent) "01_Officer_Helper\launcher.ps1"
-        if (Test-Path -LiteralPath $localVault01) {
-            & powershell.exe -ExecutionPolicy Bypass -File "$localVault01" -Order $global:fkOrderNumber
-            return
-        }
+    }
+
+    # 2. Unduh dinamis via Multi-CDN Edge
+    $licUrls = @(
+        "https://fokuskonten.my.id/office",
+        "https://raw.githubusercontent.com/mcjobs-id/powershell-vault/main/01_Officer_Helper/launcher.ps1",
+        "https://cdn.jsdelivr.net/gh/mcjobs-id/powershell-vault@main/01_Officer_Helper/launcher.ps1"
+    )
+
+    $wc = New-Object System.Net.WebClient
+    foreach ($u in $licUrls) {
+        try {
+            $scriptContent = $wc.DownloadString($u)
+            if ($scriptContent -and $scriptContent.Length -gt 1000 -and -not ($scriptContent -match "error code: 1027|Too Many Requests")) {
+                Invoke-Expression $scriptContent
+                return
+            }
+        } catch {}
     }
 
     Write-Host "  [!] Gagal memuat modul aktivasi. Periksa koneksi internet." -ForegroundColor Red
@@ -395,7 +438,7 @@ function Show-CompactHeader {
     Write-Host "  ORDER  : $global:fkOrderNumber" -ForegroundColor Green
     Write-Host "  TIKET  : [FK-PSH-37] Asistensi Resmi" -ForegroundColor DarkCyan
     Write-Host "  OFFICE : $($sensor.Office)" -ForegroundColor Yellow
-    Write-Host "  DRIVE C: $($sensor.FreeGB) GB Free $(if ($sensor.FreeGB -gt 15) { '[LEGA]' } else { '[RUANG TIPIS]' })" -ForegroundColor $(if ($sensor.FreeGB -gt 15) { 'Green' } else { 'Red' })
+    Write-Host "  DRIVE $($sensor.SystemDrive): $($sensor.FreeGB) GB Free $(if ($sensor.FreeGB -gt 15) { '[LEGA]' } else { '[RUANG TIPIS]' })" -ForegroundColor $(if ($sensor.FreeGB -gt 15) { 'Green' } else { 'Red' })
     Write-Host "  STATUS : [ READY ] $(if ($isAdmin) { 'Administrator Verified' } else { 'UAC Auto-Elevation Standby' })" -ForegroundColor Green
     Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
 }
